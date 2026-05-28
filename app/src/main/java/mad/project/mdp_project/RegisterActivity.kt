@@ -89,18 +89,12 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun calculateStrength(password: String): Int {
-        if (password.isEmpty()) return 0
-        if (password.length < 6) return 1
-        
-        var score = 0
-        if (password.length >= 8) score++
-        if (password.any { it.isDigit() } && password.any { it.isLetter() }) score++
-        if (password.any { !it.isLetterOrDigit() }) score++
-        
+        val length = password.length
         return when {
-            score >= 3 -> 3
-            score >= 1 -> 2
-            else -> 1
+            length >= 8 -> 3
+            length >= 4 -> 2
+            length >= 1 -> 1
+            else -> 0
         }
     }
 
