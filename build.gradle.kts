@@ -3,6 +3,7 @@ plugins {
   alias(libs.plugins.android.application) apply false
   id("org.jetbrains.kotlin.plugin.parcelize") version "2.3.20-RC2" apply false
   id("com.google.devtools.ksp") version "2.3.4" apply false
+    alias(libs.plugins.compose.compiler) apply false
 }
 buildscript {
   repositories {

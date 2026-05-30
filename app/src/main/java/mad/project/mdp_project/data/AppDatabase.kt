@@ -4,6 +4,10 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Database(
     entities = [User::class],
@@ -24,9 +28,24 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "mdp_project.db"
-                ).build()
+                )
+                    .addCallback(DatabaseCallback())
+                    .build()
                 INSTANCE = instance
                 instance
+            }
+        }
+
+        private class DatabaseCallback : RoomDatabase.Callback() {
+            override fun onCreate(db: SupportSQLiteDatabase) {
+                super.onCreate(db)
+                INSTANCE?.let { database ->
+                    CoroutineScope(Dispatchers.IO).launch {
+                        database.userDao().insertUser(
+                            User(username = "admin", password = "admin123")
+                        )
+                    }
+                }
             }
         }
     }

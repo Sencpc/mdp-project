@@ -3,11 +3,12 @@ plugins {
     id("kotlin-parcelize")
     id("androidx.navigation.safeargs.kotlin")
     id("com.google.devtools.ksp")
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
     namespace = "mad.project.mdp_project"
-    compileSdk = 35 // Menggunakan versi stabil terbaru untuk targetSdk 36 (preview)
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "mad.project.mdp_project"
@@ -42,7 +43,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.14" // Versi ini kompatibel dengan Kotlin 1.9.24
+        kotlinCompilerExtensionVersion = "1.5.14"
     }
 
     packaging {

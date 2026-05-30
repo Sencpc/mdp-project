@@ -13,6 +13,7 @@ cardview = "1.0.0"
 gridlayout = "1.1.0"
 legacySupportV4 = "1.0.0"
 viewpager2 = "1.1.0"
+kotlin = "2.3.21"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -31,4 +32,7 @@ androidx-viewpager2 = { group = "androidx.viewpager2", name = "viewpager2", vers
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+org-jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 

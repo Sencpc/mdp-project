@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_dashboard"
+        android:icon="@drawable/ic_nav_dashboard"
+        android:title="Dashboard" />
+    <item
+        android:id="@+id/nav_habits"
+        android:icon="@drawable/ic_nav_habit"
+        android:title="Habits" />
+    <item
+        android:id="@+id/nav_screen"
+        android:icon="@drawable/ic_nav_screen"
+        android:title="Screen" />
+    <item
+        android:id="@+id/nav_sleep"
+        android:icon="@drawable/ic_nav_sleep"
+        android:title="Sleep" />
+</menu>

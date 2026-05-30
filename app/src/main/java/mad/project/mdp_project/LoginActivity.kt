@@ -4,7 +4,11 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import mad.project.mdp_project.data.AppDatabase
 import mad.project.mdp_project.databinding.ActivityLoginBinding
 
 class LoginActivity : AppCompatActivity() {
@@ -23,8 +27,29 @@ class LoginActivity : AppCompatActivity() {
     private fun setupUI() {
         setupPasswordVisibilityToggle()
 
+        val db = AppDatabase.getDatabase(this)
+        val userDao = db.userDao()
+
         binding.btnLogin.setOnClickListener {
-            // Implement login logic
+            val username = binding.etUsername.text.toString().trim()
+            val password = binding.etPassword.text.toString().trim()
+
+            if (username.isEmpty() || password.isEmpty()) {
+                Toast.makeText(this, "Harap isi semua field", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            lifecycleScope.launch {
+                val user = userDao.getUserByUsername(username)
+                if (user != null && user.password == password) {
+                    Toast.makeText(this@LoginActivity, "Login Berhasil!", Toast.LENGTH_SHORT).show()
+                    val intent = Intent(this@LoginActivity, MainActivity::class.java)
+                    startActivity(intent)
+                    finish()
+                } else {
+                    Toast.makeText(this@LoginActivity, "Username atau Password salah", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
 
         binding.tvSignUp.setOnClickListener {
