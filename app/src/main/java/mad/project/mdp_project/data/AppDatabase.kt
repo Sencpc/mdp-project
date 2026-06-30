@@ -8,10 +8,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-
 @Database(
-    entities = [User::class],
-    version = 1,
+    entities = [User::class, Habit::class, SleepLog::class],
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -27,7 +26,7 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "mdp_project.db"
+                    "mdp_project_db" //gantien sean
                 )
                     .addCallback(DatabaseCallback())
                     .build()

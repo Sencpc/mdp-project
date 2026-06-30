@@ -7,7 +7,8 @@ import android.view.View
 import android.view.ViewGroup
 import mad.project.mdp_project.R
 
-class FormHabitsFragment : Fragment() {
+class SleepTrackerFragment : Fragment() {
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -19,6 +20,7 @@ class FormHabitsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_form_habits, container, false)
+        return inflater.inflate(R.layout.fragment_sleep_tracker, container, false)
     }
+
 }
