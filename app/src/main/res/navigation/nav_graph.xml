@@ -11,4 +11,20 @@
         android:label="Dashboard"
         tools:layout="@layout/fragment_dashboard" />
 
+    <fragment
+        android:id="@+id/nav_habits"
+        android:name="mad.project.mdp_project.ui.HabitsFragment"
+        android:label="Habits"
+        tools:layout="@layout/fragment_habits">
+        <action
+            android:id="@+id/action_nav_habits_to_nav_form_habits"
+            app:destination="@id/nav_form_habits" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_form_habits"
+        android:name="mad.project.mdp_project.ui.FormHabitsFragment"
+        android:label="Add Habit"
+        tools:layout="@layout/fragment_form_habits" />
+
 </navigation>
