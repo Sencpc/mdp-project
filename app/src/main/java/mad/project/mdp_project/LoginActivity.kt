@@ -9,17 +9,27 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import mad.project.mdp_project.data.AppDatabase
+import mad.project.mdp_project.data.SessionManager
 import mad.project.mdp_project.databinding.ActivityLoginBinding
 
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
     private var isPasswordVisible = false
+    private lateinit var sessionManager: SessionManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        
+        sessionManager = SessionManager(this)
+        
+        // Auto-login if session exists
+        if (sessionManager.getUserId() != -1) {
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+        }
 
         setupUI()
     }
@@ -42,6 +52,7 @@ class LoginActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 val user = userDao.getUserByUsername(username)
                 if (user != null && user.password == password) {
+                    sessionManager.saveSession(user.id, user.username)
                     Toast.makeText(this@LoginActivity, "Login Berhasil!", Toast.LENGTH_SHORT).show()
                     val intent = Intent(this@LoginActivity, MainActivity::class.java)
                     startActivity(intent)

@@ -13,6 +13,9 @@
         <action
             android:id="@+id/action_nav_dashboard_to_nav_sleep"
             app:destination="@id/nav_sleep" />
+        <action
+            android:id="@+id/action_nav_dashboard_to_nav_profile"
+            app:destination="@id/nav_profile" />
     </fragment>
 
     <fragment
@@ -36,5 +39,15 @@
         android:name="mad.project.mdp_project.ui.FormHabitsFragment"
         android:label="Add Habit"
         tools:layout="@layout/fragment_form_habits" />
+
+    <fragment
+        android:id="@+id/nav_profile"
+        android:name="mad.project.mdp_project.ui.ProfileFragment"
+        android:label="Profile" />
+
+    <fragment
+        android:id="@+id/nav_screen"
+        android:name="mad.project.mdp_project.ui.ScreenTimeFragment"
+        android:label="Screen Time" />
 
 </navigation>

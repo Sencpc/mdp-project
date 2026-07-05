@@ -6,8 +6,13 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import mad.project.mdp_project.data.AppDatabase
+import mad.project.mdp_project.data.User
 import mad.project.mdp_project.databinding.ActivityRegisterBinding
 
 class RegisterActivity : AppCompatActivity() {
@@ -34,8 +39,39 @@ class RegisterActivity : AppCompatActivity() {
         setupPasswordStrengthChecker()
         setupTermsCheckbox()
 
+        val db = AppDatabase.getDatabase(this)
+        val userDao = db.userDao()
+
         binding.btnCreateAccount.setOnClickListener {
-            // Implement registration logic
+            val fullName = binding.etFullName.text.toString().trim()
+            val username = binding.etUsername.text.toString().trim()
+            val password = binding.etPassword.text.toString().trim()
+
+            if (fullName.isEmpty() || username.isEmpty() || password.isEmpty()) {
+                Toast.makeText(this, "Harap isi semua field", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            if (password.length < 8) {
+                Toast.makeText(this, "Password minimal 8 karakter", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            lifecycleScope.launch {
+                val existingUser = userDao.getUserByUsername(username)
+                if (existingUser != null) {
+                    Toast.makeText(this@RegisterActivity, "Username sudah digunakan", Toast.LENGTH_SHORT).show()
+                } else {
+                    val newUser = User(
+                        username = username,
+                        password = password,
+                        fullName = fullName
+                    )
+                    userDao.insertUser(newUser)
+                    Toast.makeText(this@RegisterActivity, "Registrasi Berhasil!", Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            }
         }
     }
 
@@ -67,10 +103,12 @@ class RegisterActivity : AppCompatActivity() {
     private fun updatePasswordStrength(password: String) {
         val strength = calculateStrength(password)
         
-        // Reset bars
-        binding.viewStrength1.setBackgroundColor(ContextCompat.getColor(this, R.color.edit_text_bg))
-        binding.viewStrength2.setBackgroundColor(ContextCompat.getColor(this, R.color.edit_text_bg))
-        binding.viewStrength3.setBackgroundColor(ContextCompat.getColor(this, R.color.edit_text_bg))
+        // Use default android colors if app colors are not found
+        val gray = ContextCompat.getColor(this, android.R.color.darker_gray)
+
+        binding.viewStrength1.setBackgroundColor(gray)
+        binding.viewStrength2.setBackgroundColor(gray)
+        binding.viewStrength3.setBackgroundColor(gray)
 
         when (strength) {
             1 -> {

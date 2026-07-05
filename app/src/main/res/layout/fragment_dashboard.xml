@@ -12,11 +12,13 @@
         android:padding="16dp">
 
         <!-- Top Bar -->
-        <View
+        <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/profile_circle"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="@drawable/bg_circle_green"
+            android:scaleType="centerCrop"
+            android:src="@drawable/bg_circle_green"
+            app:shapeAppearanceOverlay="@style/CircleAppearance"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -49,7 +51,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:text="Good morning, Alex."
+            tools:text="Good morning, Alex."
             android:textColor="#333333"
             android:textSize="16sp"
             android:textStyle="bold"

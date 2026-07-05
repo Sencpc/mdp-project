@@ -9,12 +9,11 @@
         android:icon="@drawable/ic_nav_habit"
         android:title="Habits" />
     <item
+        android:id="@+id/nav_screen"
+        android:icon="@drawable/ic_dash_timer"
+        android:title="Screen" />
+    <item
         android:id="@+id/nav_sleep"
         android:icon="@drawable/ic_nav_sleep"
         android:title="Sleep" />
-    <item
-        android:id="@+id/nav_profile"
-        android:icon="@drawable/ic_regis_full_name"
-        android:title="Profile"
-        />
 </menu>

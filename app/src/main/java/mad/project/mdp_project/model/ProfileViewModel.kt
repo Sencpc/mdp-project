@@ -1,11 +1,14 @@
 package mad.project.mdp_project.model
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import mad.project.mdp_project.data.User
 import mad.project.mdp_project.data.UserDao
@@ -13,74 +16,74 @@ import java.util.Calendar
 
 class ProfileViewModel(private val userDao: UserDao, private val userId: Int) : ViewModel() {
 
-    private val _user = MutableStateFlow<User?>(null)
-    val user: StateFlow<User?> = _user.asStateFlow()
+    companion object {
+        private const val TAG = "ProfileViewModel"
+    }
+
+    // Data dari database (Source of truth)
+    val user: StateFlow<User?> = userDao.getUserById(userId)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = null
+        )
+
+    // Data sementara untuk di-edit (Draft)
+    private val _draftUser = MutableStateFlow<User?>(null)
+    val draftUser: StateFlow<User?> = _draftUser.asStateFlow()
+
+    // Flag agar draft hanya diinisialisasi sekali dari DB
+    private var isDraftInitialized = false
 
     init {
-        loadUser()
-    }
-
-    private fun loadUser() {
+        Log.d(TAG, "ViewModel created for userId=$userId")
         viewModelScope.launch {
-            _user.value = userDao.getUserById(userId)
+            // Query langsung ke database, tidak melalui StateFlow
+            val dbUser = userDao.getUserByIdOnce(userId)
+            if (dbUser != null) {
+                Log.d(TAG, "DB user loaded: id=${dbUser.id}, fullName=${dbUser.fullName}")
+                _draftUser.value = dbUser
+                isDraftInitialized = true
+            } else {
+                Log.e(TAG, "User NOT FOUND in DB for userId=$userId — session mungkin sudah tidak valid")
+            }
         }
     }
 
-    fun updateHeight(height: Float) {
-        val currentUser = _user.value ?: return
-        viewModelScope.launch {
-            val updatedUser = currentUser.copy(height = height)
-            userDao.updateUser(updatedUser)
-            _user.value = updatedUser
+    /**
+     * Memperbarui data draft di memori.
+     * Ini akan segera memperbarui UI Profile Screen tanpa menyimpan ke DB.
+     */
+    fun updateDraft(update: (User) -> User) {
+        val current = _draftUser.value
+        if (current != null) {
+            _draftUser.value = update(current)
+            Log.d(TAG, "Draft updated: ${_draftUser.value}")
+        } else {
+            Log.w(TAG, "updateDraft called but draftUser is null — user data not loaded yet")
         }
     }
 
-    fun updateWeight(weight: Float) {
-        val currentUser = _user.value ?: return
+    /**
+     * Menyimpan seluruh perubahan dari draft ke database Room.
+     * @param onComplete callback yang dipanggil setelah penyimpanan berhasil.
+     */
+    fun saveChanges(onComplete: (() -> Unit)? = null) {
         viewModelScope.launch {
-            val updatedUser = currentUser.copy(weight = weight)
-            userDao.updateUser(updatedUser)
-            _user.value = updatedUser
+            _draftUser.value?.let {
+                userDao.updateUser(it)
+                Log.d(TAG, "Changes saved to DB for userId=${it.id}")
+            }
+            onComplete?.invoke()
         }
     }
 
-    fun updateBirthDate(birthDate: Long) {
-        val currentUser = _user.value ?: return
-        viewModelScope.launch {
-            val updatedUser = currentUser.copy(birthDate = birthDate)
-            userDao.updateUser(updatedUser)
-            _user.value = updatedUser
-        }
-    }
-
-    fun updateBloodType(bloodType: String) {
-        val currentUser = _user.value ?: return
-        viewModelScope.launch {
-            val updatedUser = currentUser.copy(bloodType = bloodType)
-            userDao.updateUser(updatedUser)
-            _user.value = updatedUser
-        }
-    }
-
-    fun updateConditions(conditions: List<String>) {
-        val currentUser = _user.value ?: return
-        viewModelScope.launch {
-            val updatedUser = currentUser.copy(conditions = conditions.joinToString(","))
-            userDao.updateUser(updatedUser)
-            _user.value = updatedUser
-        }
-    }
-
-    fun updateEmergencyContact(name: String, phone: String) {
-        val currentUser = _user.value ?: return
-        viewModelScope.launch {
-            val updatedUser = currentUser.copy(
-                emergencyContactName = name,
-                emergencyContactPhone = phone
-            )
-            userDao.updateUser(updatedUser)
-            _user.value = updatedUser
-        }
+    /**
+     * Membatalkan perubahan draft dan kembali ke data dari database.
+     */
+    fun resetDraft() {
+        _draftUser.value = user.value
+        isDraftInitialized = user.value != null
     }
 
     fun calculateAge(birthDate: Long?): Int {
