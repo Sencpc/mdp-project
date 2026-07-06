@@ -5,14 +5,23 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import mad.project.mdp_project.R
+import mad.project.mdp_project.data.Habit
 import mad.project.mdp_project.databinding.FragmentHabitsBinding
+import mad.project.mdp_project.model.HabitViewModel
 
 class HabitsFragment : Fragment() {
 
     private var _binding: FragmentHabitsBinding? = null
     private val binding get() = _binding!!
+    private val viewModel: HabitViewModel by viewModels()
+    private lateinit var habitAdapter: HabitAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -25,12 +34,50 @@ class HabitsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupUI()
+        setupRecyclerView()
+        observeViewModel()
     }
 
-    private fun setupUI() {
-        binding.fabAddHabit.setOnClickListener {
-            findNavController().navigate(R.id.action_nav_habits_to_nav_form_habits)
+    private fun setupRecyclerView() {
+        habitAdapter = HabitAdapter(
+            onHabitClick = { habit ->
+                // Edit logic if needed
+            },
+            onAddClick = {
+                findNavController().navigate(R.id.action_nav_habits_to_nav_form_habits)
+            },
+            onCompleteClick = { habit, isCompleted ->
+                viewModel.toggleHabitCompletion(habit, isCompleted)
+            }
+        )
+        
+        binding.rvHabits.apply {
+            adapter = habitAdapter
+            layoutManager = LinearLayoutManager(requireContext())
+        }
+    }
+
+    private fun observeViewModel() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.habits.collectLatest { habits ->
+                habitAdapter.submitList(habits)
+                updateProgress(habits)
+            }
+        }
+    }
+
+    private fun updateProgress(habits: List<Habit>) {
+        val total = habits.size
+        val completed = habits.count { it.isCompleted }
+        
+        binding.tvProgressPercent.text = "$completed/$total"
+        binding.circularProgressBar.progress = if (total > 0) (completed * 100 / total) else 0
+        
+        val remaining = total - completed
+        binding.tvProgressStatus.text = if (remaining > 0) {
+            "Keep it up! $remaining more to go."
+        } else {
+            "All habits completed! Well done!"
         }
     }
 
