@@ -474,7 +474,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:divider="#EEEEEE"
+                android:divider="@drawable/divider_line"
                 android:orientation="vertical"
                 android:showDividers="middle">
 
@@ -506,7 +506,7 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/tvNudge1Title" />
 
-                    <com.google.android.material.materialswitch.MaterialSwitch
+                    <androidx.appcompat.widget.SwitchCompat
                         android:id="@+id/switchNudge1"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -544,7 +544,7 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/tvNudge2Title" />
 
-                    <com.google.android.material.materialswitch.MaterialSwitch
+                    <androidx.appcompat.widget.SwitchCompat
                         android:id="@+id/switchNudge2"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -581,7 +581,7 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/tvNudge3Title" />
 
-                    <com.google.android.material.materialswitch.MaterialSwitch
+                    <androidx.appcompat.widget.SwitchCompat
                         android:id="@+id/switchNudge3"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"

@@ -91,7 +91,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnFilterAll"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:checkable="true"
@@ -109,7 +109,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnFilterGeneral"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:checkable="true"
@@ -126,7 +126,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnFilterTherapy"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:checkable="true"
@@ -143,7 +143,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnFilterNutrition"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:checkable="true"
