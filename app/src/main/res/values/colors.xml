@@ -12,4 +12,8 @@
     <color name="brand_light">#D1E8D1</color>
     <color name="text_secondary">#757575</color>
     <color name="edit_text_bg">#F5F5F5</color>
+    <color name="screen_time_social_bg">#1A535C</color>
+    <color name="screen_time_productivity_bg">#C7EFCF</color>
+    <color name="screen_time_entertainment_bg">#F2B880</color>
+    <color name="progress_track">#EEEEEE</color>
 </resources>
