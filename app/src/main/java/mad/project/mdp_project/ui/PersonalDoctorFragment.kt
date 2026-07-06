@@ -68,24 +68,34 @@ class PersonalDoctorFragment : Fragment() {
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        binding.chipGroup.setOnCheckedStateChangeListener { _, _ ->
-            filterDoctors()
+        val filterButtons = listOf(
+            binding.btnFilterAll,
+            binding.btnFilterGeneral,
+            binding.btnFilterTherapy,
+            binding.btnFilterNutrition
+        )
+
+        filterButtons.forEach { button ->
+            button.setOnClickListener {
+                // Handle single selection manually
+                filterButtons.forEach { it.isChecked = (it == button) }
+                filterDoctors()
+            }
         }
     }
 
     private fun filterDoctors() {
         val query = binding.etSearch.text.toString().lowercase()
-        val checkedId = binding.chipGroup.checkedChipId
-
+        
         val filteredList = allDoctors.filter { doctor ->
             val matchesQuery = doctor.name.lowercase().contains(query) ||
                     doctor.specialty.lowercase().contains(query)
 
-            val matchesCategory = when (checkedId) {
-                R.id.chipGeneral -> doctor.specialty == "General Practice"
-                R.id.chipTherapy -> doctor.specialty == "Therapy"
-                R.id.chipNutrition -> doctor.specialty == "Nutrition"
-                else -> true // chipAll or nothing selected
+            val matchesCategory = when {
+                binding.btnFilterGeneral.isChecked -> doctor.specialty == "General Practice"
+                binding.btnFilterTherapy.isChecked -> doctor.specialty == "Therapy"
+                binding.btnFilterNutrition.isChecked -> doctor.specialty == "Nutrition"
+                else -> true // All selected
             }
 
             matchesQuery && matchesCategory

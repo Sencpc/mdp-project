@@ -53,81 +53,126 @@
     <!-- Search Bar -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/searchLayout"
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
         android:layout_marginTop="8dp"
+        android:background="@drawable/bg_search_bar"
         app:hintEnabled="false"
         app:layout_constraintTop_toBottomOf="@id/headerLayout"
         app:startIconDrawable="@android:drawable/ic_menu_search"
-        app:startIconTint="@color/text_secondary"
+        app:startIconTint="#495057"
+        app:endIconMode="custom"
+        app:endIconDrawable="@drawable/ic_tune"
+        app:endIconTint="#495057"
         app:boxStrokeWidth="0dp"
-        app:boxStrokeWidthFocused="0dp"
-        app:startIconContentDescription="Search">
+        app:boxStrokeWidthFocused="0dp">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etSearch"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_edit_text"
+            android:background="@android:color/transparent"
             android:hint="@string/search_hint"
-            android:paddingVertical="12dp" />
+            android:paddingVertical="12dp"
+            android:textColor="#495057"
+            android:textColorHint="#ADB5BD" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Categories -->
-    <HorizontalScrollView
-        android:id="@+id/categoriesScroll"
+    <!-- Filter Buttons Container -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/filterContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:clipToPadding="false"
         android:paddingHorizontal="16dp"
-        android:scrollbars="none"
         app:layout_constraintTop_toBottomOf="@id/searchLayout">
 
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/chipGroup"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnFilterAll"
+            style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:selectionRequired="true"
-            app:singleLine="true"
-            app:singleSelection="true">
+            android:checkable="true"
+            android:checked="true"
+            android:text="@string/cat_all"
+            android:textColor="@color/chip_text_color"
+            android:textStyle="bold"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:minHeight="40dp"
+            app:backgroundTint="@color/chip_background_color"
+            app:cornerRadius="24dp"
+            app:strokeColor="@color/chip_stroke_color"
+            app:strokeWidth="1dp" />
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipAll"
-                style="@style/Widget.Material3.Chip.Filter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:text="@string/cat_all"
-                app:chipBackgroundColor="@color/brand_light"
-                app:chipStrokeColor="@color/brand_primary" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnFilterGeneral"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checkable="true"
+            android:text="@string/cat_general"
+            android:textColor="@color/chip_text_color"
+            android:textStyle="bold"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:minHeight="40dp"
+            app:backgroundTint="@color/chip_background_color"
+            app:cornerRadius="24dp"
+            app:strokeColor="@color/chip_stroke_color"
+            app:strokeWidth="1dp" />
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipGeneral"
-                style="@style/Widget.Material3.Chip.Filter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/cat_general" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnFilterTherapy"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checkable="true"
+            android:text="@string/cat_therapy"
+            android:textColor="@color/chip_text_color"
+            android:textStyle="bold"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:minHeight="40dp"
+            app:backgroundTint="@color/chip_background_color"
+            app:cornerRadius="24dp"
+            app:strokeColor="@color/chip_stroke_color"
+            app:strokeWidth="1dp" />
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipTherapy"
-                style="@style/Widget.Material3.Chip.Filter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/cat_therapy" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnFilterNutrition"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checkable="true"
+            android:text="@string/cat_nutrition"
+            android:textColor="@color/chip_text_color"
+            android:textStyle="bold"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:minHeight="40dp"
+            app:backgroundTint="@color/chip_background_color"
+            app:cornerRadius="24dp"
+            app:strokeColor="@color/chip_stroke_color"
+            app:strokeWidth="1dp" />
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipNutrition"
-                style="@style/Widget.Material3.Chip.Filter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/cat_nutrition" />
+        <androidx.constraintlayout.helper.widget.Flow
+            android:id="@+id/filterFlow"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:constraint_referenced_ids="btnFilterAll,btnFilterGeneral,btnFilterTherapy,btnFilterNutrition"
+            app:flow_horizontalGap="8dp"
+            app:flow_horizontalStyle="packed"
+            app:flow_verticalGap="8dp"
+            app:flow_wrapMode="aligned"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:flow_horizontalBias="0"/>
 
-        </com.google.android.material.chip.ChipGroup>
-    </HorizontalScrollView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- Doctor List -->
     <androidx.recyclerview.widget.RecyclerView
@@ -139,7 +184,7 @@
         android:paddingHorizontal="16dp"
         android:paddingBottom="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/categoriesScroll"
+        app:layout_constraintTop_toBottomOf="@id/filterContainer"
         tools:listitem="@layout/item_doctor" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
