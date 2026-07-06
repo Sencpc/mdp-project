@@ -1,5 +1,15 @@
 <resources>
     <string name="app_name">mdp-project</string>
+    <string name="doctor_consult">Doctor Consult</string>
+    <string name="search_hint">Search doctor, specialty&#8230;</string>
+    <string name="cat_all">All</string>
+    <string name="cat_general">General Practice</string>
+    <string name="cat_therapy">Therapy</string>
+    <string name="cat_nutrition">Nutrition</string>
+    <string name="consult_now">Consult Now</string>
+    <string name="next_available">Next Available</string>
+    <string name="reviews_format">%1$.1f (%2$d reviews)</string>
+    <string name="highly_recommended">Highly Recommended</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
