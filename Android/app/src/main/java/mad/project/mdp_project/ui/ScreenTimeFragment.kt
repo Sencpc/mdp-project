@@ -1,21 +1,36 @@
 package mad.project.mdp_project.ui
 
+import android.app.AppOpsManager
+import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.os.Process
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import mad.project.mdp_project.databinding.FragmentScreenTimeBinding
 import mad.project.mdp_project.model.ScreenTimeViewModel
+import mad.project.mdp_project.service.ScreenTimeService
 
 class ScreenTimeFragment : Fragment() {
     private var _binding: FragmentScreenTimeBinding? = null
     private val binding get() = _binding!!
     private val viewModel: ScreenTimeViewModel by viewModels()
+
+    companion object {
+        private const val REFRESH_INTERVAL_MS = 10_000L // 10 seconds
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -30,13 +45,27 @@ class ScreenTimeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupUI()
         observeViewModel()
+        startAutoRefresh()
     }
 
-    override fun onResume() {
-        super.onResume()
-        // Refresh data setiap kali fragment tampil
-        viewModel.loadTodayUsage()
-        viewModel.loadWeeklyAverage()
+    /**
+     * Auto-refreshes screen time data every 10 seconds while the fragment
+     * is in the RESUMED state. Automatically pauses when navigating away
+     * and resumes when coming back.
+     */
+    private fun startAutoRefresh() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                while (true) {
+                    if (hasUsageStatsPermission()) {
+                        viewModel.loadTodayUsage()
+                        viewModel.loadWeeklyAverage()
+                        ensureServiceRunning()
+                    }
+                    delay(REFRESH_INTERVAL_MS)
+                }
+            }
+        }
     }
 
     private fun setupUI() {
@@ -49,7 +78,7 @@ class ScreenTimeFragment : Fragment() {
     private fun observeViewModel() {
         viewModel.totalScreenTime.observe(viewLifecycleOwner) { time ->
             // Update the time display in layoutTime
-            // The layout has hardcoded TextViews inside layoutTime, 
+            // The layout has hardcoded TextViews inside layoutTime,
             // we update them via the parent LinearLayout
             updateTimeDisplay(binding.layoutTime, time)
         }
@@ -57,6 +86,36 @@ class ScreenTimeFragment : Fragment() {
         viewModel.dailyAverage.observe(viewLifecycleOwner) { avg ->
             // Could update a subtitle text if available
             binding.tvSubtitle.text = "Daily average: $avg"
+        }
+
+        // Category time observers
+        viewModel.socialMediaTime.observe(viewLifecycleOwner) { time ->
+            binding.tvSocialTime.text = time
+        }
+
+        viewModel.productivityTime.observe(viewLifecycleOwner) { time ->
+            binding.tvProdTime.text = time
+        }
+
+        viewModel.entertainmentTime.observe(viewLifecycleOwner) { time ->
+            binding.tvEntTime.text = time
+        }
+
+        // Progress bar observers
+        viewModel.totalProgress.observe(viewLifecycleOwner) { progress ->
+            binding.progressTotal.progress = progress
+        }
+
+        viewModel.socialProgress.observe(viewLifecycleOwner) { progress ->
+            binding.progressSocial.progress = progress
+        }
+
+        viewModel.productivityProgress.observe(viewLifecycleOwner) { progress ->
+            binding.progressProd.progress = progress
+        }
+
+        viewModel.entertainmentProgress.observe(viewLifecycleOwner) { progress ->
+            binding.progressEnt.progress = progress
         }
     }
 
@@ -71,6 +130,32 @@ class ScreenTimeFragment : Fragment() {
             (layout.getChildAt(0) as? TextView)?.text = hours
             (layout.getChildAt(2) as? TextView)?.text = minutes
         }
+    }
+
+    private fun hasUsageStatsPermission(): Boolean {
+        val context = requireContext()
+        val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+        val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            appOps.unsafeCheckOpNoThrow(
+                AppOpsManager.OPSTR_GET_USAGE_STATS,
+                Process.myUid(),
+                context.packageName
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            appOps.checkOpNoThrow(
+                AppOpsManager.OPSTR_GET_USAGE_STATS,
+                Process.myUid(),
+                context.packageName
+            )
+        }
+        return mode == AppOpsManager.MODE_ALLOWED
+    }
+
+    private fun ensureServiceRunning() {
+        val context = requireContext()
+        val serviceIntent = Intent(context, ScreenTimeService::class.java)
+        ContextCompat.startForegroundService(context, serviceIntent)
     }
 
     override fun onDestroyView() {
