@@ -10,8 +10,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Database(
-    entities = [User::class, Habit::class, SleepLog::class, ScreenTimeLog::class],
-    version = 6,
+    entities = [User::class, Habit::class, SleepLog::class, ScreenTimeLog::class, ChatMessage::class],
+    version = 7,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -20,6 +20,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun habitDao(): HabitDao
     abstract fun sleepLogDao(): SleepLogDao
     abstract fun screenTimeLogDao(): ScreenTimeLogDao
+    abstract fun chatMessageDao(): ChatMessageDao
 
     companion object {
         @Volatile

@@ -138,6 +138,9 @@ class DashboardFragment : Fragment() {
         binding.btnConsult.setOnClickListener {
             findNavController().navigate(R.id.action_nav_dashboard_to_nav_personal_doctor)
         }
+        binding.btnChatbot.setOnClickListener {
+            findNavController().navigate(R.id.action_nav_dashboard_to_nav_chatbot)
+        }
     }
 
     override fun onDestroyView() {
