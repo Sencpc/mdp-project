@@ -27,6 +27,7 @@ class ScreenTimeFragment : Fragment() {
     private var _binding: FragmentScreenTimeBinding? = null
     private val binding get() = _binding!!
     private val viewModel: ScreenTimeViewModel by viewModels()
+    private lateinit var appUsageAdapter: AppUsageAdapter
 
     companion object {
         private const val REFRESH_INTERVAL_MS = 10_000L // 10 seconds
@@ -44,8 +45,17 @@ class ScreenTimeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupUI()
+        setupRecyclerView()
         observeViewModel()
         startAutoRefresh()
+    }
+
+    private fun setupRecyclerView() {
+        appUsageAdapter = AppUsageAdapter(requireContext().packageManager)
+        binding.rvAppUsage.apply {
+            layoutManager = androidx.recyclerview.widget.LinearLayoutManager(requireContext())
+            adapter = appUsageAdapter
+        }
     }
 
     /**
@@ -88,34 +98,19 @@ class ScreenTimeFragment : Fragment() {
             binding.tvSubtitle.text = "Daily average: $avg"
         }
 
-        // Category time observers
-        viewModel.socialMediaTime.observe(viewLifecycleOwner) { time ->
-            binding.tvSocialTime.text = time
-        }
-
-        viewModel.productivityTime.observe(viewLifecycleOwner) { time ->
-            binding.tvProdTime.text = time
-        }
-
-        viewModel.entertainmentTime.observe(viewLifecycleOwner) { time ->
-            binding.tvEntTime.text = time
-        }
-
         // Progress bar observers
         viewModel.totalProgress.observe(viewLifecycleOwner) { progress ->
             binding.progressTotal.progress = progress
         }
 
-        viewModel.socialProgress.observe(viewLifecycleOwner) { progress ->
-            binding.progressSocial.progress = progress
+        // App usage list observer
+        viewModel.appUsageList.observe(viewLifecycleOwner) { list ->
+            appUsageAdapter.submitList(list, viewModel.totalMs.value ?: 0L)
         }
 
-        viewModel.productivityProgress.observe(viewLifecycleOwner) { progress ->
-            binding.progressProd.progress = progress
-        }
-
-        viewModel.entertainmentProgress.observe(viewLifecycleOwner) { progress ->
-            binding.progressEnt.progress = progress
+        // When totalMs changes, we might want to update the adapter so progress bars recalculate
+        viewModel.totalMs.observe(viewLifecycleOwner) { totalMs ->
+            appUsageAdapter.submitList(viewModel.appUsageList.value ?: emptyList(), totalMs)
         }
     }
 

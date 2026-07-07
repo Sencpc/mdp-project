@@ -203,250 +203,27 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Categories -->
+        <!-- App Usage List -->
         <TextView
             android:id="@+id/tvCategoriesTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginTop="32dp"
-            android:text="Categories"
+            android:text="App Usage"
             android:textColor="#212121"
             android:textSize="20sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/cardMain" />
 
-        <!-- Category Item 1 -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardSocial"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvAppUsage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginTop="16dp"
-            app:cardBackgroundColor="@color/white"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="0dp"
-            app:layout_constraintTop_toBottomOf="@id/tvCategoriesTitle"
-            app:strokeColor="#E0E0E0"
-            app:strokeWidth="1dp">
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="12dp">
-
-                <View
-                    android:id="@+id/viewSocialIconBg"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="@drawable/bg_circle_green"
-                    android:backgroundTint="#1A535C"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_social_media"
-                    app:layout_constraintBottom_toBottomOf="@id/viewSocialIconBg"
-                    app:layout_constraintEnd_toEndOf="@id/viewSocialIconBg"
-                    app:layout_constraintStart_toStartOf="@id/viewSocialIconBg"
-                    app:layout_constraintTop_toTopOf="@id/viewSocialIconBg"
-                    app:tint="@color/white" />
-
-                <TextView
-                    android:id="@+id/tvSocialTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:text="Social Media"
-                    android:textColor="#212121"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    app:layout_constraintStart_toEndOf="@id/viewSocialIconBg"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <TextView
-                    android:id="@+id/tvSocialTime"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="1h 30m"
-                    android:textColor="#616161"
-                    android:textSize="12sp"
-                    app:layout_constraintStart_toStartOf="@id/tvSocialTitle"
-                    app:layout_constraintTop_toBottomOf="@id/tvSocialTitle" />
-
-                <com.google.android.material.progressindicator.LinearProgressIndicator
-                    android:id="@+id/progressSocial"
-                    android:layout_width="80dp"
-                    android:layout_height="wrap_content"
-                    android:progress="60"
-                    app:indicatorColor="#003538"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:trackColor="#EEEEEE"
-                    app:trackCornerRadius="4dp"
-                    app:trackThickness="6dp" />
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Category Item 2 -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardProductivity"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginTop="12dp"
-            app:cardBackgroundColor="@color/white"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="0dp"
-            app:layout_constraintTop_toBottomOf="@id/cardSocial"
-            app:strokeColor="#E0E0E0"
-            app:strokeWidth="1dp">
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="12dp">
-
-                <View
-                    android:id="@+id/viewProdIconBg"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="@drawable/bg_circle_green"
-                    android:backgroundTint="#C7EFCF"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_productivity"
-                    app:layout_constraintBottom_toBottomOf="@id/viewProdIconBg"
-                    app:layout_constraintEnd_toEndOf="@id/viewProdIconBg"
-                    app:layout_constraintStart_toStartOf="@id/viewProdIconBg"
-                    app:layout_constraintTop_toTopOf="@id/viewProdIconBg"
-                    app:tint="#004B4F" />
-
-                <TextView
-                    android:id="@+id/tvProdTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:text="Productivity"
-                    android:textColor="#212121"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    app:layout_constraintStart_toEndOf="@id/viewProdIconBg"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <TextView
-                    android:id="@+id/tvProdTime"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="1h 10m"
-                    android:textColor="#616161"
-                    android:textSize="12sp"
-                    app:layout_constraintStart_toStartOf="@id/tvProdTitle"
-                    app:layout_constraintTop_toBottomOf="@id/tvProdTitle" />
-
-                <com.google.android.material.progressindicator.LinearProgressIndicator
-                    android:id="@+id/progressProd"
-                    android:layout_width="80dp"
-                    android:layout_height="wrap_content"
-                    android:progress="45"
-                    app:indicatorColor="#435D48"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:trackColor="#EEEEEE"
-                    app:trackCornerRadius="4dp"
-                    app:trackThickness="6dp" />
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Category Item 3 -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardEntertainment"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginTop="12dp"
-            app:cardBackgroundColor="@color/white"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="0dp"
-            app:layout_constraintTop_toBottomOf="@id/cardProductivity"
-            app:strokeColor="#E0E0E0"
-            app:strokeWidth="1dp">
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="12dp">
-
-                <View
-                    android:id="@+id/viewEntIconBg"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="@drawable/bg_circle_green"
-                    android:backgroundTint="#F2B880"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_entertainment"
-                    app:layout_constraintBottom_toBottomOf="@id/viewEntIconBg"
-                    app:layout_constraintEnd_toEndOf="@id/viewEntIconBg"
-                    app:layout_constraintStart_toStartOf="@id/viewEntIconBg"
-                    app:layout_constraintTop_toTopOf="@id/viewEntIconBg"
-                    app:tint="#795548" />
-
-                <TextView
-                    android:id="@+id/tvEntTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:text="Entertainment"
-                    android:textColor="#212121"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    app:layout_constraintStart_toEndOf="@id/viewEntIconBg"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <TextView
-                    android:id="@+id/tvEntTime"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="40m"
-                    android:textColor="#616161"
-                    android:textSize="12sp"
-                    app:layout_constraintStart_toStartOf="@id/tvEntTitle"
-                    app:layout_constraintTop_toBottomOf="@id/tvEntTitle" />
-
-                <com.google.android.material.progressindicator.LinearProgressIndicator
-                    android:id="@+id/progressEnt"
-                    android:layout_width="80dp"
-                    android:layout_height="wrap_content"
-                    android:progress="25"
-                    app:indicatorColor="#795548"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:trackColor="#EEEEEE"
-                    app:trackCornerRadius="4dp"
-                    app:trackThickness="6dp" />
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-        </com.google.android.material.card.MaterialCardView>
+            android:layout_marginTop="8dp"
+            android:nestedScrollingEnabled="false"
+            app:layout_constraintTop_toBottomOf="@id/tvCategoriesTitle" />
 
         <!-- Nudges -->
         <TextView
@@ -460,7 +237,7 @@
             android:textSize="20sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/cardEntertainment" />
+            app:layout_constraintTop_toBottomOf="@id/rvAppUsage" />
 
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"

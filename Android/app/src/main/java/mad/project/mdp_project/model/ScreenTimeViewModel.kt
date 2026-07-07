@@ -67,6 +67,7 @@ class ScreenTimeViewModel(application: Application) : AndroidViewModel(applicati
 
     // Raw ms values for progress calculation
     private val _totalMs = MutableLiveData(0L)
+    val totalMs: LiveData<Long> = _totalMs
 
     companion object {
         private const val DAILY_GOAL_MS = 4 * 60 * 60 * 1000L // 4 hours
