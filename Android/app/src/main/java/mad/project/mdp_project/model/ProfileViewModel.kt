@@ -12,16 +12,20 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import mad.project.mdp_project.data.User
 import mad.project.mdp_project.data.UserDao
+import mad.project.mdp_project.data.remote.ApiService
+import mad.project.mdp_project.data.repository.UserRepository
 import java.util.Calendar
 
-class ProfileViewModel(private val userDao: UserDao, private val userId: Int) : ViewModel() {
+class ProfileViewModel(private val userDao: UserDao, private val userId: Int, private val apiService: ApiService) : ViewModel() {
 
     companion object {
         private const val TAG = "ProfileViewModel"
     }
 
+    private val userRepository = UserRepository(userDao, apiService)
+
     // Data dari database (Source of truth)
-    val user: StateFlow<User?> = userDao.getUserById(userId)
+    val user: StateFlow<User?> = userRepository.getUserById(userId)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
@@ -39,7 +43,7 @@ class ProfileViewModel(private val userDao: UserDao, private val userId: Int) : 
         Log.d(TAG, "ViewModel created for userId=$userId")
         viewModelScope.launch {
             // Query langsung ke database, tidak melalui StateFlow
-            val dbUser = userDao.getUserByIdOnce(userId)
+            val dbUser = userRepository.getUserByIdOnce(userId)
             if (dbUser != null) {
                 Log.d(TAG, "DB user loaded: id=${dbUser.id}, fullName=${dbUser.fullName}")
                 _draftUser.value = dbUser
@@ -65,14 +69,14 @@ class ProfileViewModel(private val userDao: UserDao, private val userId: Int) : 
     }
 
     /**
-     * Menyimpan seluruh perubahan dari draft ke database Room.
+     * Menyimpan seluruh perubahan dari draft ke database Room + sync ke server.
      * @param onComplete callback yang dipanggil setelah penyimpanan berhasil.
      */
     fun saveChanges(onComplete: (() -> Unit)? = null) {
         viewModelScope.launch {
             _draftUser.value?.let {
-                userDao.updateUser(it)
-                Log.d(TAG, "Changes saved to DB for userId=${it.id}")
+                userRepository.updateUser(it)
+                Log.d(TAG, "Changes saved via repository for userId=${it.id}")
             }
             onComplete?.invoke()
         }
@@ -97,11 +101,11 @@ class ProfileViewModel(private val userDao: UserDao, private val userId: Int) : 
         return age
     }
 
-    class Factory(private val userDao: UserDao, private val userId: Int) : ViewModelProvider.Factory {
+    class Factory(private val userDao: UserDao, private val userId: Int, private val apiService: ApiService) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(ProfileViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
-                return ProfileViewModel(userDao, userId) as T
+                return ProfileViewModel(userDao, userId, apiService) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

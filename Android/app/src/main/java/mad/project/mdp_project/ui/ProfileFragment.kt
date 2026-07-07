@@ -43,6 +43,7 @@ import coil.compose.AsyncImage
 import mad.project.mdp_project.R
 import mad.project.mdp_project.data.AppDatabase
 import mad.project.mdp_project.data.SessionManager
+import mad.project.mdp_project.data.remote.RetrofitClient
 import mad.project.mdp_project.model.ProfileViewModel
 import java.io.File
 import java.text.SimpleDateFormat
@@ -62,7 +63,7 @@ class ProfileFragment : Fragment() {
                 val userId = sessionManager.getUserId()
                 val db = remember { AppDatabase.getDatabase(context) }
                 val viewModel: ProfileViewModel = viewModel(
-                    factory = ProfileViewModel.Factory(db.userDao(), userId)
+                    factory = ProfileViewModel.Factory(db.userDao(), userId, RetrofitClient.apiService)
                 )
 
                 ProfileScreen(

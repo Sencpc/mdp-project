@@ -5,18 +5,18 @@ import android.os.Bundle
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
-import mad.project.mdp_project.data.AppDatabase
 import mad.project.mdp_project.data.SessionManager
 import mad.project.mdp_project.databinding.ActivityLoginBinding
+import mad.project.mdp_project.model.LoginViewModel
 
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
     private var isPasswordVisible = false
     private lateinit var sessionManager: SessionManager
+    private val viewModel: LoginViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,40 +32,41 @@ class LoginActivity : AppCompatActivity() {
         }
 
         setupUI()
+        observeViewModel()
     }
 
     private fun setupUI() {
         setupPasswordVisibilityToggle()
 
-        val db = AppDatabase.getDatabase(this)
-        val userDao = db.userDao()
-
         binding.btnLogin.setOnClickListener {
             val username = binding.etUsername.text.toString().trim()
             val password = binding.etPassword.text.toString().trim()
-
-            if (username.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Harap isi semua field", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            lifecycleScope.launch {
-                val user = userDao.getUserByUsername(username)
-                if (user != null && user.password == password) {
-                    sessionManager.saveSession(user.id, user.username)
-                    Toast.makeText(this@LoginActivity, "Login Berhasil!", Toast.LENGTH_SHORT).show()
-                    val intent = Intent(this@LoginActivity, MainActivity::class.java)
-                    startActivity(intent)
-                    finish()
-                } else {
-                    Toast.makeText(this@LoginActivity, "Username atau Password salah", Toast.LENGTH_SHORT).show()
-                }
-            }
+            viewModel.login(username, password)
         }
 
         binding.tvSignUp.setOnClickListener {
             val intent = Intent(this, RegisterActivity::class.java)
             startActivity(intent)
+        }
+    }
+
+    private fun observeViewModel() {
+        viewModel.loginResult.observe(this) { result ->
+            result.onSuccess { user ->
+                sessionManager.saveSession(user.id, user.username)
+                Toast.makeText(this, "Login Berhasil!", Toast.LENGTH_SHORT).show()
+                val intent = Intent(this, MainActivity::class.java)
+                startActivity(intent)
+                finish()
+            }
+            result.onFailure { error ->
+                Toast.makeText(this, error.message ?: "Login gagal", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        viewModel.isLoading.observe(this) { isLoading ->
+            binding.btnLogin.isEnabled = !isLoading
+            binding.btnLogin.alpha = if (isLoading) 0.5f else 1.0f
         }
     }
 

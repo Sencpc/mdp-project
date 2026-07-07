@@ -1,24 +1,22 @@
 package mad.project.mdp_project
 
-import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
-import mad.project.mdp_project.data.AppDatabase
-import mad.project.mdp_project.data.User
 import mad.project.mdp_project.databinding.ActivityRegisterBinding
+import mad.project.mdp_project.model.RegisterViewModel
 
 class RegisterActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityRegisterBinding
     private var isPasswordVisible = false
+    private val viewModel: RegisterViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,6 +24,7 @@ class RegisterActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setupUI()
+        observeViewModel()
     }
 
     private fun setupUI() {
@@ -39,39 +38,28 @@ class RegisterActivity : AppCompatActivity() {
         setupPasswordStrengthChecker()
         setupTermsCheckbox()
 
-        val db = AppDatabase.getDatabase(this)
-        val userDao = db.userDao()
-
         binding.btnCreateAccount.setOnClickListener {
             val fullName = binding.etFullName.text.toString().trim()
             val username = binding.etUsername.text.toString().trim()
             val password = binding.etPassword.text.toString().trim()
+            viewModel.register(fullName, username, password)
+        }
+    }
 
-            if (fullName.isEmpty() || username.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Harap isi semua field", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
+    private fun observeViewModel() {
+        viewModel.registerResult.observe(this) { result ->
+            result.onSuccess {
+                Toast.makeText(this, "Registrasi Berhasil!", Toast.LENGTH_SHORT).show()
+                finish()
             }
+            result.onFailure { error ->
+                Toast.makeText(this, error.message ?: "Registrasi gagal", Toast.LENGTH_SHORT).show()
+            }
+        }
 
-            if (password.length < 8) {
-                Toast.makeText(this, "Password minimal 8 karakter", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            lifecycleScope.launch {
-                val existingUser = userDao.getUserByUsername(username)
-                if (existingUser != null) {
-                    Toast.makeText(this@RegisterActivity, "Username sudah digunakan", Toast.LENGTH_SHORT).show()
-                } else {
-                    val newUser = User(
-                        username = username,
-                        password = password,
-                        fullName = fullName
-                    )
-                    userDao.insertUser(newUser)
-                    Toast.makeText(this@RegisterActivity, "Registrasi Berhasil!", Toast.LENGTH_SHORT).show()
-                    finish()
-                }
-            }
+        viewModel.isLoading.observe(this) { isLoading ->
+            binding.btnCreateAccount.isEnabled = !isLoading && binding.cbTerms.isChecked
+            binding.btnCreateAccount.alpha = if (isLoading) 0.5f else if (binding.cbTerms.isChecked) 1.0f else 0.5f
         }
     }
 

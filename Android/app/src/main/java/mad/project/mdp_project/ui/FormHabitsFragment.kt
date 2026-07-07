@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import mad.project.mdp_project.R
 import mad.project.mdp_project.databinding.FragmentFormHabitsBinding
 import mad.project.mdp_project.model.HabitViewModel
@@ -18,6 +19,7 @@ class FormHabitsFragment : Fragment() {
     private var _binding: FragmentFormHabitsBinding? = null
     private val binding get() = _binding!!
     private val viewModel: HabitViewModel by viewModels()
+    private val args: FormHabitsFragmentArgs by navArgs()
     private var selectedCategory: String = "Mental"
 
     override fun onCreateView(
@@ -33,6 +35,37 @@ class FormHabitsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupUI()
         setupCategorySelection()
+        loadArgsData()
+    }
+
+    /**
+     * Load data dari NavArgs — jika habitId != -1, ini adalah mode edit.
+     */
+    private fun loadArgsData() {
+        val habitId = args.habitId
+        val habitName = args.habitName
+        val habitCategory = args.habitCategory
+        val habitSubtitle = args.habitSubtitle
+
+        if (habitId != -1) {
+            // Edit mode
+            binding.etHabitName.setText(habitName)
+            binding.etDescription.setText(habitSubtitle)
+            selectedCategory = habitCategory
+            binding.tvSaveHabit.setText("Update Habit")
+
+            // Highlight the correct category chip
+            val categories = mapOf(
+                binding.tvCatNutrition to "Nutrition",
+                binding.tvCatMental to "Mental",
+                binding.tvCatFitness to "Fitness",
+                binding.tvCatFocus to "Focus",
+                binding.tvCatSleep to "Sleep"
+            )
+            categories.entries.find { it.value == habitCategory }?.let { entry ->
+                updateCategoryUI(categories.keys, entry.key)
+            }
+        }
     }
 
     private fun setupUI() {

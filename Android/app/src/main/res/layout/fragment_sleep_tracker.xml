@@ -39,150 +39,127 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="Good morning, Alex"
-            android:textColor="#757575"
-            android:textSize="14sp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Your sleep looks steady\nthis week."
-            android:textColor="#212121"
-            android:textSize="22sp"
-            android:textStyle="bold" />
-
-        <!-- Weekly Avg Card -->
-        <com.google.android.material.card.MaterialCardView
+        <!-- Stats Row -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:strokeColor="#EEEEEE"
-            app:strokeWidth="1dp">
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal">
 
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
+            <!-- Avg Sleep Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:padding="20dp">
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#EEEEEE"
+                app:strokeWidth="1dp">
 
-                <ImageView
-                    android:id="@+id/iv_moon"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_nav_sleep"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:tint="#004B4F" />
-
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/bg_badge"
-                    android:paddingHorizontal="10dp"
-                    android:paddingVertical="4dp"
-                    android:text="Weekly Avg"
-                    android:textColor="#757575"
-                    android:textSize="10sp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    android:orientation="vertical"
+                    android:padding="12dp">
 
-                <TextView
-                    android:id="@+id/tv_avg_time"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="7h 15m"
-                    android:textColor="#212121"
-                    android:textSize="24sp"
-                    android:textStyle="bold"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/iv_moon" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Avg Sleep"
+                        android:textColor="#757575"
+                        android:textSize="11sp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="Right on target"
-                    android:textColor="#757575"
-                    android:textSize="12sp"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tv_avg_time" />
+                    <TextView
+                        android:id="@+id/tv_avg_sleep"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="--"
+                        android:textColor="#212121"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
-            </androidx.constraintlayout.widget.ConstraintLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Bedtime Card -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:strokeColor="#EEEEEE"
-            app:strokeWidth="1dp">
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
+            <!-- Avg Quality Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:padding="20dp">
+                android:layout_weight="1"
+                android:layout_marginHorizontal="6dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#EEEEEE"
+                app:strokeWidth="1dp">
 
-                <ImageView
-                    android:id="@+id/iv_clock"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_dash_timer"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:tint="#004B4F" />
-
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/bg_badge"
-                    android:paddingHorizontal="10dp"
-                    android:paddingVertical="4dp"
-                    android:text="Bedtime"
-                    android:textColor="#757575"
-                    android:textSize="10sp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    android:orientation="vertical"
+                    android:padding="12dp">
 
-                <TextView
-                    android:id="@+id/tv_bedtime"
-                    android:layout_width="wrap_content"
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Quality"
+                        android:textColor="#757575"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/tv_avg_quality"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="--"
+                        android:textColor="#212121"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Streak Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#EEEEEE"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="11:30 PM"
-                    android:textColor="#212121"
-                    android:textSize="24sp"
-                    android:textStyle="bold"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/iv_clock" />
+                    android:orientation="vertical"
+                    android:padding="12dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="Average start time"
-                    android:textColor="#757575"
-                    android:textSize="12sp"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tv_bedtime" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Streak"
+                        android:textColor="#757575"
+                        android:textSize="11sp" />
 
-            </androidx.constraintlayout.widget.ConstraintLayout>
-        </com.google.android.material.card.MaterialCardView>
+                    <TextView
+                        android:id="@+id/tv_sleep_streak"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="--"
+                        android:textColor="#212121"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
 
         <!-- Log Sleep Card -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="20dp"
             app:cardBackgroundColor="#E2F0E2"
             app:cardCornerRadius="20dp"
             app:cardElevation="0dp">
@@ -209,6 +186,7 @@
                     android:textColor="#555555"
                     android:textSize="12sp" />
 
+                <!-- Bedtime Picker -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -218,43 +196,153 @@
                     android:textSize="12sp"
                     android:textStyle="bold" />
 
-                <EditText
+                <LinearLayout
+                    android:id="@+id/btn_select_bedtime"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:background="@drawable/bg_white_rounded"
-                    android:hint="11:30 PM"
+                    android:gravity="center_vertical"
                     android:padding="12dp"
-                    android:inputType="time"
-                    android:autofillHints="none"
-                    android:textSize="14sp" />
+                    android:clickable="true"
+                    android:focusable="true">
 
+                    <TextView
+                        android:id="@+id/tv_bedtime"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Select"
+                        android:textColor="#757575"
+                        android:textSize="14sp" />
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_dash_timer"
+                        app:tint="#004B4F" />
+                </LinearLayout>
+
+                <!-- Wake Time Picker -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="Wake up"
+                    android:text="Woke up"
                     android:textColor="#212121"
                     android:textSize="12sp"
                     android:textStyle="bold" />
 
-                <EditText
+                <LinearLayout
+                    android:id="@+id/btn_select_wake_time"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:background="@drawable/bg_white_rounded"
-                    android:hint="07:00 AM"
+                    android:gravity="center_vertical"
                     android:padding="12dp"
-                    android:inputType="time"
-                    android:autofillHints="none"
-                    android:textSize="14sp" />
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:id="@+id/tv_wake_time"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Select"
+                        android:textColor="#757575"
+                        android:textSize="14sp" />
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_dash_timer"
+                        app:tint="#004B4F" />
+                </LinearLayout>
+
+                <!-- Quality Rating -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Sleep Quality"
+                    android:textColor="#212121"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
                 <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/btn_quality_1"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_marginHorizontal="8dp"
+                        android:src="@drawable/ic_nav_sleep"
+                        android:alpha="0.4"
+                        android:padding="6dp"
+                        android:background="@drawable/bg_white_rounded"
+                        app:tint="#004B4F" />
+
+                    <ImageView
+                        android:id="@+id/btn_quality_2"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_marginHorizontal="8dp"
+                        android:src="@drawable/ic_nav_sleep"
+                        android:alpha="0.4"
+                        android:padding="6dp"
+                        android:background="@drawable/bg_white_rounded"
+                        app:tint="#004B4F" />
+
+                    <ImageView
+                        android:id="@+id/btn_quality_3"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_marginHorizontal="8dp"
+                        android:src="@drawable/ic_nav_sleep"
+                        android:alpha="1.0"
+                        android:padding="6dp"
+                        android:background="@drawable/bg_white_rounded"
+                        app:tint="#004B4F" />
+
+                    <ImageView
+                        android:id="@+id/btn_quality_4"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_marginHorizontal="8dp"
+                        android:src="@drawable/ic_nav_sleep"
+                        android:alpha="0.4"
+                        android:padding="6dp"
+                        android:background="@drawable/bg_white_rounded"
+                        app:tint="#004B4F" />
+
+                    <ImageView
+                        android:id="@+id/btn_quality_5"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_marginHorizontal="8dp"
+                        android:src="@drawable/ic_nav_sleep"
+                        android:alpha="0.4"
+                        android:padding="6dp"
+                        android:background="@drawable/bg_white_rounded"
+                        app:tint="#004B4F" />
+                </LinearLayout>
+
+                <!-- Save Button -->
+                <LinearLayout
+                    android:id="@+id/btn_log_sleep"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
                     android:layout_marginTop="20dp"
                     android:background="@drawable/bg_save_button"
-                    android:gravity="center">
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:focusable="true">
 
                     <ImageView
                         android:layout_width="16dp"
@@ -274,80 +362,23 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Last 7 Days Card -->
-        <com.google.android.material.card.MaterialCardView
+        <!-- Sleep History -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Sleep History"
+            android:textColor="#212121"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_sleep_logs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="8dp"
             android:layout_marginBottom="24dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:strokeColor="#EEEEEE"
-            app:strokeWidth="1dp">
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="20dp">
-
-                <TextView
-                    android:id="@+id/tv_last_title"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Last 7 Days"
-                    android:textColor="#212121"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Details >"
-                    android:textColor="#757575"
-                    android:textSize="12sp"
-                    app:layout_constraintBottom_toBottomOf="@id/tv_last_title"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="@id/tv_last_title" />
-
-                <!-- Dummy Chart Placeholder -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="100dp"
-                    android:layout_marginTop="24dp"
-                    android:gravity="bottom"
-                    android:orientation="horizontal"
-                    app:layout_constraintTop_toBottomOf="@id/tv_last_title">
-
-                    <View android:layout_width="0dp" android:layout_height="40dp" android:layout_weight="1" android:layout_marginHorizontal="4dp" android:background="#EEEEEE" />
-                    <View android:layout_width="0dp" android:layout_height="60dp" android:layout_weight="1" android:layout_marginHorizontal="4dp" android:background="#EEEEEE" />
-                    <View android:layout_width="0dp" android:layout_height="80dp" android:layout_weight="1" android:layout_marginHorizontal="4dp" android:background="#EEEEEE" />
-                    <View android:layout_width="0dp" android:layout_height="50dp" android:layout_weight="1" android:layout_marginHorizontal="4dp" android:background="#EEEEEE" />
-                    <View android:layout_width="0dp" android:layout_height="90dp" android:layout_weight="1" android:layout_marginHorizontal="4dp" android:background="#004B4F" />
-                    <View android:layout_width="0dp" android:layout_height="45dp" android:layout_weight="1" android:layout_marginHorizontal="4dp" android:background="#EEEEEE" />
-                    <View android:layout_width="0dp" android:layout_height="30dp" android:layout_weight="1" android:layout_marginHorizontal="4dp" android:background="#EEEEEE" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:orientation="horizontal"
-                    app:layout_constraintTop_toBottomOf="@id/tv_last_title"
-                    android:paddingTop="108dp">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Mon" android:textSize="10sp" android:gravity="center" />
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Tue" android:textSize="10sp" android:gravity="center" />
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Wed" android:textSize="10sp" android:gravity="center" />
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Thu" android:textSize="10sp" android:gravity="center" />
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Fri" android:textSize="10sp" android:gravity="center" android:textStyle="bold" android:textColor="#004B4F" />
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Sat" android:textSize="10sp" android:gravity="center" />
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Sun" android:textSize="10sp" android:gravity="center" />
-                </LinearLayout>
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-        </com.google.android.material.card.MaterialCardView>
+            android:nestedScrollingEnabled="false" />
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

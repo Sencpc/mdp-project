@@ -6,7 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.flow.collectLatest
@@ -41,7 +43,14 @@ class HabitsFragment : Fragment() {
     private fun setupRecyclerView() {
         habitAdapter = HabitAdapter(
             onHabitClick = { habit ->
-                // Edit logic if needed
+                // Navigasi ke FormHabits dengan NavArgs untuk edit mode
+                val action = HabitsFragmentDirections.actionNavHabitsToNavFormHabits(
+                    habitId = habit.id,
+                    habitName = habit.name,
+                    habitCategory = habit.category,
+                    habitSubtitle = habit.subtitle
+                )
+                findNavController().navigate(action)
             },
             onAddClick = {
                 findNavController().navigate(R.id.action_nav_habits_to_nav_form_habits)
@@ -59,9 +68,11 @@ class HabitsFragment : Fragment() {
 
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.habits.collectLatest { habits ->
-                habitAdapter.submitList(habits)
-                updateProgress(habits)
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.habits.collectLatest { habits ->
+                    habitAdapter.submitList(habits)
+                    updateProgress(habits)
+                }
             }
         }
     }

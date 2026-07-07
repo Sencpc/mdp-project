@@ -8,12 +8,25 @@ import kotlinx.coroutines.launch
 import mad.project.mdp_project.data.AppDatabase
 import mad.project.mdp_project.data.Habit
 import mad.project.mdp_project.data.SessionManager
+import mad.project.mdp_project.data.remote.RetrofitClient
+import mad.project.mdp_project.data.repository.HabitRepository
 
 class HabitViewModel(application: Application) : AndroidViewModel(application) {
-    private val habitDao = AppDatabase.getDatabase(application).habitDao()
     private val sessionManager = SessionManager(application)
-    
-    val habits: Flow<List<Habit>> = habitDao.getHabitsForUser(sessionManager.getUserId())
+    private val habitRepository: HabitRepository
+
+    val habits: Flow<List<Habit>>
+
+    init {
+        val db = AppDatabase.getDatabase(application)
+        habitRepository = HabitRepository(db.habitDao(), RetrofitClient.apiService)
+        habits = habitRepository.getHabitsForUser(sessionManager.getUserId())
+
+        // Sync dari server
+        viewModelScope.launch {
+            habitRepository.syncFromServer(sessionManager.getUserId())
+        }
+    }
 
     fun addHabit(name: String, subtitle: String, category: String) {
         val userId = sessionManager.getUserId()
@@ -27,14 +40,20 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
                     startTime = System.currentTimeMillis(),
                     endTime = System.currentTimeMillis() + 3600000 // Default 1 hour
                 )
-                habitDao.insertHabit(newHabit)
+                habitRepository.addHabit(newHabit)
             }
         }
     }
 
     fun toggleHabitCompletion(habit: Habit, isCompleted: Boolean) {
         viewModelScope.launch {
-            habitDao.updateHabitCompletion(habit.id, isCompleted)
+            habitRepository.toggleHabitCompletion(habit.id, isCompleted)
+        }
+    }
+
+    fun deleteHabit(habit: Habit) {
+        viewModelScope.launch {
+            habitRepository.deleteHabit(habit)
         }
     }
 }

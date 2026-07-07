@@ -11,31 +11,60 @@ const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASS, {
   logging: false,
 });
 
-// 1. Model: User
+// 1. Model: User (disesuaikan dengan Android Room entity)
 class User extends Model {}
 User.init(
   {
     id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
       primaryKey: true,
     },
-    name: {
+    username: {
       type: DataTypes.STRING(100),
-      allowNull: false,
-    },
-    email: {
-      type: DataTypes.STRING(150),
       allowNull: false,
       unique: true,
     },
-    daily_calorie_target: {
-      type: DataTypes.INTEGER,
-      defaultValue: 2000,
+    password: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
     },
-    daily_sleep_target: {
-      type: DataTypes.INTEGER,
-      defaultValue: 8,
+    fullName: {
+      type: DataTypes.STRING(150),
+      allowNull: false,
+      defaultValue: "",
+    },
+    height: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+    },
+    weight: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+    },
+    birthDate: {
+      type: DataTypes.BIGINT, // Store as timestamp (ms) like Android
+      allowNull: true,
+    },
+    bloodType: {
+      type: DataTypes.STRING(10),
+      allowNull: true,
+    },
+    conditions: {
+      type: DataTypes.TEXT, // Comma-separated string
+      defaultValue: "",
+    },
+    emergencyContactName: {
+      type: DataTypes.STRING(150),
+      allowNull: true,
+    },
+    emergencyContactPhone: {
+      type: DataTypes.STRING(30),
+      allowNull: true,
+    },
+    profilePicturePath: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
     },
   },
   {
@@ -43,109 +72,116 @@ User.init(
     tableName: "users",
     timestamps: true,
     createdAt: "created_at",
-    updatedAt: false,
-  },
+    updatedAt: "updated_at",
+  }
 );
 
-// 2. Model: Habit
+// 2. Model: Habit (disesuaikan dengan Android Room entity)
 class Habit extends Model {}
 Habit.init(
   {
     id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
       primaryKey: true,
     },
-    title: {
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    name: {
       type: DataTypes.STRING(150),
       allowNull: false,
     },
-    description: {
-      type: DataTypes.TEXT,
-    },
-    frequency: {
+    category: {
       type: DataTypes.STRING(50),
-      defaultValue: "DAILY",
+      defaultValue: "Focus",
     },
-    is_active: {
+    subtitle: {
+      type: DataTypes.TEXT,
+      defaultValue: "",
+    },
+    isCompleted: {
       type: DataTypes.BOOLEAN,
-      defaultValue: true,
+      defaultValue: false,
+    },
+    streak: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    startTime: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+    endTime: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+    createdAt: {
+      type: DataTypes.BIGINT,
+      defaultValue: () => Date.now(),
+    },
+    deletedAt: {
+      type: DataTypes.BIGINT,
+      allowNull: true,
     },
   },
   {
     sequelize,
     tableName: "habits",
-    timestamps: true,
-    createdAt: false,
-    updatedAt: "last_synced",
-  },
-);
-
-// 3. Model: HabitLog
-class HabitLog extends Model {}
-HabitLog.init(
-  {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-    },
-    completed_date: {
-      type: DataTypes.DATEONLY,
-      allowNull: false,
-    },
-    status: {
-      type: DataTypes.STRING(20),
-      defaultValue: "COMPLETED",
-    },
-  },
-  {
-    sequelize,
-    tableName: "habit_logs",
     timestamps: false,
-  },
+  }
 );
 
-// 4. Model: SleepLog
+// 3. Model: SleepLog (disesuaikan dengan Android Room entity)
 class SleepLog extends Model {}
 SleepLog.init(
   {
     id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
       primaryKey: true,
     },
-    sleep_start: {
-      type: DataTypes.DATE,
+    userId: {
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
-    sleep_end: {
-      type: DataTypes.DATE,
+    startTime: {
+      type: DataTypes.BIGINT,
       allowNull: false,
     },
-    quality_rating: {
+    endTime: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+    quality: {
       type: DataTypes.INTEGER,
       validate: { min: 1, max: 5 },
     },
-    notes: {
-      type: DataTypes.TEXT,
+    date: {
+      type: DataTypes.BIGINT,
+      defaultValue: () => Date.now(),
     },
   },
   {
     sequelize,
     tableName: "sleep_logs",
     timestamps: false,
-  },
+  }
 );
 
-// 5. Model: NutritionLog
+// 4. Model: NutritionLog (tetap ada untuk API)
 class NutritionLog extends Model {}
 NutritionLog.init(
   {
     id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
       primaryKey: true,
+    },
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
     food_name: {
       type: DataTypes.STRING(150),
@@ -159,15 +195,15 @@ NutritionLog.init(
       type: DataTypes.STRING(255),
     },
     consumed_at: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
+      type: DataTypes.BIGINT,
+      defaultValue: () => Date.now(),
     },
   },
   {
     sequelize,
     tableName: "nutrition_logs",
     timestamps: false,
-  },
+  }
 );
 
 // ==========================================
@@ -175,26 +211,21 @@ NutritionLog.init(
 // ==========================================
 
 // Relasi User ke Habits (1 to Many)
-User.hasMany(Habit, { foreignKey: "user_id", onDelete: "CASCADE" });
-Habit.belongsTo(User, { foreignKey: "user_id" });
+User.hasMany(Habit, { foreignKey: "userId", onDelete: "CASCADE" });
+Habit.belongsTo(User, { foreignKey: "userId" });
 
 // Relasi User ke SleepLogs (1 to Many)
-User.hasMany(SleepLog, { foreignKey: "user_id", onDelete: "CASCADE" });
-SleepLog.belongsTo(User, { foreignKey: "user_id" });
+User.hasMany(SleepLog, { foreignKey: "userId", onDelete: "CASCADE" });
+SleepLog.belongsTo(User, { foreignKey: "userId" });
 
 // Relasi User ke NutritionLogs (1 to Many)
-User.hasMany(NutritionLog, { foreignKey: "user_id", onDelete: "CASCADE" });
-NutritionLog.belongsTo(User, { foreignKey: "user_id" });
-
-// Relasi Habit ke HabitLogs (1 to Many)
-Habit.hasMany(HabitLog, { foreignKey: "habit_id", onDelete: "CASCADE" });
-HabitLog.belongsTo(Habit, { foreignKey: "habit_id" });
+User.hasMany(NutritionLog, { foreignKey: "userId", onDelete: "CASCADE" });
+NutritionLog.belongsTo(User, { foreignKey: "userId" });
 
 module.exports = {
   sequelize,
   User,
   Habit,
-  HabitLog,
   SleepLog,
   NutritionLog,
 };
