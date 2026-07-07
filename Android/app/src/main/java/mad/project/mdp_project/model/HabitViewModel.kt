@@ -28,7 +28,16 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun addHabit(name: String, subtitle: String, category: String) {
+    private fun getTenPMEndTime(): Long {
+        val calendar = java.util.Calendar.getInstance()
+        calendar.set(java.util.Calendar.HOUR_OF_DAY, 22)
+        calendar.set(java.util.Calendar.MINUTE, 0)
+        calendar.set(java.util.Calendar.SECOND, 0)
+        calendar.set(java.util.Calendar.MILLISECOND, 0)
+        return calendar.timeInMillis
+    }
+
+    fun addHabit(name: String, subtitle: String, category: String, reminderTime: Long? = null) {
         val userId = sessionManager.getUserId()
         if (userId != -1) {
             viewModelScope.launch {
@@ -38,9 +47,27 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
                     subtitle = subtitle,
                     category = category,
                     startTime = System.currentTimeMillis(),
-                    endTime = System.currentTimeMillis() + 3600000 // Default 1 hour
+                    endTime = getTenPMEndTime(),
+                    reminderTime = reminderTime
                 )
                 habitRepository.addHabit(newHabit)
+            }
+        }
+    }
+
+    fun updateHabit(id: Int, name: String, subtitle: String, category: String, reminderTime: Long? = null) {
+        viewModelScope.launch {
+            val existingHabit = habitRepository.getHabitById(id)
+            if (existingHabit != null) {
+                val updatedHabit = existingHabit.copy(
+                    name = name,
+                    subtitle = subtitle,
+                    category = category,
+                    startTime = System.currentTimeMillis(),
+                    endTime = getTenPMEndTime(),
+                    reminderTime = reminderTime
+                )
+                habitRepository.updateHabit(updatedHabit)
             }
         }
     }

@@ -22,17 +22,25 @@ class HabitRepository(
         return habitDao.getHabitsForUser(userId)
     }
 
+    suspend fun getHabitById(habitId: Int): Habit? {
+        return habitDao.getHabitById(habitId)
+    }
+
+    fun getHabitsWithReminder(userId: Int): Flow<List<Habit>> {
+        return habitDao.getHabitsWithReminder(userId)
+    }
+
     /**
      * Add habit: simpan ke Room, lalu sync ke server.
      */
     suspend fun addHabit(habit: Habit): Result<Habit> {
         return try {
             // 1. Simpan ke Room
-            habitDao.insertHabit(habit)
+            val localId = habitDao.insertHabit(habit).toInt()
 
             // 2. Sync ke server
             try {
-                apiService.createHabit(HabitRequest(
+                val response = apiService.createHabit(HabitRequest(
                     userId = habit.userId,
                     name = habit.name,
                     category = habit.category,
@@ -40,6 +48,17 @@ class HabitRepository(
                     startTime = habit.startTime,
                     endTime = habit.endTime
                 ))
+                
+                if (response.isSuccessful && response.body() != null) {
+                    val serverHabit = response.body()!!
+                    if (localId != serverHabit.id) {
+                        // Replace the temporary local ID with the server's ID
+                        val habitWithServerId = habit.copy(id = serverHabit.id)
+                        habitDao.insertHabit(habitWithServerId)
+                        habitDao.deleteHabit(habit.copy(id = localId))
+                        Log.d(TAG, "Replaced local habit ID $localId with server ID ${serverHabit.id}")
+                    }
+                }
                 Log.d(TAG, "Habit synced ke server")
             } catch (e: Exception) {
                 Log.w(TAG, "Gagal sync habit ke server: ${e.message}")

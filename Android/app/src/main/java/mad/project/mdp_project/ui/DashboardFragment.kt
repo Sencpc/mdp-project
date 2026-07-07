@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -71,7 +72,62 @@ class DashboardFragment : Fragment() {
                         // Update UI jika ada view untuk summary habits di dashboard
                     }
                 }
+
+                // Observe Reminders
+                launch {
+                    viewModel.habitsWithReminder.collectLatest { reminders ->
+                        updateRemindersUI(reminders)
+                    }
+                }
             }
+        }
+    }
+
+    private fun updateRemindersUI(reminders: List<mad.project.mdp_project.data.Habit>) {
+        val container = binding.llRemindersContainer
+        // Keep the "no reminders" text view, remove others
+        for (i in container.childCount - 1 downTo 0) {
+            val view = container.getChildAt(i)
+            if (view.id != R.id.tv_no_reminders) {
+                container.removeViewAt(i)
+            }
+        }
+        
+        if (reminders.isEmpty()) {
+            binding.tvNoReminders.visibility = View.VISIBLE
+            return
+        }
+        
+        binding.tvNoReminders.visibility = View.GONE
+        
+        val timeFormat = java.text.SimpleDateFormat("h:mm a", java.util.Locale.getDefault())
+        
+        // Take at most 3 upcoming reminders
+        reminders.take(3).forEach { habit ->
+            val reminderView = layoutInflater.inflate(R.layout.item_dashboard_reminder, container, false)
+            
+            val tvName = reminderView.findViewById<TextView>(R.id.tv_reminder_name)
+            val tvTime = reminderView.findViewById<TextView>(R.id.tv_reminder_time)
+            val indicator = reminderView.findViewById<View>(R.id.view_indicator)
+            
+            tvName.text = habit.name
+            
+            habit.reminderTime?.let { time ->
+                val calendar = java.util.Calendar.getInstance().apply { timeInMillis = time }
+                tvTime.text = timeFormat.format(calendar.time)
+            }
+            
+            // Set indicator color based on category
+            val colorRes = when (habit.category.lowercase()) {
+                "nutrition" -> R.drawable.bg_circle_green
+                "mental" -> R.drawable.bg_circle_blue
+                "fitness" -> R.drawable.bg_circle_green // Reuse existing colors
+                "sleep" -> R.drawable.bg_circle_green
+                else -> R.drawable.bg_circle_blue
+            }
+            indicator.setBackgroundResource(colorRes)
+            
+            container.addView(reminderView)
         }
     }
 

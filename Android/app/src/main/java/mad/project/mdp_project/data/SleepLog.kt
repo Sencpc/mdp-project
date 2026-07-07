@@ -17,7 +17,7 @@ data class SleepLog(
     fun getDurationMillis(): Long = endTime - startTime
 
     fun getTotalSleepHours(): Double {
-        return getDurationMillis().toDouble() / (1000 * 60 * 60 * 6)
+        return getDurationMillis().toDouble() / (1000 * 60 * 60.0)
     }
 
     fun getFormattedDuration(): String {

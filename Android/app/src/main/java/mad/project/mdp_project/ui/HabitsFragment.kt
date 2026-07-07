@@ -48,7 +48,8 @@ class HabitsFragment : Fragment() {
                     habitId = habit.id,
                     habitName = habit.name,
                     habitCategory = habit.category,
-                    habitSubtitle = habit.subtitle
+                    habitSubtitle = habit.subtitle,
+                    reminderTime = habit.reminderTime ?: -1L
                 )
                 findNavController().navigate(action)
             },

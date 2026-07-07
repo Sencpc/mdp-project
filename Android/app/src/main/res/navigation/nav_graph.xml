@@ -65,6 +65,10 @@
             android:name="habitSubtitle"
             app:argType="string"
             android:defaultValue="" />
+        <argument
+            android:name="reminderTime"
+            app:argType="long"
+            android:defaultValue="-1L" />
     </fragment>
 
     <fragment

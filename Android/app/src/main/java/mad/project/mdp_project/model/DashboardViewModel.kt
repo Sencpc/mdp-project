@@ -35,6 +35,9 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     val habits: StateFlow<List<Habit>> = habitRepository.getHabitsForUser(userId)
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
+    val habitsWithReminder: StateFlow<List<Habit>> = habitRepository.getHabitsWithReminder(userId)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
     val sleepLogs: StateFlow<List<SleepLog>> = sleepRepository.getSleepLogsForUser(userId)
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
