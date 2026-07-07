@@ -79,6 +79,9 @@ class DashboardFragment : Fragment() {
         binding.profileCircle.setOnClickListener {
             findNavController().navigate(R.id.action_nav_dashboard_to_nav_profile)
         }
+        binding.btnConsult.setOnClickListener {
+            findNavController().navigate(R.id.action_nav_dashboard_to_nav_personal_doctor)
+        }
     }
 
     override fun onDestroyView() {
