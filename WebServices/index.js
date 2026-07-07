@@ -5,7 +5,7 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-const port = 3000;
+const PORT = process.env.PORT || 3000;
 
 // ==========================================
 // 1. ROUTES UNTUK AUTH (REGISTER & LOGIN)
@@ -15,7 +15,9 @@ app.post("/api/users/register", async (req, res) => {
     const { username, password, fullName } = req.body;
 
     if (!username || !password) {
-      return res.status(400).json({ error: "Username dan password wajib diisi" });
+      return res
+        .status(400)
+        .json({ error: "Username dan password wajib diisi" });
     }
 
     // Cek apakah username sudah ada
@@ -45,7 +47,9 @@ app.post("/api/users/login", async (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
-      return res.status(400).json({ error: "Username dan password wajib diisi" });
+      return res
+        .status(400)
+        .json({ error: "Username dan password wajib diisi" });
     }
 
     const user = await User.findOne({ where: { username } });
@@ -88,15 +92,27 @@ app.put("/api/users/:id", async (req, res) => {
     if (!user) return res.status(404).json({ error: "User not found" });
 
     const {
-      fullName, height, weight, birthDate, bloodType,
-      conditions, emergencyContactName, emergencyContactPhone,
-      profilePicturePath
+      fullName,
+      height,
+      weight,
+      birthDate,
+      bloodType,
+      conditions,
+      emergencyContactName,
+      emergencyContactPhone,
+      profilePicturePath,
     } = req.body;
 
     await user.update({
-      fullName, height, weight, birthDate, bloodType,
-      conditions, emergencyContactName, emergencyContactPhone,
-      profilePicturePath
+      fullName,
+      height,
+      weight,
+      birthDate,
+      bloodType,
+      conditions,
+      emergencyContactName,
+      emergencyContactPhone,
+      profilePicturePath,
     });
 
     return res.status(200).json(user);
@@ -143,8 +159,24 @@ app.put("/api/habits/:id", async (req, res) => {
     const habit = await Habit.findByPk(req.params.id);
     if (!habit) return res.status(404).json({ error: "Habit not found" });
 
-    const { name, category, subtitle, isCompleted, streak, startTime, endTime } = req.body;
-    await habit.update({ name, category, subtitle, isCompleted, streak, startTime, endTime });
+    const {
+      name,
+      category,
+      subtitle,
+      isCompleted,
+      streak,
+      startTime,
+      endTime,
+    } = req.body;
+    await habit.update({
+      name,
+      category,
+      subtitle,
+      isCompleted,
+      streak,
+      startTime,
+      endTime,
+    });
     return res.status(200).json(habit);
   } catch (err) {
     return res.status(500).json({ error: err.message });
@@ -229,11 +261,14 @@ app.get("/api/nutrition/user/:userId", async (req, res) => {
 // ==========================================
 // START SERVER
 // ==========================================
-sequelize.sync({ alter: true }).then(() => {
-  console.log("Database siap (synced with alter).");
-  app.listen(port, function () {
-    console.log(`Server berjalan di port ${port}...`);
+sequelize
+  .sync({ alter: true })
+  .then(() => {
+    console.log("Database siap (synced with alter).");
+    app.listen(PORT, function () {
+      console.log(`Server berjalan di port ${PORT}...`);
+    });
+  })
+  .catch((err) => {
+    console.error("Gagal menyambungkan ke database:", err.message);
   });
-}).catch((err) => {
-  console.error("Gagal menyambungkan ke database:", err.message);
-});

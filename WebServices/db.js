@@ -223,16 +223,6 @@ SleepLog.belongsTo(User, { foreignKey: "userId" });
 User.hasMany(NutritionLog, { foreignKey: "userId", onDelete: "CASCADE" });
 NutritionLog.belongsTo(User, { foreignKey: "userId" });
 
-// Synchronize the models with the database
-sequelize
-  .sync({ alter: true })
-  .then(() => {
-    console.log("Database & tables synced successfully!");
-  })
-  .catch((error) => {
-    console.error("Error syncing database:", error);
-  });
-
 module.exports = {
   sequelize,
   User,
