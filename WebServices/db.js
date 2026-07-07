@@ -1,9 +1,10 @@
 const { Sequelize, Model, DataTypes } = require("sequelize");
+require("dotenv").config();
 
-const DB_NAME = "mdp-project";
-const DB_USER = "root";
-const DB_PASS = "";
-const DB_HOST = "localhost";
+const DB_NAME = process.env.DB_NAME;
+const DB_USER = process.env.DB_USER;
+const DB_PASS = process.env.DB_PASS;
+const DB_HOST = process.env.DB_HOST;
 
 const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASS, {
   host: DB_HOST,
@@ -73,7 +74,7 @@ User.init(
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
-  }
+  },
 );
 
 // 2. Model: Habit (disesuaikan dengan Android Room entity)
@@ -130,7 +131,7 @@ Habit.init(
     sequelize,
     tableName: "habits",
     timestamps: false,
-  }
+  },
 );
 
 // 3. Model: SleepLog (disesuaikan dengan Android Room entity)
@@ -167,7 +168,7 @@ SleepLog.init(
     sequelize,
     tableName: "sleep_logs",
     timestamps: false,
-  }
+  },
 );
 
 // 4. Model: NutritionLog (tetap ada untuk API)
@@ -203,7 +204,7 @@ NutritionLog.init(
     sequelize,
     tableName: "nutrition_logs",
     timestamps: false,
-  }
+  },
 );
 
 // ==========================================
@@ -221,6 +222,16 @@ SleepLog.belongsTo(User, { foreignKey: "userId" });
 // Relasi User ke NutritionLogs (1 to Many)
 User.hasMany(NutritionLog, { foreignKey: "userId", onDelete: "CASCADE" });
 NutritionLog.belongsTo(User, { foreignKey: "userId" });
+
+// Synchronize the models with the database
+sequelize
+  .sync({ alter: true })
+  .then(() => {
+    console.log("Database & tables synced successfully!");
+  })
+  .catch((error) => {
+    console.error("Error syncing database:", error);
+  });
 
 module.exports = {
   sequelize,
