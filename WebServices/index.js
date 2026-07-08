@@ -24,6 +24,7 @@ const PORT = process.env.PORT || 3000;
 require("dotenv").config();
 const { GoogleGenAI } = require("@google/genai");
 const multer = require("multer");
+const { marked } = require("marked");
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
@@ -376,7 +377,6 @@ app.post("/api/chat", async (req, res) => {
     2. Use very polite, empathetic, and simple English. Avoid complex medical jargon.
     3. You are not a doctor. Advise them to consult a real doctor if they mention severe symptoms.
     4. Use the provided context to personalize your advice.
-    5. Formatting: Do NOT use Markdown (like **bold**). Instead, strictly use basic HTML tags like <b>bold</b>, <i>italic</i>, and <br> for newlines.
     
     DAILY METRICS CONTEXT:
     - Calories consumed today: ${caloriesToday} kcal
@@ -397,7 +397,8 @@ app.post("/api/chat", async (req, res) => {
       model: GEMINI_MODEL,
       contents: systemPrompt,
     });
-    const aiReply = result.text;
+    const aiReplyMarkdown = result.text;
+    const aiReply = marked.parse(aiReplyMarkdown).trim();
     console.log(
       `[Chat API] Gemini API responded (Elapsed: ${Date.now() - startTime}ms)`,
     );
