@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">mdp-project</string>
+    <string name="app_name">Mindful Life</string>
     <string name="doctor_consult">Doctor Consult</string>
     <string name="search_hint">Search by name or specialty&#8230;</string>
     <string name="cat_all">All</string>
