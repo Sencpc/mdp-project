@@ -433,6 +433,28 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
+app.delete("/api/chat/user/:userId/history", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    await ChatLog.destroy({ where: { userId } });
+    return res.status(200).json({ message: "Chat history cleared successfully." });
+  } catch (err) {
+    console.error("Clear History Error:", err);
+    return res.status(500).json({ error: "Failed to clear chat history." });
+  }
+});
+
+app.delete("/api/chat/user/:userId/memory", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    await User.update({ chatSummary: "" }, { where: { id: userId } });
+    return res.status(200).json({ message: "AI memory context reset successfully." });
+  } catch (err) {
+    console.error("Reset Memory Error:", err);
+    return res.status(500).json({ error: "Failed to reset AI memory." });
+  }
+});
+
 async function updateChatSummary(userId, currentSummary, unsummarizedChats) {
   try {
     const chatTranscript = unsummarizedChats

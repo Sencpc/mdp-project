@@ -58,4 +58,10 @@ interface ApiService {
     // ========== AI CHATBOT ==========
     @POST("api/chat")
     suspend fun sendChatMessage(@Body request: ChatRequest): Response<ChatResponse>
+
+    @DELETE("api/chat/user/{userId}/history")
+    suspend fun clearChatHistory(@Path("userId") userId: Int): Response<MessageResponse>
+
+    @DELETE("api/chat/user/{userId}/memory")
+    suspend fun resetAiMemory(@Path("userId") userId: Int): Response<MessageResponse>
 }

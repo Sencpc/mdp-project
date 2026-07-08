@@ -54,4 +54,25 @@ class ChatRepository(
             )
         }
     }
+
+    suspend fun clearHistory(userId: Int) {
+        // Clear local messages first
+        chatDao.deleteMessagesForUser(userId)
+
+        // Clear backend history
+        try {
+            apiService.clearChatHistory(userId)
+        } catch (e: Exception) {
+            Log.e(TAG, "Network error during clear history: ${e.message}")
+        }
+    }
+
+    suspend fun resetMemory(userId: Int) {
+        // Clear backend memory
+        try {
+            apiService.resetAiMemory(userId)
+        } catch (e: Exception) {
+            Log.e(TAG, "Network error during reset memory: ${e.message}")
+        }
+    }
 }

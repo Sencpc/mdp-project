@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import mad.project.mdp_project.databinding.FragmentChatbotBinding
 import mad.project.mdp_project.model.ChatViewModel
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class ChatbotFragment : Fragment() {
 
@@ -52,6 +53,24 @@ class ChatbotFragment : Fragment() {
             findNavController().popBackStack()
         }
 
+        binding.btnSettings.setOnClickListener {
+            val options = arrayOf("Clear Chat History", "Reset AI Memory", "Clear Both")
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Chat Options")
+                .setItems(options) { _, which ->
+                    when (which) {
+                        0 -> viewModel.clearHistory()
+                        1 -> viewModel.resetMemory()
+                        2 -> {
+                            viewModel.clearHistory()
+                            viewModel.resetMemory()
+                        }
+                    }
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
+
         binding.btnSend.setOnClickListener {
             val message = binding.etMessage.text.toString()
             if (message.isNotBlank()) {
@@ -83,11 +102,18 @@ class ChatbotFragment : Fragment() {
                     }
                 }
 
-                // Observe loading state to disable/enable send button
+                // Observe loading state to disable/enable send button and show typing indicator
                 launch {
                     viewModel.isLoading.collectLatest { isLoading ->
                         binding.btnSend.isEnabled = !isLoading
                         binding.btnSend.alpha = if (isLoading) 0.5f else 1.0f
+                        
+                        binding.layoutTyping.visibility = if (isLoading) android.view.View.VISIBLE else android.view.View.GONE
+                        
+                        // Scroll to bottom when typing indicator appears
+                        if (isLoading && adapter.itemCount > 0) {
+                            binding.rvChat.smoothScrollToPosition(adapter.itemCount - 1)
+                        }
                     }
                 }
             }
