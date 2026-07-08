@@ -136,7 +136,8 @@ data class ErrorResponse(
 @JsonClass(generateAdapter = true)
 data class ChatRequest(
     val userId: Int,
-    val message: String
+    val message: String,
+    val timezone: String? = null
 )
 
 @JsonClass(generateAdapter = true)
