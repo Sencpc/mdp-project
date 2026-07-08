@@ -19,6 +19,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const multer = require("multer");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-1.5-flash";
 const upload = multer({ storage: multer.memoryStorage() });
 
 // ==========================================
@@ -286,7 +287,7 @@ app.post("/api/nutrition/analyze", upload.single("image"), async (req, res) => {
       },
     };
 
-    const model = genAI.getGenerativeModel({ model: "gemini-3.0-flash" });
+    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
 
     const prompt = `Analyze the food in this image. Estimate the standard portion size and total calories. 
     Return ONLY a valid JSON object in this exact format without any additional text or markdown formatting: 
@@ -378,7 +379,7 @@ app.post("/api/chat", async (req, res) => {
     USER: "${message}"`;
 
     // 5. Generate AI Response
-    const model = genAI.getGenerativeModel({ model: "gemini-3.0-flash" });
+    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
     const result = await model.generateContent(systemPrompt);
     const aiReply = result.response.text();
 
@@ -411,7 +412,7 @@ app.post("/api/chat", async (req, res) => {
 
 async function updateChatSummary(userId, currentSummary, unsummarizedChats) {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-3.0-flash" });
+    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
 
     const chatTranscript = unsummarizedChats
       .map((c) => `${c.sender}: ${c.message}`)
