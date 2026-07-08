@@ -33,11 +33,10 @@
             android:layout_height="40dp"
             android:layout_marginStart="16dp"
             android:scaleType="centerCrop"
-            android:src="@color/brand_primary"
-            app:shapeAppearanceOverlay="@style/CircleAppearance"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@id/btn_back"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_dash_chatbot" />
 
         <TextView
             android:id="@+id/tv_app_name"

@@ -65,7 +65,7 @@ class ChatbotFragment : Fragment() {
         }
 
         binding.chipScreenTime.setOnClickListener {
-            viewModel.sendQuickAction("What are some healthy eating tips?")
+            viewModel.sendQuickAction("Check my screen time!")
         }
     }
 
