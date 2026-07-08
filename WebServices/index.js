@@ -350,11 +350,17 @@ app.post("/api/chat", async (req, res) => {
         (lastSleep.endTime - lastSleep.startTime) / (1000 * 60 * 60);
       sleepDuration = `${hours.toFixed(1)} hours`;
 
-      const timeOpts = { hour: '2-digit', minute: '2-digit' };
+      const timeOpts = { hour: "2-digit", minute: "2-digit" };
       if (timezone) timeOpts.timeZone = timezone;
-      
-      const startStr = new Date(Number(lastSleep.startTime)).toLocaleTimeString("en-US", timeOpts);
-      const endStr = new Date(Number(lastSleep.endTime)).toLocaleTimeString("en-US", timeOpts);
+
+      const startStr = new Date(Number(lastSleep.startTime)).toLocaleTimeString(
+        "en-US",
+        timeOpts,
+      );
+      const endStr = new Date(Number(lastSleep.endTime)).toLocaleTimeString(
+        "en-US",
+        timeOpts,
+      );
       sleepTimeDetails = ` (Fell asleep at: ${startStr}, Woke up at: ${endStr})`;
     }
 
@@ -377,25 +383,45 @@ app.post("/api/chat", async (req, res) => {
         recentChats.map((c) => `${c.sender}: ${c.message}`).join("\n");
     }
 
+    // Prepare User Demographic Context
+    let ageStr = "Unknown";
+    if (user.birthDate) {
+      const ageDifMs = Date.now() - Number(user.birthDate);
+      const ageDate = new Date(ageDifMs);
+      ageStr = `${Math.abs(ageDate.getUTCFullYear() - 1970)} years old`;
+    }
+    const heightStr = user.height ? `${user.height} cm` : "Unknown";
+    const weightStr = user.weight ? `${user.weight} kg` : "Unknown";
+    const bloodTypeStr = user.bloodType || "Unknown";
+    const conditionsStr = user.conditions || "None";
+
     // 4. Construct the Agentic System Prompt
-    const currentTimeStr = timezone 
-      ? new Date().toLocaleString("en-US", { timeZone: timezone }) 
+    const currentTimeStr = timezone
+      ? new Date().toLocaleString("en-US", { timeZone: timezone })
       : new Date().toLocaleString("en-US");
 
     const systemPrompt = `You are a Digital Wellness Assistant. Your SOLE purpose is to help users maintain their health.
     STRICT RULES:
     1. You MUST ONLY answer questions regarding basic health, nutrition, light exercise, and sleep.
-    2. Use very polite, empathetic, and simple English. Avoid complex medical jargon.
+    2. Use a friendly, conversational, and empathetic tone in simple English. Avoid complex medical jargon.
     3. You are not a doctor. Advise them to consult a real doctor if they mention severe symptoms.
     4. You MUST format your responses using Markdown. Do NOT use any HTML tags.
-    5. Use the provided context to personalize your advice.
+    5. Be highly natural and varied in your responses. Do NOT use repetitive, templated greetings or robotic transitions (e.g., avoid saying "It's great that you asked about sleep!" every time). Act like a real, casual human friend but polite enough.
+    6. You have access to the user's physical profile below. Use it silently for medical/health reasoning. Do NOT awkwardly announce their stats to them (e.g. NEVER say "Since you are 162cm and 24 years old..."). Only mention these stats if directly asked.
     
-    DAILY METRICS CONTEXT:
+    USER PROFILE CONTEXT (if empty ignore it):
+    - Age: ${ageStr}
+    - Height: ${heightStr}
+    - Weight: ${weightStr}
+    - Blood Type: ${bloodTypeStr}
+    - Medical Conditions: ${conditionsStr}
+
+    DAILY METRICS CONTEXT (if empty ignore it):
     - User's Current Local Time: ${currentTimeStr}
     - Calories consumed today: ${caloriesToday} kcal
     - Last recorded sleep: ${sleepDuration}${sleepTimeDetails}
 
-    LONG-TERM USER SUMMARY:
+    LONG-TERM USER SUMMARY (if empty ignore it):
     ${user.chatSummary || "No previous summary."}
 
     ${recentChatContext}
@@ -450,7 +476,9 @@ app.delete("/api/chat/user/:userId/history", async (req, res) => {
   try {
     const { userId } = req.params;
     await ChatLog.destroy({ where: { userId } });
-    return res.status(200).json({ message: "Chat history cleared successfully." });
+    return res
+      .status(200)
+      .json({ message: "Chat history cleared successfully." });
   } catch (err) {
     console.error("Clear History Error:", err);
     return res.status(500).json({ error: "Failed to clear chat history." });
@@ -461,7 +489,9 @@ app.delete("/api/chat/user/:userId/memory", async (req, res) => {
   try {
     const { userId } = req.params;
     await User.update({ chatSummary: "" }, { where: { id: userId } });
-    return res.status(200).json({ message: "AI memory context reset successfully." });
+    return res
+      .status(200)
+      .json({ message: "AI memory context reset successfully." });
   } catch (err) {
     console.error("Reset Memory Error:", err);
     return res.status(500).json({ error: "Failed to reset AI memory." });
