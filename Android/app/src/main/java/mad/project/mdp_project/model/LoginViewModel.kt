@@ -36,6 +36,8 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun login(username: String, password: String) {
+        if (_isLoading.value == true) return
+
         if (username.isEmpty() || password.isEmpty()) {
             _loginResult.value = Result.failure(Exception("Harap isi semua field"))
             return

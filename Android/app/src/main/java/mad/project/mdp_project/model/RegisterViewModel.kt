@@ -36,6 +36,8 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun register(fullName: String, username: String, password: String) {
+        if (_isLoading.value == true) return
+
         if (fullName.isEmpty() || username.isEmpty() || password.isEmpty()) {
             _registerResult.value = Result.failure(Exception("Harap isi semua field"))
             return
