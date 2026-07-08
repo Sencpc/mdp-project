@@ -84,7 +84,8 @@ class SleepTrackerFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.sleepLogs.collectLatest { logs ->
-                    sleepLogAdapter.submitList(logs)
+                    val recentLogs = logs.sortedByDescending { it.date }.take(5)
+                    sleepLogAdapter.submitList(recentLogs)
                     updateStats()
                 }
             }

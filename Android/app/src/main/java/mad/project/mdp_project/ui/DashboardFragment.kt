@@ -108,6 +108,84 @@ class DashboardFragment : Fragment() {
                         updateConsultationsUI(consultations)
                     }
                 }
+
+                // Observe Sleep Logs for Dashboard
+                launch {
+                    viewModel.sleepLogs.collectLatest { logs ->
+                        if (logs.isNotEmpty()) {
+                            val weekAgo = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000L)
+                            val recentLogs = logs.filter { it.date >= weekAgo }
+                            
+                            val avgSleep = if (recentLogs.isNotEmpty()) {
+                                recentLogs.map { (it.endTime - it.startTime).toDouble() / (1000 * 60 * 60) }.average()
+                            } else 0.0
+                            
+                            // Re-calculate average quality using 6 hours standard for the dashboard
+                            val avgQuality = if (logs.isNotEmpty()) {
+                                logs.map { it.quality }.average().toFloat() * 5f
+                            } else 0f
+                            
+                            // Display average sleep per day
+                            val hours = avgSleep.toInt()
+                            val minutes = ((avgSleep - hours) * 60).toInt()
+                            binding.tvSleepValue.text = "${hours}h ${minutes}m"
+                            
+                            // Display average sleep quality
+                            binding.tvSleepStatus.text = String.format(java.util.Locale.getDefault(), "Quality: %.1f/5", avgQuality)
+                            
+                            // Draw chart for the current week (Monday to Sunday)
+                            binding.llSleepChart.removeAllViews()
+                            
+                            val todayCal = java.util.Calendar.getInstance()
+                            val todayYear = todayCal.get(java.util.Calendar.YEAR)
+                            val todayDayOfYear = todayCal.get(java.util.Calendar.DAY_OF_YEAR)
+                            
+                            val startOfWeekCal = java.util.Calendar.getInstance()
+                            var dayOfWeek = startOfWeekCal.get(java.util.Calendar.DAY_OF_WEEK)
+                            if (dayOfWeek == java.util.Calendar.SUNDAY) {
+                                dayOfWeek = 8 // Treat Sunday as the end of the week
+                            }
+                            // Subtract days to get back to Monday (day 2)
+                            startOfWeekCal.add(java.util.Calendar.DAY_OF_YEAR, -(dayOfWeek - 2))
+                            
+                            for (i in 0..6) {
+                                val dayCal = startOfWeekCal.clone() as java.util.Calendar
+                                dayCal.add(java.util.Calendar.DAY_OF_YEAR, i)
+                                val targetYear = dayCal.get(java.util.Calendar.YEAR)
+                                val targetDay = dayCal.get(java.util.Calendar.DAY_OF_YEAR)
+                                
+                                val isToday = (targetYear == todayYear && targetDay == todayDayOfYear)
+                                
+                                val logsForDay = logs.filter { log ->
+                                    val logCal = java.util.Calendar.getInstance()
+                                    logCal.timeInMillis = log.date
+                                    logCal.get(java.util.Calendar.YEAR) == targetYear &&
+                                    logCal.get(java.util.Calendar.DAY_OF_YEAR) == targetDay
+                                }
+                                
+                                val dayQuality = if (logsForDay.isNotEmpty()) logsForDay.map { it.quality }.average().toFloat() else 0.0f
+                                
+                                val bar = View(requireContext())
+                                val lp = android.widget.LinearLayout.LayoutParams(0, 0, 1f)
+                                lp.marginEnd = if (i == 6) 0 else 8
+                                
+                                val maxDp = 40
+                                val density = resources.displayMetrics.density
+                                val heightPx = (dayQuality * maxDp * density).toInt()
+                                lp.height = if (heightPx < 4) (2 * density).toInt() else heightPx
+                                
+                                bar.layoutParams = lp
+                                bar.setBackgroundColor(if (isToday) android.graphics.Color.parseColor("#004B4F") else android.graphics.Color.parseColor("#E0E0E0"))
+                                
+                                binding.llSleepChart.addView(bar)
+                            }
+                        } else {
+                            binding.tvSleepValue.text = "0h 0m"
+                            binding.tvSleepStatus.text = "Quality: 0/5"
+                            binding.llSleepChart.removeAllViews()
+                        }
+                    }
+                }
             }
         }
     }

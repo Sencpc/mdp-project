@@ -127,4 +127,13 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
             habitRepository.deleteHabit(habit)
         }
     }
+
+    fun deleteHabitById(id: Int) {
+        viewModelScope.launch {
+            val existingHabit = habitRepository.getHabitById(id)
+            if (existingHabit != null) {
+                habitRepository.deleteHabit(existingHabit)
+            }
+        }
+    }
 }

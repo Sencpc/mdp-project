@@ -43,12 +43,13 @@ class SleepViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             val durationHours = (endTime - startTime).toDouble() / (1000 * 60 * 60)
-            val avgSleep = getAverageSleepHours()
-            var calculatedQuality = if (avgSleep > 0.0) {
-                (durationHours / avgSleep).toFloat()
-            } else {
-                1.0f
+            var calculatedQuality = 1.0f
+            if (durationHours < 7.0) {
+                calculatedQuality = (durationHours / 7.0).toFloat()
+            } else if (durationHours > 9.0) {
+                calculatedQuality = (9.0 / durationHours).toFloat()
             }
+            if (calculatedQuality < 0f) calculatedQuality = 0f
             if (calculatedQuality > 1.0f) {
                 calculatedQuality = 1.0f
             }

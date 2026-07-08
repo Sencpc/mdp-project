@@ -59,6 +59,14 @@ class FormHabitsFragment : Fragment() {
             binding.etDescription.setText(habitSubtitle)
             selectedCategory = habitCategory
             binding.tvSaveHabit.setText("Update Habit")
+            
+            // Show remove button in edit mode
+            binding.btnRemoveHabit.visibility = View.VISIBLE
+            binding.btnRemoveHabit.setOnClickListener {
+                viewModel.deleteHabitById(habitId)
+                Toast.makeText(requireContext(), "Habit removed!", Toast.LENGTH_SHORT).show()
+                findNavController().navigateUp()
+            }
 
             val reminderTime = args.reminderTime
             if (reminderTime != -1L) {
