@@ -113,6 +113,13 @@ data class NutritionResponse(
     val consumed_at: Long? = null
 )
 
+// Response from /api/nutrition/analyze — AI prediction only, not saved to DB yet
+@JsonClass(generateAdapter = true)
+data class AnalyzeResponse(
+    val food_name: String,
+    val calories: Int
+)
+
 // ========== GENERIC ==========
 @JsonClass(generateAdapter = true)
 data class MessageResponse(

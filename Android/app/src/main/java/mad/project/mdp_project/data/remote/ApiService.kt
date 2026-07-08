@@ -50,11 +50,10 @@ interface ApiService {
 
     // ========== AI CALORIE SCANNER ==========
     @Multipart
-    @POST("api/nutrition/scan")
-    suspend fun scanFood(
-        @Part image: MultipartBody.Part,
-        @Part("userId") userId: RequestBody
-    ): Response<NutritionResponse>
+    @POST("api/nutrition/analyze")
+    suspend fun analyzeFood(
+        @Part image: MultipartBody.Part
+    ): Response<AnalyzeResponse>
 
     // ========== AI CHATBOT ==========
     @POST("api/chat")

@@ -181,15 +181,35 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_done"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Done"
-                android:textAllCaps="false"
-                app:backgroundTint="#004B4F"
-                app:cornerRadius="12dp" />
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_cancel_scan"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    android:text="Don't Eat"
+                    android:textAllCaps="false"
+                    android:textColor="#757575"
+                    app:cornerRadius="12dp"
+                    app:strokeColor="#DDDDDD" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_log_meal"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Log Meal"
+                    android:textAllCaps="false"
+                    app:backgroundTint="#004B4F"
+                    app:cornerRadius="12dp" />
+            </LinearLayout>
 
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

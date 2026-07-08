@@ -111,12 +111,20 @@ class ScannerFragment : Fragment() {
             captureImage()
         }
 
-        binding.btnDone.setOnClickListener {
-            findNavController().popBackStack()
+        // "Log Meal" — user confirms, save to DB
+        binding.btnLogMeal.setOnClickListener {
+            viewModel.confirmLog()
+        }
+
+        // "Don't Eat" — user cancels, discard and go back to camera
+        binding.btnCancelScan.setOnClickListener {
+            viewModel.cancelScan()
+            binding.cardResult.visibility = View.GONE
+            binding.bottomControls.visibility = View.VISIBLE
         }
 
         binding.btnRetry.setOnClickListener {
-            viewModel.clearResult()
+            viewModel.cancelScan()
             binding.cardError.visibility = View.GONE
             binding.cardResult.visibility = View.GONE
             binding.bottomControls.visibility = View.VISIBLE
@@ -175,7 +183,7 @@ class ScannerFragment : Fragment() {
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                // Observe scanning state
+                // Observe scanning state (AI analyzing)
                 launch {
                     viewModel.isScanning.collectLatest { isScanning ->
                         binding.loadingOverlay.visibility = if (isScanning) View.VISIBLE else View.GONE
@@ -183,15 +191,38 @@ class ScannerFragment : Fragment() {
                     }
                 }
 
-                // Observe scan result
+                // Observe scan preview (AI prediction awaiting user decision)
                 launch {
-                    viewModel.scanResult.collectLatest { result ->
-                        if (result != null) {
-                            binding.tvFoodName.text = result.foodName
-                            binding.tvCalories.text = "${result.calories} kcal"
+                    viewModel.scanPreview.collectLatest { preview ->
+                        if (preview != null) {
+                            binding.tvFoodName.text = preview.foodName
+                            binding.tvCalories.text = "${preview.calories} kcal"
                             binding.cardResult.visibility = View.VISIBLE
                             binding.bottomControls.visibility = View.GONE
                             binding.cardError.visibility = View.GONE
+                        }
+                    }
+                }
+
+                // Observe logging state (saving to DB after confirm)
+                launch {
+                    viewModel.isLogging.collectLatest { isLogging ->
+                        binding.btnLogMeal.isEnabled = !isLogging
+                        binding.btnCancelScan.isEnabled = !isLogging
+                        if (isLogging) {
+                            binding.btnLogMeal.text = "Saving..."
+                        } else {
+                            binding.btnLogMeal.text = "Log Meal"
+                        }
+                    }
+                }
+
+                // Observe log success — navigate back
+                launch {
+                    viewModel.logSuccess.collectLatest { success ->
+                        if (success) {
+                            Toast.makeText(requireContext(), "Meal logged successfully!", Toast.LENGTH_SHORT).show()
+                            findNavController().popBackStack()
                         }
                     }
                 }
