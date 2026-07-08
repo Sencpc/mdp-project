@@ -66,12 +66,32 @@ class DashboardFragment : Fragment() {
                     }
                 }
 
-                // Observe Habits summary
+                // Observe Habits — update progress circle, habit count, and streak
                 launch {
                     viewModel.habits.collectLatest { habits ->
                         val completed = habits.count { it.isCompleted }
                         val total = habits.size
-                        // Update UI jika ada view untuk summary habits di dashboard
+                        val progress = if (total > 0) (completed * 100 / total) else 0
+
+                        // Update progress circle
+                        binding.circularProgressBar.progress = progress
+                        binding.tvProgressPercent.text = "${progress}%"
+
+                        // Update habits completed text
+                        binding.tvHabitsCompleted.text = "$completed of $total Habits\nCompleted"
+
+                        // Update daily streak
+                        // Show max individual streak; add +1 if all habits completed today
+                        val maxStreak = habits.maxOfOrNull { it.streak } ?: 0
+                        val displayStreak = if (completed == total && total > 0) maxStreak + 1 else maxStreak
+                        binding.tvDailyStreak.text = "$displayStreak Day Streak"
+
+                        // Update status message
+                        binding.tvProgressStatus.text = when {
+                            total == 0 -> "Add some habits to get started!"
+                            completed == total -> "All habits completed! Amazing! 🎉"
+                            else -> "You're on track. Keep it up!"
+                        }
                     }
                 }
 

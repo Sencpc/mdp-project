@@ -123,7 +123,7 @@
                         android:layout_height="match_parent"
                         android:indeterminate="false"
                         android:max="100"
-                        android:progress="75"
+                        android:progress="0"
                         android:progressDrawable="@drawable/circular_progress_drawable" />
 
                     <TextView
@@ -131,7 +131,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
-                        android:text="75%"
+                        android:text="0%"
                         android:textColor="#004B4F"
                         android:textSize="20sp"
                         android:textStyle="bold" />
@@ -160,10 +160,11 @@
                             app:tint="#004B4F" />
 
                         <TextView
+                            android:id="@+id/tv_habits_completed"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="3 of 4 Habits\nCompleted"
+                            android:text="0 of 0 Habits\nCompleted"
                             android:textColor="#333333"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -182,10 +183,11 @@
                             app:tint="#004B4F" />
 
                         <TextView
+                            android:id="@+id/tv_daily_streak"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="5 Day Streak"
+                            android:text="0 Day Streak"
                             android:textColor="#333333"
                             android:textSize="12sp" />
                     </LinearLayout>

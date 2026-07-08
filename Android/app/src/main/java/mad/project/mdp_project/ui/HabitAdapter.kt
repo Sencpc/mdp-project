@@ -1,9 +1,12 @@
 package mad.project.mdp_project.ui
 
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
 import android.graphics.Paint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.OvershootInterpolator
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -84,6 +87,7 @@ class HabitAdapter(
             binding.cbCompleted.setOnCheckedChangeListener { _, isChecked ->
                 updateStrikeThrough(isChecked)
                 updateCheckboxForeground(isChecked)
+                animateCheckbox(binding.cbCompleted)
                 onCompleteClick(habit, isChecked)
             }
             
@@ -106,9 +110,37 @@ class HabitAdapter(
 
         private fun updateCheckboxForeground(isCompleted: Boolean) {
             if (isCompleted) {
-                binding.cbCompleted.foregroundTintList = binding.root.context.getColorStateList(android.R.color.white)
+                binding.cbCompleted.foregroundTintList =
+                    binding.root.context.getColorStateList(android.R.color.white)
             } else {
-                binding.cbCompleted.foregroundTintList = binding.root.context.getColorStateList(android.R.color.transparent)
+                binding.cbCompleted.foregroundTintList =
+                    binding.root.context.getColorStateList(android.R.color.transparent)
+            }
+        }
+
+        /**
+         * Subtle bounce animation on checkbox toggle.
+         * Uses OvershootInterpolator for a satisfying "pop" feel.
+         */
+        private fun animateCheckbox(view: View) {
+            val scaleDownX = ObjectAnimator.ofFloat(view, "scaleX", 1f, 0.8f)
+            val scaleDownY = ObjectAnimator.ofFloat(view, "scaleY", 1f, 0.8f)
+            val scaleUpX = ObjectAnimator.ofFloat(view, "scaleX", 0.8f, 1f)
+            val scaleUpY = ObjectAnimator.ofFloat(view, "scaleY", 0.8f, 1f)
+
+            scaleUpX.interpolator = OvershootInterpolator(2f)
+            scaleUpY.interpolator = OvershootInterpolator(2f)
+
+            AnimatorSet().apply {
+                play(scaleDownX).with(scaleDownY)
+                duration = 100
+                start()
+            }
+            AnimatorSet().apply {
+                play(scaleUpX).with(scaleUpY)
+                startDelay = 100
+                duration = 200
+                start()
             }
         }
     }
