@@ -83,8 +83,8 @@ class ChatbotFragment : Fragment() {
             viewModel.sendQuickAction("How can I improve my sleep quality?")
         }
 
-        binding.chipScreenTime.setOnClickListener {
-            viewModel.sendQuickAction("Check my screen time!")
+        binding.chipSleepTime.setOnClickListener {
+            viewModel.sendQuickAction("Check my sleep time!")
         }
     }
 

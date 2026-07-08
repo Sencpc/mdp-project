@@ -148,11 +148,11 @@
             app:strokeColor="#EEEEEE" />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/chip_screen_time"
+            android:id="@+id/chip_sleep_time"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Check my screen time"
+            android:text="Check my sleep time"
             android:textAllCaps="false"
             android:textColor="#333333"
             app:cornerRadius="24dp"
