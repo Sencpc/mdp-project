@@ -172,6 +172,11 @@ class ScreenTimeFragment : Fragment() {
         // Progress bar observers
         viewModel.totalProgress.observe(viewLifecycleOwner) { progress ->
             binding.progressTotal.progress = progress
+            if (progress >= 100) {
+                binding.progressTotal.setIndicatorColor(android.graphics.Color.RED)
+            } else {
+                binding.progressTotal.setIndicatorColor(android.graphics.Color.parseColor("#003538"))
+            }
         }
 
         // App usage list observer
