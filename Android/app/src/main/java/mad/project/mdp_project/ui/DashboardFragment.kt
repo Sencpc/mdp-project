@@ -42,6 +42,13 @@ class DashboardFragment : Fragment() {
         setupClickListeners()
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Refresh screen time data when returning to dashboard
+        // (e.g. after changing daily limit on the Screen Time page)
+        viewModel.loadScreenTimeData()
+    }
+
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -187,6 +194,17 @@ class DashboardFragment : Fragment() {
                     }
                 }
             }
+        }
+
+        // Observe Screen Time data (LiveData from DashboardViewModel)
+        viewModel.screenTimeValue.observe(viewLifecycleOwner) { value ->
+            binding.tvScreenValue.text = value
+        }
+        viewModel.screenTimeComparison.observe(viewLifecycleOwner) { comparison ->
+            binding.tvScreenComparison.text = comparison
+        }
+        viewModel.screenTimeStatus.observe(viewLifecycleOwner) { status ->
+            binding.tvScreenStatus.text = status
         }
     }
 

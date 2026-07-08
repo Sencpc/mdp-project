@@ -1,8 +1,14 @@
 package mad.project.mdp_project.model
 
 import android.app.Application
+import android.app.usage.UsageEvents
+import android.app.usage.UsageStatsManager
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -18,6 +24,10 @@ import mad.project.mdp_project.data.repository.DoctorRepository
 import mad.project.mdp_project.data.repository.HabitRepository
 import mad.project.mdp_project.data.repository.SleepRepository
 import mad.project.mdp_project.data.repository.UserRepository
+import mad.project.mdp_project.service.ScreenTimeService
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 class DashboardViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -47,11 +57,133 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     val upcomingConsultations: StateFlow<List<ConsultationEntity>> = doctorRepository.getUpcomingConsultations()
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
+    // Screen time data for dashboard
+    private val _screenTimeValue = MutableLiveData("0h 0m")
+    val screenTimeValue: LiveData<String> = _screenTimeValue
+
+    private val _screenTimeComparison = MutableLiveData("")
+    val screenTimeComparison: LiveData<String> = _screenTimeComparison
+
+    private val _screenTimeStatus = MutableLiveData("")
+    val screenTimeStatus: LiveData<String> = _screenTimeStatus
+
     init {
         // Sync data dari server saat dashboard dibuka
         viewModelScope.launch {
             habitRepository.syncFromServer(userId)
             sleepRepository.syncFromServer(userId)
+        }
+        // Load screen time data
+        loadScreenTimeData()
+    }
+
+    fun loadScreenTimeData() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val context = getApplication<Application>()
+                val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+
+                val todayTotalMs = getTodayScreenTime(usageStatsManager)
+                val weeklyAvgMs = getWeeklyAverage(context)
+
+                // Format today's screen time
+                val totalMinutes = todayTotalMs / (1000 * 60)
+                val hours = totalMinutes / 60
+                val minutes = totalMinutes % 60
+                _screenTimeValue.postValue("${hours}h ${minutes}m")
+
+                // Comparison vs average
+                if (weeklyAvgMs > 0) {
+                    val diffMs = todayTotalMs - weeklyAvgMs
+                    val diffMinutes = Math.abs(diffMs) / (1000 * 60)
+                    val diffHours = diffMinutes / 60
+                    val diffMins = diffMinutes % 60
+                    val diffStr = if (diffHours > 0) "${diffHours}h ${diffMins}m" else "${diffMins}m"
+                    val sign = if (diffMs >= 0) "+" else "-"
+                    _screenTimeComparison.postValue("${sign}${diffStr} vs avg")
+                } else {
+                    _screenTimeComparison.postValue("")
+                }
+
+                // Status vs daily limit
+                val limitMs = ScreenTimeService.getDailyLimitMs(context)
+                val limitStr = ScreenTimeService.formatLimit(context)
+                if (todayTotalMs >= limitMs) {
+                    _screenTimeStatus.postValue("You've exceeded your daily limit of $limitStr.")
+                } else {
+                    val remainingMs = limitMs - todayTotalMs
+                    val remMinutes = remainingMs / (1000 * 60)
+                    val remH = remMinutes / 60
+                    val remM = remMinutes % 60
+                    val remStr = if (remH > 0) "${remH}h ${remM}m" else "${remM}m"
+                    _screenTimeStatus.postValue("$remStr remaining until your $limitStr limit.")
+                }
+
+            } catch (e: Exception) {
+                _screenTimeValue.postValue("--")
+                _screenTimeComparison.postValue("")
+                _screenTimeStatus.postValue("Grant usage access permission")
+            }
+        }
+    }
+
+    private fun getTodayScreenTime(usageStatsManager: UsageStatsManager): Long {
+        val now = System.currentTimeMillis()
+        val calendar = Calendar.getInstance()
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val startTime = calendar.timeInMillis
+
+        val events = usageStatsManager.queryEvents(startTime, now)
+
+        val foregroundTimes = mutableMapOf<String, Long>()
+        val lastForegroundTimestamp = mutableMapOf<String, Long>()
+
+        val event = UsageEvents.Event()
+        while (events.hasNextEvent()) {
+            events.getNextEvent(event)
+            when (event.eventType) {
+                UsageEvents.Event.MOVE_TO_FOREGROUND -> {
+                    lastForegroundTimestamp[event.packageName] = event.timeStamp
+                }
+                UsageEvents.Event.MOVE_TO_BACKGROUND -> {
+                    val fgStart = lastForegroundTimestamp.remove(event.packageName)
+                    if (fgStart != null) {
+                        val duration = event.timeStamp - fgStart
+                        foregroundTimes[event.packageName] =
+                            (foregroundTimes[event.packageName] ?: 0L) + duration
+                    }
+                }
+            }
+        }
+
+        // For apps still in the foreground, count time up to now
+        for ((pkg, fgStart) in lastForegroundTimestamp) {
+            val duration = now - fgStart
+            foregroundTimes[pkg] = (foregroundTimes[pkg] ?: 0L) + duration
+        }
+
+        return foregroundTimes.values.sum()
+    }
+
+    private fun getWeeklyAverage(context: Context): Long {
+        // Try Room DB first for accurate historical data
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val calendar = Calendar.getInstance()
+        val endDate = dateFormat.format(calendar.time)
+        calendar.add(Calendar.DAY_OF_YEAR, -7)
+        val startDate = dateFormat.format(calendar.time)
+
+        val logs = kotlinx.coroutines.runBlocking {
+            db.screenTimeLogDao().getLogsForRange(userId, startDate, endDate)
+        }
+
+        return if (logs.isNotEmpty()) {
+            logs.sumOf { it.totalScreenTimeMs } / logs.size
+        } else {
+            0L
         }
     }
 
@@ -68,3 +200,4 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         return latest.getFormattedDuration()
     }
 }
+

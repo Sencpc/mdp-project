@@ -52,6 +52,13 @@ class ScreenTimeFragment : Fragment() {
         startAutoRefresh()
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Refresh the limit display and toggle state when returning
+        updateLimitDisplay()
+        binding.switchNudge1.isChecked = ScreenTimeService.isDailyLimitEnabled(requireContext())
+    }
+
     private fun setupRecyclerView() {
         appUsageAdapter = AppUsageAdapter(requireContext().packageManager)
         binding.rvAppUsage.apply {
