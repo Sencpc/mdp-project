@@ -1,7 +1,9 @@
 package mad.project.mdp_project.data.repository
 
 import android.util.Log
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 import mad.project.mdp_project.data.Habit
 import mad.project.mdp_project.data.HabitDao
 import mad.project.mdp_project.data.remote.ApiService
@@ -119,11 +121,22 @@ class HabitRepository(
      */
     suspend fun deleteHabit(habit: Habit) {
         try {
+            // 1. Delete lokal (Room)
             habitDao.deleteHabit(habit)
-            try {
-                apiService.deleteHabit(habit.id)
-            } catch (e: Exception) {
-                Log.w(TAG, "Gagal sync delete ke server: ${e.message}")
+            Log.d(TAG, "Habit deleted locally: ${habit.id}")
+
+            // 2. Sync ke server (Gunakan NonCancellable agar tidak terputus saat navigasi)
+            withContext(NonCancellable) {
+                try {
+                    val response = apiService.deleteHabit(habit.id)
+                    if (response.isSuccessful) {
+                        Log.d(TAG, "Habit deleted on server: ${habit.id}")
+                    } else {
+                        Log.e(TAG, "Gagal delete di server: Code=${response.code()}, Msg=${response.errorBody()?.string()}")
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Gagal sync delete ke server (Network error): ${e.message}")
+                }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error delete habit: ${e.message}")
@@ -139,6 +152,9 @@ class HabitRepository(
             if (response.isSuccessful && response.body() != null) {
                 val serverHabits = response.body()!!
                 serverHabits.forEach { apiHabit ->
+                    // Ambil habit lokal yang ada untuk menjaga data reminderTime
+                    val existingLocal = habitDao.getHabitById(apiHabit.id)
+                    
                     val localHabit = Habit(
                         id = apiHabit.id,
                         userId = apiHabit.userId,
@@ -150,7 +166,8 @@ class HabitRepository(
                         startTime = apiHabit.startTime,
                         endTime = apiHabit.endTime,
                         createdAt = apiHabit.createdAt ?: System.currentTimeMillis(),
-                        deletedAt = apiHabit.deletedAt
+                        deletedAt = apiHabit.deletedAt,
+                        reminderTime = existingLocal?.reminderTime // Jaga reminderTime lokal
                     )
                     habitDao.insertHabit(localHabit)
                 }

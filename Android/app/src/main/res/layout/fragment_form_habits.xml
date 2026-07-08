@@ -96,23 +96,23 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="16dp"
-                            android:text="Description"
+                            android:text="Subtitle"
                             android:textColor="#333333"
                             android:textSize="14sp"
                             android:textStyle="bold" />
 
                         <EditText
-                            android:id="@+id/etDescription"
+                            android:id="@+id/etSubtitle"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
                             android:background="@drawable/bg_edit_text"
-                            android:gravity="top"
-                            android:hint="e.g., Description..."
-                            android:minLines="3"
+                            android:hint="e.g., 8 glasses today"
                             android:padding="12dp"
                             android:text="@={vm.habitSubtitle}"
                             android:textSize="14sp" />
+
+
 
                         <TextView
                             android:layout_width="wrap_content"

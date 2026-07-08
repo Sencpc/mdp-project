@@ -84,11 +84,13 @@ class UserRepository(
                 Log.d(TAG, "Login via API berhasil: id=${localUser.id}")
                 Result.success(localUser)
             } else {
-                Log.e(TAG, "Login API gagal, coba lokal...")
+                val errorMsg = response.errorBody()?.string() ?: "Unknown error"
+                val code = response.code()
+                Log.e(TAG, "Login API gagal: Code=$code, Msg=$errorMsg, coba lokal...")
                 loginLocal(username, password)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Login API error: ${e.message}, fallback ke lokal")
+            Log.e(TAG, "Login API error (Network/Moshi): ${e.message}, fallback ke lokal")
             loginLocal(username, password)
         }
     }

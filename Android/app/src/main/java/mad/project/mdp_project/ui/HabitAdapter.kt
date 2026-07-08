@@ -58,6 +58,7 @@ class HabitAdapter(
         fun bind(habit: Habit) {
             binding.tvHabitName.text = habit.name
             binding.tvHabitSubtitle.text = habit.subtitle
+
             binding.tvCategory.text = habit.category
             
             // Set icon based on category using Material 3 style icons

@@ -29,16 +29,19 @@ class FormHabitViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     fun loadHabit(habitId: Int) {
-        if (habitId == -1) return
+        if (habitId == -1) {
+            isEditMode.value = false
+            return
+        }
         currentHabitId = habitId
         isEditMode.value = true
         viewModelScope.launch {
             val habit = repository.getHabitById(habitId)
             habit?.let {
-                habitName.postValue(it.name)
-                habitSubtitle.postValue(it.subtitle)
-                habitCategory.postValue(it.category)
-                reminderTime.postValue(it.reminderTime)
+                habitName.value = it.name
+                habitSubtitle.value = it.subtitle
+                habitCategory.value = it.category
+                reminderTime.value = it.reminderTime
             }
         }
     }

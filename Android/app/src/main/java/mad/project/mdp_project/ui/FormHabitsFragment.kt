@@ -72,6 +72,20 @@ class FormHabitsFragment : Fragment() {
     }
 
     private fun observeViewModel() {
+        viewModel.habitName.observe(viewLifecycleOwner) { name ->
+            if (binding.etHabitName.text.toString() != name) {
+                binding.etHabitName.setText(name)
+            }
+        }
+
+        viewModel.habitSubtitle.observe(viewLifecycleOwner) { subtitle ->
+            if (binding.etSubtitle.text.toString() != subtitle) {
+                binding.etSubtitle.setText(subtitle)
+            }
+        }
+
+
+
         viewModel.habitCategory.observe(viewLifecycleOwner) { category ->
             updateCategoryUI(category)
         }

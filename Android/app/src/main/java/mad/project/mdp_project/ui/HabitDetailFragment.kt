@@ -7,10 +7,16 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import mad.project.mdp_project.databinding.FragmentHabitDetailBinding
 import mad.project.mdp_project.model.HabitViewModel
 
@@ -37,28 +43,35 @@ class HabitDetailFragment : Fragment() {
     private fun setupUI() {
         binding.ivBack.setOnClickListener { findNavController().navigateUp() }
         
-        lifecycleScope.launch {
-            // Kita butuh fungsi di ViewModel atau Repository untuk ambil Habit by ID
-            // Namun karena kita punya flow 'habits' di ViewModel, kita bisa filter dari sana
-            // atau tambahkan fungsi baru. Mari kita asumsikan ada di Repository.
-            // Untuk tantangan ini, kita gunakan viewModel.habits
-            viewModel.habits.collect { habits ->
-                val habit = habits.find { it.id == args.habitId }
-                habit?.let { h ->
-                    binding.tvHabitName.text = h.name
-                    binding.tvCategory.text = h.category
-                    binding.tvDescription.text = h.subtitle
-                    binding.tvStreak.text = "Current Streak: ${h.streak} days"
-                    
-                    binding.ivEdit.setOnClickListener {
-                        val action = HabitDetailFragmentDirections.actionNavHabitDetailToNavFormHabits(h.id)
-                        findNavController().navigate(action)
-                    }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.habits.collect { habits ->
+                    _binding?.let { b ->
+                        val habit = habits.find { it.id == args.habitId }
+                        habit?.let { h ->
+                            b.tvHabitName.text = h.name
+                            b.tvSubtitle.text = h.subtitle
+                            b.tvCategory.text = h.category
 
-                    binding.btnRemove.setOnClickListener {
-                        viewModel.deleteHabit(h)
-                        Toast.makeText(requireContext(), "Habit removed", Toast.LENGTH_SHORT).show()
-                        findNavController().navigateUp()
+                            b.tvStreak.text = "Current Streak: ${h.streak} days"
+                            
+                            // Tampilkan info reminder jika ada
+                            if (h.reminderTime != null) {
+                                val sdf = SimpleDateFormat("h:mm a", Locale.getDefault())
+                                b.tvStreak.append("\nReminder: ${sdf.format(Date(h.reminderTime!!))}")
+                            }
+                            
+                            b.ivEdit.setOnClickListener {
+                                val action = HabitDetailFragmentDirections.actionNavHabitDetailToNavFormHabits(h.id)
+                                findNavController().navigate(action)
+                            }
+
+                            b.btnRemove.setOnClickListener {
+                                viewModel.deleteHabit(h)
+                                Toast.makeText(requireContext(), "Habit removed", Toast.LENGTH_SHORT).show()
+                                findNavController().navigateUp()
+                            }
+                        }
                     }
                 }
             }
