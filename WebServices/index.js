@@ -321,7 +321,7 @@ app.post("/api/nutrition/analyze", upload.single("image"), async (req, res) => {
 // ==========================================
 app.post("/api/chat", async (req, res) => {
   try {
-    const { userId, message } = req.body;
+    const { userId, message, timezone } = req.body;
     console.log(`[Chat API] Start handling chat request for User ${userId}`);
     const startTime = Date.now();
 
@@ -344,10 +344,18 @@ app.post("/api/chat", async (req, res) => {
     });
 
     let sleepDuration = "No data yet";
+    let sleepTimeDetails = "";
     if (lastSleep && lastSleep.startTime && lastSleep.endTime) {
       const hours =
         (lastSleep.endTime - lastSleep.startTime) / (1000 * 60 * 60);
       sleepDuration = `${hours.toFixed(1)} hours`;
+
+      const timeOpts = { hour: '2-digit', minute: '2-digit' };
+      if (timezone) timeOpts.timeZone = timezone;
+      
+      const startStr = new Date(Number(lastSleep.startTime)).toLocaleTimeString("en-US", timeOpts);
+      const endStr = new Date(Number(lastSleep.endTime)).toLocaleTimeString("en-US", timeOpts);
+      sleepTimeDetails = ` (Fell asleep at: ${startStr}, Woke up at: ${endStr})`;
     }
 
     // 3. Fetch recent unsummarized chat history (max 3 months old)
@@ -370,6 +378,10 @@ app.post("/api/chat", async (req, res) => {
     }
 
     // 4. Construct the Agentic System Prompt
+    const currentTimeStr = timezone 
+      ? new Date().toLocaleString("en-US", { timeZone: timezone }) 
+      : new Date().toLocaleString("en-US");
+
     const systemPrompt = `You are a Digital Wellness Assistant. Your SOLE purpose is to help users maintain their health.
     STRICT RULES:
     1. You MUST ONLY answer questions regarding basic health, nutrition, light exercise, and sleep.
@@ -379,8 +391,9 @@ app.post("/api/chat", async (req, res) => {
     5. Use the provided context to personalize your advice.
     
     DAILY METRICS CONTEXT:
+    - User's Current Local Time: ${currentTimeStr}
     - Calories consumed today: ${caloriesToday} kcal
-    - Last recorded sleep: ${sleepDuration}
+    - Last recorded sleep: ${sleepDuration}${sleepTimeDetails}
 
     LONG-TERM USER SUMMARY:
     ${user.chatSummary || "No previous summary."}

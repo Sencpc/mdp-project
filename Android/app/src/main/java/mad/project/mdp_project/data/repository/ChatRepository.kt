@@ -5,6 +5,9 @@ import mad.project.mdp_project.data.ChatMessage
 import mad.project.mdp_project.data.ChatMessageDao
 import mad.project.mdp_project.data.remote.ApiService
 import mad.project.mdp_project.data.remote.ChatRequest
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class ChatRepository(
     private val chatDao: ChatMessageDao,
@@ -29,7 +32,8 @@ class ChatRepository(
 
         // 2. Call backend API
         try {
-            val response = apiService.sendChatMessage(ChatRequest(userId = userId, message = text))
+            val timezoneId = java.util.TimeZone.getDefault().id
+            val response = apiService.sendChatMessage(ChatRequest(userId = userId, message = text, timezone = timezoneId))
 
             if (response.isSuccessful && response.body()?.reply != null) {
                 val aiReply = response.body()!!.reply!!
