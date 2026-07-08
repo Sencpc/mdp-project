@@ -9,10 +9,13 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import mad.project.mdp_project.model.DoctorViewModel
+import androidx.navigation.fragment.navArgs
+import mad.project.mdp_project.R
+import mad.project.mdp_project.model.ConsultationViewModel
 
-class PersonalDoctorFragment : Fragment() {
-    private val viewModel: DoctorViewModel by viewModels()
+class ScheduleConsultationFragment : Fragment() {
+    private val viewModel: ConsultationViewModel by viewModels()
+    private val args: ScheduleConsultationFragmentArgs by navArgs()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -21,22 +24,20 @@ class PersonalDoctorFragment : Fragment() {
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
-                DoctorConsultScreen(
+                ScheduleConsultationScreen(
+                    doctorId = args.doctorId,
+                    doctorName = args.doctorName,
+                    category = args.category,
+                    rating = args.rating,
+                    description = args.description,
+                    profileIcon = args.profileIcon,
                     viewModel = viewModel,
                     onBackClick = {
                         requireActivity().onBackPressedDispatcher.onBackPressed()
                     },
-                    onConsultClick = { doctor ->
-                        val action = PersonalDoctorFragmentDirections
-                            .actionNavPersonalDoctorToNavScheduleConsultation(
-                                doctorId = doctor.id,
-                                doctorName = doctor.doctorName,
-                                category = doctor.category,
-                                rating = doctor.rating.toFloat(),
-                                description = doctor.description,
-                                profileIcon = doctor.profileIcon
-                            )
-                        findNavController().navigate(action)
+                    onConfirmed = {
+                        // Navigate back to Dashboard
+                        findNavController().navigate(R.id.nav_dashboard)
                     }
                 )
             }

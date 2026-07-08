@@ -8,11 +8,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import mad.project.mdp_project.data.AppDatabase
+import mad.project.mdp_project.data.ConsultationEntity
 import mad.project.mdp_project.data.Habit
 import mad.project.mdp_project.data.SessionManager
 import mad.project.mdp_project.data.SleepLog
 import mad.project.mdp_project.data.User
 import mad.project.mdp_project.data.remote.RetrofitClient
+import mad.project.mdp_project.data.repository.DoctorRepository
 import mad.project.mdp_project.data.repository.HabitRepository
 import mad.project.mdp_project.data.repository.SleepRepository
 import mad.project.mdp_project.data.repository.UserRepository
@@ -28,6 +30,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     private val userRepository = UserRepository(db.userDao(), api)
     private val habitRepository = HabitRepository(db.habitDao(), api)
     private val sleepRepository = SleepRepository(db.sleepLogDao(), api)
+    private val doctorRepository = DoctorRepository(db.doctorDao(), db.consultationDao())
 
     val user: StateFlow<User?> = userRepository.getUserById(userId)
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
@@ -39,6 +42,9 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val sleepLogs: StateFlow<List<SleepLog>> = sleepRepository.getSleepLogsForUser(userId)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val upcomingConsultations: StateFlow<List<ConsultationEntity>> = doctorRepository.getUpcomingConsultations()
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     init {

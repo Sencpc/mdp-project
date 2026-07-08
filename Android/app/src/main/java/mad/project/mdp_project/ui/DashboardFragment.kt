@@ -16,8 +16,10 @@ import coil.load
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import mad.project.mdp_project.R
+import mad.project.mdp_project.data.ConsultationEntity
 import mad.project.mdp_project.databinding.FragmentDashboardBinding
 import mad.project.mdp_project.model.DashboardViewModel
+import java.time.format.DateTimeFormatter
 
 class DashboardFragment : Fragment() {
 
@@ -79,6 +81,13 @@ class DashboardFragment : Fragment() {
                         updateRemindersUI(reminders)
                     }
                 }
+
+                // Observe Upcoming Consultations
+                launch {
+                    viewModel.upcomingConsultations.collectLatest { consultations ->
+                        updateConsultationsUI(consultations)
+                    }
+                }
             }
         }
     }
@@ -128,6 +137,47 @@ class DashboardFragment : Fragment() {
             indicator.setBackgroundResource(colorRes)
             
             container.addView(reminderView)
+        }
+    }
+
+    private fun updateConsultationsUI(consultations: List<ConsultationEntity>) {
+        val container = binding.llConsultationsContainer
+        // Keep the "no consultations" text view, remove others
+        for (i in container.childCount - 1 downTo 0) {
+            val view = container.getChildAt(i)
+            if (view.id != R.id.tv_no_consultations) {
+                container.removeViewAt(i)
+            }
+        }
+
+        if (consultations.isEmpty()) {
+            binding.tvNoConsultations.visibility = View.VISIBLE
+            return
+        }
+
+        binding.tvNoConsultations.visibility = View.GONE
+
+        val dateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy")
+        val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
+
+        consultations.take(3).forEach { consultation ->
+            val consultView = layoutInflater.inflate(R.layout.item_dashboard_consultation, container, false)
+
+            val tvDoctorName = consultView.findViewById<TextView>(R.id.tv_consult_doctor_name)
+            val tvCategory = consultView.findViewById<TextView>(R.id.tv_consult_category)
+            val tvTime = consultView.findViewById<TextView>(R.id.tv_consult_time)
+            val tvStatus = consultView.findViewById<TextView>(R.id.tv_consult_status)
+
+            tvDoctorName.text = consultation.doctorName
+            tvCategory.text = consultation.category
+
+            val formattedDate = consultation.consultationTime.format(dateFormatter)
+            val formattedTime = consultation.consultationTime.format(timeFormatter)
+            tvTime.text = "$formattedDate • $formattedTime"
+
+            tvStatus.text = consultation.status
+
+            container.addView(consultView)
         }
     }
 

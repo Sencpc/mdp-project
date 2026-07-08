@@ -33,8 +33,35 @@
     <fragment
         android:id="@+id/nav_personal_doctor"
         android:name="mad.project.mdp_project.ui.PersonalDoctorFragment"
-        android:label="Personal Doctor"
-        tools:layout="@layout/fragment_personal_doctor" />
+        android:label="Personal Doctor">
+        <action
+            android:id="@+id/action_nav_personal_doctor_to_nav_schedule_consultation"
+            app:destination="@id/nav_schedule_consultation" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_schedule_consultation"
+        android:name="mad.project.mdp_project.ui.ScheduleConsultationFragment"
+        android:label="Schedule Consultation">
+        <argument
+            android:name="doctorId"
+            app:argType="integer" />
+        <argument
+            android:name="doctorName"
+            app:argType="string" />
+        <argument
+            android:name="category"
+            app:argType="string" />
+        <argument
+            android:name="rating"
+            app:argType="float" />
+        <argument
+            android:name="description"
+            app:argType="string" />
+        <argument
+            android:name="profileIcon"
+            app:argType="string" />
+    </fragment>
 
     <fragment
         android:id="@+id/nav_sleep"

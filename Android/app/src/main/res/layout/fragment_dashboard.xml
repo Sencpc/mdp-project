@@ -480,7 +480,6 @@
             app:cardElevation="0dp"
             app:strokeColor="#EEEEEE"
             app:strokeWidth="1dp"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@id/card_screen">
 
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -530,6 +529,72 @@
                         android:textColor="#757575"
                         android:textSize="14sp"
                         android:visibility="gone" />
+
+                </LinearLayout>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Upcoming Consultations Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_consultations"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:strokeColor="#EEEEEE"
+            app:strokeWidth="1dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/card_reminders">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp">
+
+                <ImageView
+                    android:id="@+id/iv_consultations_icon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_dash_consult"
+                    android:scaleType="centerInside"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="#004B4F" />
+
+                <TextView
+                    android:id="@+id/tv_consultations_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Upcoming Consultations"
+                    android:textColor="#004B4F"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    app:layout_constraintBottom_toBottomOf="@id/iv_consultations_icon"
+                    app:layout_constraintStart_toEndOf="@id/iv_consultations_icon"
+                    app:layout_constraintTop_toTopOf="@id/iv_consultations_icon" />
+
+                <LinearLayout
+                    android:id="@+id/ll_consultations_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="vertical"
+                    app:layout_constraintTop_toBottomOf="@id/iv_consultations_icon">
+
+                    <TextView
+                        android:id="@+id/tv_no_consultations"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:padding="16dp"
+                        android:text="No upcoming consultations"
+                        android:textColor="#757575"
+                        android:textSize="14sp"
+                        android:visibility="visible" />
 
                 </LinearLayout>
 

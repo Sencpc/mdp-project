@@ -4,16 +4,18 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Database(
-    entities = [User::class, Habit::class, SleepLog::class, ScreenTimeLog::class, ChatMessage::class],
-    version = 7,
+    entities = [User::class, Habit::class, SleepLog::class, ScreenTimeLog::class, ChatMessage::class, DoctorEntity::class, ConsultationEntity::class],
+    version = 8,
     exportSchema = false
 )
+@TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun userDao(): UserDao
@@ -21,6 +23,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun sleepLogDao(): SleepLogDao
     abstract fun screenTimeLogDao(): ScreenTimeLogDao
     abstract fun chatMessageDao(): ChatMessageDao
+    abstract fun doctorDao(): DoctorDao
+    abstract fun consultationDao(): ConsultationDao
 
     companion object {
         @Volatile
@@ -46,9 +50,26 @@ abstract class AppDatabase : RoomDatabase() {
                 super.onCreate(db)
                 INSTANCE?.let { database ->
                     CoroutineScope(Dispatchers.IO).launch {
+                        // Seed default admin user
                         database.userDao().insertUser(
                             User(username = "admin", password = "admin123", fullName = "Admin User")
                         )
+
+                        // Seed doctors
+                        database.doctorDao().insertAll(DoctorSeeder.getSeedDoctors())
+                    }
+                }
+            }
+
+            override fun onOpen(db: SupportSQLiteDatabase) {
+                super.onOpen(db)
+                // Re-seed doctors on every open to ensure fresh available times
+                INSTANCE?.let { database ->
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val count = database.doctorDao().getCount()
+                        if (count == 0) {
+                            database.doctorDao().insertAll(DoctorSeeder.getSeedDoctors())
+                        }
                     }
                 }
             }
