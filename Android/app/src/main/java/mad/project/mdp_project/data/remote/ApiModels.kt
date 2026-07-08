@@ -124,3 +124,16 @@ data class MessageResponse(
 data class ErrorResponse(
     val error: String
 )
+
+// ========== CHATBOT ==========
+@JsonClass(generateAdapter = true)
+data class ChatRequest(
+    val userId: Int,
+    val message: String
+)
+
+@JsonClass(generateAdapter = true)
+data class ChatResponse(
+    val reply: String? = null,
+    val error: String? = null
+)

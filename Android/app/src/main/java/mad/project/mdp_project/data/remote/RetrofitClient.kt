@@ -10,7 +10,7 @@ object RetrofitClient {
     // Ganti dengan IP server kamu:
     // - Emulator Android Studio: "http://10.0.2.2:3000/"
     // - Device fisik (WiFi): "http://<IP_KOMPUTER>:3000/"
-    private const val BASE_URL = "http://10.0.2.2:3000/"
+    private const val BASE_URL = "https://mdp-project-production.up.railway.app/"
 
     private val moshi: Moshi = Moshi.Builder()
         .addLast(KotlinJsonAdapterFactory())

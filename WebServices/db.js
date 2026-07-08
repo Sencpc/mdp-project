@@ -1,4 +1,4 @@
-const { Sequelize, Model, DataTypes } = require("sequelize");
+const { Sequelize, Model, DataTypes, Op } = require("sequelize");
 require("dotenv").config();
 
 const DB_NAME = process.env.DB_NAME;
@@ -12,69 +12,25 @@ const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASS, {
   logging: false,
 });
 
-// 1. Model: User (disesuaikan dengan Android Room entity)
+// 1. Model: User (Updated with chatSummary)
 class User extends Model {}
 User.init(
   {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
-      primaryKey: true,
-    },
-    username: {
-      type: DataTypes.STRING(100),
-      allowNull: false,
-      unique: true,
-    },
-    password: {
-      type: DataTypes.STRING(255),
-      allowNull: false,
-    },
-    fullName: {
-      type: DataTypes.STRING(150),
-      allowNull: false,
-      defaultValue: "",
-    },
-    height: {
-      type: DataTypes.FLOAT,
-      allowNull: true,
-    },
-    weight: {
-      type: DataTypes.FLOAT,
-      allowNull: true,
-    },
-    birthDate: {
-      type: DataTypes.BIGINT, // Store as timestamp (ms) like Android
-      allowNull: true,
-    },
-    bloodType: {
-      type: DataTypes.STRING(10),
-      allowNull: true,
-    },
-    conditions: {
-      type: DataTypes.TEXT, // Comma-separated string
-      defaultValue: "",
-    },
-    emergencyContactName: {
-      type: DataTypes.STRING(150),
-      allowNull: true,
-    },
-    emergencyContactPhone: {
-      type: DataTypes.STRING(30),
-      allowNull: true,
-    },
-    profilePicturePath: {
-      type: DataTypes.STRING(500),
-      allowNull: true,
-    },
+    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+    username: { type: DataTypes.STRING(100), allowNull: false, unique: true },
+    password: { type: DataTypes.STRING(255), allowNull: false },
+    fullName: { type: DataTypes.STRING(150), allowNull: false, defaultValue: "" },
+    height: { type: DataTypes.FLOAT, allowNull: true },
+    weight: { type: DataTypes.FLOAT, allowNull: true },
+    birthDate: { type: DataTypes.BIGINT, allowNull: true },
+    bloodType: { type: DataTypes.STRING(10), allowNull: true },
+    conditions: { type: DataTypes.TEXT, defaultValue: "" },
+    emergencyContactName: { type: DataTypes.STRING(150), allowNull: true },
+    emergencyContactPhone: { type: DataTypes.STRING(30), allowNull: true },
+    profilePicturePath: { type: DataTypes.STRING(500), allowNull: true },
+    chatSummary: { type: DataTypes.TEXT, defaultValue: "" }, 
   },
-  {
-    sequelize,
-    tableName: "users",
-    timestamps: true,
-    createdAt: "created_at",
-    updatedAt: "updated_at",
-  },
+  { sequelize, tableName: "users", timestamps: true, createdAt: "created_at", updatedAt: "updated_at" },
 );
 
 // 2. Model: Habit (disesuaikan dengan Android Room entity)
@@ -207,6 +163,20 @@ NutritionLog.init(
   },
 );
 
+// 5. Model: ChatLog
+class ChatLog extends Model {}
+ChatLog.init(
+  {
+    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+    userId: { type: DataTypes.INTEGER, allowNull: false },
+    sender: { type: DataTypes.ENUM("USER", "AI"), allowNull: false },
+    message: { type: DataTypes.TEXT, allowNull: false },
+    isSummarized: { type: DataTypes.BOOLEAN, defaultValue: false }, // Tracks if this message is already in the summary
+    createdAt: { type: DataTypes.BIGINT, defaultValue: () => Date.now() },
+  },
+  { sequelize, tableName: "chat_logs", timestamps: false }
+);
+
 // ==========================================
 // MENDEFINISIKAN RELASI (FOREIGN KEYS)
 // ==========================================
@@ -223,10 +193,16 @@ SleepLog.belongsTo(User, { foreignKey: "userId" });
 User.hasMany(NutritionLog, { foreignKey: "userId", onDelete: "CASCADE" });
 NutritionLog.belongsTo(User, { foreignKey: "userId" });
 
+// Relasi User ke ChatLogs
+User.hasMany(ChatLog, { foreignKey: "userId", onDelete: "CASCADE" });
+ChatLog.belongsTo(User, { foreignKey: "userId" });
+
 module.exports = {
   sequelize,
+  Op,
   User,
   Habit,
   SleepLog,
   NutritionLog,
+  ChatLog,
 };

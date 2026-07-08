@@ -1,11 +1,18 @@
 const express = require("express");
-const { sequelize, User, Habit, SleepLog, NutritionLog } = require("./db");
+const { sequelize, Op, User, Habit, SleepLog, NutritionLog, ChatLog } = require("./db");
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
+
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const multer = require("multer");
+
+// Inisialisasi Gemini API (Pastikan API Key diletakkan di file .env untuk keamanan)
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const upload = multer({ storage: multer.memoryStorage() }); // Menyimpan file gambar di memori (buffer)
 
 // ==========================================
 // 1. ROUTES UNTUK AUTH (REGISTER & LOGIN)
@@ -257,6 +264,183 @@ app.get("/api/nutrition/user/:userId", async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 });
+
+// ==========================================
+// 6. ROUTES FOR AI CALORIE SCANNER (GEMINI 3.0 FLASH)
+// ==========================================
+app.post("/api/nutrition/scan", upload.single("image"), async (req, res) => {
+  try {
+    const { userId } = req.body;
+    
+    if (!req.file) {
+      return res.status(400).json({ error: "Image not found in the request" });
+    }
+
+    const image = {
+      inlineData: {
+        data: req.file.buffer.toString("base64"),
+        mimeType: req.file.mimetype
+      },
+    };
+
+    const model = genAI.getGenerativeModel({ model: "gemini-3.0-flash" });
+    
+    const prompt = `Analyze the food in this image. Estimate the standard portion size and total calories. 
+    Return ONLY a valid JSON object in this exact format without any additional text or markdown formatting: 
+    {"food_name": "Food Name", "calories": 1500}`;
+
+    const result = await model.generateContent([prompt, image]);
+    const responseText = result.response.text().trim();
+    
+    const cleanJson = responseText.replace(/```json|```/g, "").trim();
+    const parsedData = JSON.parse(cleanJson);
+
+    const nutritionLog = await NutritionLog.create({
+      userId,
+      food_name: parsedData.food_name,
+      calories: parsedData.calories,
+      consumed_at: Date.now(),
+    });
+
+    return res.status(201).json(nutritionLog);
+  } catch (err) {
+    console.error("AI Scan Error:", err);
+    return res.status(500).json({ error: "Failed to process image through AI" });
+  }
+});
+
+// ==========================================
+// 7. ROUTES FOR AI WELLBEING CHATBOT
+// ==========================================
+app.post("/api/chat", async (req, res) => {
+  try {
+    const { userId, message } = req.body;
+
+    // 1. Fetch User data to get the existing chatSummary
+    const user = await User.findByPk(userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    // 2. Fetch daily metrics (Calories & Sleep)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const todayNutrition = await NutritionLog.findAll({ where: { userId } });
+    const caloriesToday = todayNutrition
+      .filter(log => log.consumed_at >= today.getTime())
+      .reduce((sum, log) => sum + log.calories, 0);
+
+    const lastSleep = await SleepLog.findOne({
+      where: { userId },
+      order: [["date", "DESC"]]
+    });
+    
+    let sleepDuration = "No data yet";
+    if (lastSleep && lastSleep.startTime && lastSleep.endTime) {
+       const hours = (lastSleep.endTime - lastSleep.startTime) / (1000 * 60 * 60);
+       sleepDuration = `${hours.toFixed(1)} hours`;
+    }
+
+    // 3. Fetch recent unsummarized chat history (max 3 months old)
+    const threeMonthsAgo = Date.now() - (90 * 24 * 60 * 60 * 1000); 
+    const recentChats = await ChatLog.findAll({
+        where: { 
+            userId, 
+            isSummarized: false,
+            createdAt: { [Op.gte]: threeMonthsAgo } // Strictly limit to last 3 months
+        },
+        order: [["createdAt", "ASC"]]
+    });
+
+    // Format recent chats for the prompt
+    let recentChatContext = "";
+    if (recentChats.length > 0) {
+        recentChatContext = "RECENT CONVERSATION HISTORY:\n" + 
+            recentChats.map(c => `${c.sender}: ${c.message}`).join("\n");
+    }
+
+    // 4. Construct the Agentic System Prompt
+    const systemPrompt = `You are a Digital Wellness Assistant. Your SOLE purpose is to help users maintain their health.
+    STRICT RULES:
+    1. You MUST ONLY answer questions regarding basic health, nutrition, light exercise, and sleep.
+    2. Use very polite, empathetic, and simple English. Avoid complex medical jargon.
+    3. You are not a doctor. Advise them to consult a real doctor if they mention severe symptoms.
+    4. Use the provided context to personalize your advice.
+    
+    DAILY METRICS CONTEXT:
+    - Calories consumed today: ${caloriesToday} kcal
+    - Last recorded sleep: ${sleepDuration}
+
+    LONG-TERM USER SUMMARY:
+    ${user.chatSummary || "No previous summary."}
+
+    ${recentChatContext}
+    
+    USER: "${message}"`;
+
+    // 5. Generate AI Response
+    const model = genAI.getGenerativeModel({ model: "gemini-3.0-flash" });
+    const result = await model.generateContent(systemPrompt);
+    const aiReply = result.response.text();
+
+    // 6. Save the new messages to the database
+    await ChatLog.bulkCreate([
+        { userId, sender: "USER", message: message, createdAt: Date.now() },
+        { userId, sender: "AI", message: aiReply, createdAt: Date.now() }
+    ]);
+
+    // 7. Trigger Background Summarization if memory gets too long (e.g., > 10 messages)
+    // We add +2 because we just added the new user message and AI reply
+    if (recentChats.length + 2 >= 10) {
+        // Fetch them again to include the two we just inserted
+        const chatsToSummarize = await ChatLog.findAll({
+            where: { userId, isSummarized: false }
+        });
+        
+        // Execute asynchronously (do not await) so the Android app gets the reply instantly
+        updateChatSummary(userId, user.chatSummary, chatsToSummarize);
+    }
+
+    return res.status(200).json({ reply: aiReply });
+  } catch (err) {
+    console.error("Chatbot Error:", err);
+    return res.status(500).json({ error: "Virtual assistant is currently unavailable." });
+  }
+});
+
+async function updateChatSummary(userId, currentSummary, unsummarizedChats) {
+    try {
+        const model = genAI.getGenerativeModel({ model: "gemini-3.0-flash" });
+        
+        const chatTranscript = unsummarizedChats.map(c => `${c.sender}: ${c.message}`).join("\n");
+        
+        const summarizerPrompt = `
+        You are an AI memory manager for a health app. 
+        Update the following user profile summary using the new conversation transcript. 
+        Focus ONLY on extracting long-term health facts, goals, and user preferences. Drop irrelevant chit-chat. Keep it concise.
+        
+        CURRENT SUMMARY:
+        ${currentSummary || "No summary yet."}
+        
+        NEW TRANSCRIPT:
+        ${chatTranscript}
+        
+        Output ONLY the updated plain text summary, nothing else.`;
+
+        const result = await model.generateContent(summarizerPrompt);
+        const newSummary = result.response.text().trim();
+
+        // Save new summary to User
+        await User.update({ chatSummary: newSummary }, { where: { id: userId } });
+
+        // Mark these specific chats as summarized so they aren't processed again
+        const chatIds = unsummarizedChats.map(c => c.id);
+        await ChatLog.update({ isSummarized: true }, { where: { id: { [Op.in]: chatIds } } });
+        
+        console.log(`Updated chat summary for User ${userId}`);
+    } catch (error) {
+        console.error("Background Summarizer Error:", error);
+    }
+}
 
 // ==========================================
 // START SERVER

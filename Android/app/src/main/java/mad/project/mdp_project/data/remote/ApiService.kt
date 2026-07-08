@@ -1,5 +1,7 @@
 package mad.project.mdp_project.data.remote
 
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -45,4 +47,16 @@ interface ApiService {
 
     @GET("api/nutrition/user/{userId}")
     suspend fun getNutritionLogsForUser(@Path("userId") userId: Int): Response<List<NutritionResponse>>
+
+    // ========== AI CALORIE SCANNER ==========
+    @Multipart
+    @POST("api/nutrition/scan")
+    suspend fun scanFood(
+        @Part image: MultipartBody.Part,
+        @Part("userId") userId: RequestBody
+    ): Response<NutritionResponse>
+
+    // ========== AI CHATBOT ==========
+    @POST("api/chat")
+    suspend fun sendChatMessage(@Body request: ChatRequest): Response<ChatResponse>
 }

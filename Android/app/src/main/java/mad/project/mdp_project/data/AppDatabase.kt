@@ -11,8 +11,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Database(
-    entities = [User::class, Habit::class, SleepLog::class, ScreenTimeLog::class, ChatMessage::class, DoctorEntity::class, ConsultationEntity::class],
-    version = 10,
+    entities = [User::class, Habit::class, SleepLog::class, ScreenTimeLog::class, ChatMessage::class, DoctorEntity::class, ConsultationEntity::class, NutritionLog::class],
+    version = 11,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -25,6 +25,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun chatMessageDao(): ChatMessageDao
     abstract fun doctorDao(): DoctorDao
     abstract fun consultationDao(): ConsultationDao
+    abstract fun nutritionLogDao(): NutritionLogDao
 
     companion object {
         @Volatile

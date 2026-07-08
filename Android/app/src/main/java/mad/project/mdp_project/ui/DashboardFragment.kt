@@ -293,6 +293,9 @@ class DashboardFragment : Fragment() {
         binding.btnChatbot.setOnClickListener {
             findNavController().navigate(R.id.action_nav_dashboard_to_nav_chatbot)
         }
+        binding.btnFotoCalori.setOnClickListener {
+            findNavController().navigate(R.id.action_nav_dashboard_to_nav_scanner)
+        }
     }
 
     override fun onDestroyView() {

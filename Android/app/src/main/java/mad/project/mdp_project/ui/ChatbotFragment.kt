@@ -61,22 +61,33 @@ class ChatbotFragment : Fragment() {
         }
 
         binding.chipSleep.setOnClickListener {
-            viewModel.sendQuickAction("How to sleep better?")
+            viewModel.sendQuickAction("How can I improve my sleep quality?")
         }
 
         binding.chipScreenTime.setOnClickListener {
-            viewModel.sendQuickAction("Check my screen time")
+            viewModel.sendQuickAction("What are some healthy eating tips?")
         }
     }
 
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.messages.collectLatest { messages ->
-                    adapter.submitList(messages) {
-                        if (messages.isNotEmpty()) {
-                            binding.rvChat.smoothScrollToPosition(messages.size - 1)
+                // Observe messages
+                launch {
+                    viewModel.messages.collectLatest { messages ->
+                        adapter.submitList(messages) {
+                            if (messages.isNotEmpty()) {
+                                binding.rvChat.smoothScrollToPosition(messages.size - 1)
+                            }
                         }
+                    }
+                }
+
+                // Observe loading state to disable/enable send button
+                launch {
+                    viewModel.isLoading.collectLatest { isLoading ->
+                        binding.btnSend.isEnabled = !isLoading
+                        binding.btnSend.alpha = if (isLoading) 0.5f else 1.0f
                     }
                 }
             }
