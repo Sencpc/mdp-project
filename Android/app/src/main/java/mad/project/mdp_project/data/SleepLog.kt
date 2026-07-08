@@ -11,7 +11,7 @@ data class SleepLog(
     val userId: Int,
     val startTime: Long,
     val endTime: Long,
-    val quality: Int,
+    val quality: Float,
     val date: Long = System.currentTimeMillis()
 ) {
     fun getDurationMillis(): Long = endTime - startTime

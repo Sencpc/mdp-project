@@ -1,6 +1,5 @@
 package mad.project.mdp_project.ui
 
-import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -31,7 +30,6 @@ class SleepTrackerFragment : Fragment() {
 
     private var selectedStartTime: Long = 0L
     private var selectedEndTime: Long = 0L
-    private var selectedQuality: Int = 3
 
     private lateinit var sleepLogAdapter: SleepLogAdapter
 
@@ -60,41 +58,25 @@ class SleepTrackerFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.btnSelectBedtime.setOnClickListener {
-            showDateTimePicker { timeMillis ->
+            showTimePicker { timeMillis ->
                 selectedStartTime = timeMillis
-                binding.tvBedtime.text = formatDateTime(timeMillis)
+                binding.tvBedtime.text = formatTime(timeMillis)
             }
         }
 
         binding.btnSelectWakeTime.setOnClickListener {
-            showDateTimePicker { timeMillis ->
+            showTimePicker { timeMillis ->
                 selectedEndTime = timeMillis
-                binding.tvWakeTime.text = formatDateTime(timeMillis)
+                binding.tvWakeTime.text = formatTime(timeMillis)
             }
         }
-
-        // Quality rating buttons
-        binding.btnQuality1.setOnClickListener { setQuality(1) }
-        binding.btnQuality2.setOnClickListener { setQuality(2) }
-        binding.btnQuality3.setOnClickListener { setQuality(3) }
-        binding.btnQuality4.setOnClickListener { setQuality(4) }
-        binding.btnQuality5.setOnClickListener { setQuality(5) }
 
         binding.btnLogSleep.setOnClickListener {
             if (selectedStartTime == 0L || selectedEndTime == 0L) {
                 Toast.makeText(requireContext(), "Pilih waktu tidur dan bangun", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            viewModel.addSleepLog(selectedStartTime, selectedEndTime, selectedQuality)
-        }
-    }
-
-    private fun setQuality(quality: Int) {
-        selectedQuality = quality
-        // Update UI untuk menunjukkan quality yang dipilih
-        listOf(binding.btnQuality1, binding.btnQuality2, binding.btnQuality3,
-               binding.btnQuality4, binding.btnQuality5).forEachIndexed { index, button ->
-            button.alpha = if (index + 1 <= quality) 1.0f else 0.4f
+            viewModel.addSleepLog(selectedStartTime, selectedEndTime)
         }
     }
 
@@ -129,18 +111,24 @@ class SleepTrackerFragment : Fragment() {
         binding.tvSleepStreak.text = "${viewModel.getSleepStreak()} days"
     }
 
-    private fun showDateTimePicker(onTimeSelected: (Long) -> Unit) {
+    /**
+     * Menampilkan TimePicker saja — tanggal otomatis hari ini.
+     */
+    private fun showTimePicker(onTimeSelected: (Long) -> Unit) {
         val calendar = Calendar.getInstance()
-        DatePickerDialog(requireContext(), { _, year, month, day ->
-            TimePickerDialog(requireContext(), { _, hour, minute ->
-                calendar.set(year, month, day, hour, minute)
-                onTimeSelected(calendar.timeInMillis)
-            }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true).show()
-        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
+        TimePickerDialog(requireContext(), { _, hour, minute ->
+            val selectedCalendar = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, hour)
+                set(Calendar.MINUTE, minute)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+            onTimeSelected(selectedCalendar.timeInMillis)
+        }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true).show()
     }
 
-    private fun formatDateTime(millis: Long): String {
-        return SimpleDateFormat("dd/MM HH:mm", Locale.getDefault()).format(Date(millis))
+    private fun formatTime(millis: Long): String {
+        return SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(millis))
     }
 
     override fun onDestroyView() {

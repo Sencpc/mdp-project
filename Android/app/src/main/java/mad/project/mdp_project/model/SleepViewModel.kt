@@ -35,18 +35,29 @@ class SleepViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun addSleepLog(startTime: Long, endTime: Long, quality: Int) {
+    fun addSleepLog(startTime: Long, endTime: Long) {
         if (endTime <= startTime) {
             _addResult.value = Result.failure(Exception("Waktu selesai harus lebih besar dari waktu mulai"))
             return
         }
 
         viewModelScope.launch {
+            val durationHours = (endTime - startTime).toDouble() / (1000 * 60 * 60)
+            val avgSleep = getAverageSleepHours()
+            var calculatedQuality = if (avgSleep > 0.0) {
+                (durationHours / avgSleep).toFloat()
+            } else {
+                1.0f
+            }
+            if (calculatedQuality > 1.0f) {
+                calculatedQuality = 1.0f
+            }
+
             val sleepLog = SleepLog(
                 userId = userId,
                 startTime = startTime,
                 endTime = endTime,
-                quality = quality
+                quality = calculatedQuality
             )
             val result = sleepRepository.addSleepLog(sleepLog)
             _addResult.value = result
@@ -68,12 +79,12 @@ class SleepViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
-     * Rata-rata kualitas tidur (1-5).
+     * Rata-rata kualitas tidur (skala 0-5).
      */
     fun getAverageQuality(): Float {
         val logs = sleepLogs.value
         if (logs.isEmpty()) return 0f
-        return logs.map { it.quality }.average().toFloat()
+        return logs.map { it.quality }.average().toFloat() * 5f
     }
 
     /**

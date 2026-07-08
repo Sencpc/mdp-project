@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [User::class, Habit::class, SleepLog::class, ScreenTimeLog::class, ChatMessage::class, DoctorEntity::class, ConsultationEntity::class],
-    version = 8,
+    version = 10,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

@@ -67,10 +67,4 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         val latest = sleepLogs.value.firstOrNull() ?: return "--"
         return latest.getFormattedDuration()
     }
-
-    fun getAverageSleepQuality(): Float {
-        val logs = sleepLogs.value
-        if (logs.isEmpty()) return 0f
-        return logs.map { it.quality }.average().toFloat()
-    }
 }

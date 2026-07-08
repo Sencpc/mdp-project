@@ -81,7 +81,7 @@ data class SleepLogRequest(
     val userId: Int,
     val startTime: Long,
     val endTime: Long,
-    val quality: Int
+    val quality: Float
 )
 
 @JsonClass(generateAdapter = true)
@@ -90,7 +90,7 @@ data class SleepLogResponse(
     val userId: Int,
     val startTime: Long,
     val endTime: Long,
-    val quality: Int,
+    val quality: Float,
     val date: Long? = null
 )
 

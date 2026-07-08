@@ -48,19 +48,5 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/tvLogQuality"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:background="@drawable/bg_badge"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="2dp"
-            android:text="Good"
-            android:textColor="#757575"
-            android:textSize="10sp"
-            app:layout_constraintEnd_toEndOf="@id/tvLogDuration"
-            app:layout_constraintTop_toBottomOf="@id/tvLogDuration" />
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

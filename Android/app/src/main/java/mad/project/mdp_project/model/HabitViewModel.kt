@@ -26,6 +26,50 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             habitRepository.syncFromServer(sessionManager.getUserId())
         }
+
+        // Evaluate streaks & schedule reminders
+        viewModelScope.launch {
+            habits.collect { habitList ->
+                val now = System.currentTimeMillis()
+                habitList.forEach { habit ->
+                    // 1. Evaluate Streaks
+                    if (now > habit.endTime) {
+                        var newStreak = if (habit.isCompleted) habit.streak + 1 else 0
+                        var newEndTime = habit.endTime
+                        var newStartTime = habit.startTime
+                        
+                        val daysMissed = ((now - habit.endTime) / (24 * 60 * 60 * 1000L)).toInt()
+                        if (daysMissed > 0) {
+                            newStreak = 0 // Reset if missed multiple days
+                        }
+
+                        while (now > newEndTime) {
+                            newEndTime += (24 * 60 * 60 * 1000L)
+                            newStartTime += (24 * 60 * 60 * 1000L)
+                        }
+
+                        val updatedHabit = habit.copy(
+                            streak = newStreak,
+                            isCompleted = false,
+                            startTime = newStartTime,
+                            endTime = newEndTime
+                        )
+                        habitRepository.updateHabit(updatedHabit)
+                    }
+
+                    // 2. Schedule Reminders (System Notification)
+                    if (habit.reminderTime != null) {
+                        mad.project.mdp_project.service.ReminderScheduler.scheduleReminder(
+                            application, habit.id, habit.name, habit.reminderTime!!
+                        )
+                    } else {
+                        mad.project.mdp_project.service.ReminderScheduler.cancelReminder(
+                            application, habit.id
+                        )
+                    }
+                }
+            }
+        }
     }
 
     private fun getTenPMEndTime(): Long {

@@ -122,19 +122,23 @@ class DashboardFragment : Fragment() {
             tvName.text = habit.name
             
             habit.reminderTime?.let { time ->
-                val calendar = java.util.Calendar.getInstance().apply { timeInMillis = time }
-                tvTime.text = timeFormat.format(calendar.time)
+                val reminderCal = java.util.Calendar.getInstance().apply { timeInMillis = time }
+                tvTime.text = timeFormat.format(reminderCal.time)
+                
+                val nowCal = java.util.Calendar.getInstance()
+                val currentHour = nowCal.get(java.util.Calendar.HOUR_OF_DAY)
+                val currentMinute = nowCal.get(java.util.Calendar.MINUTE)
+                val reminderHour = reminderCal.get(java.util.Calendar.HOUR_OF_DAY)
+                val reminderMinute = reminderCal.get(java.util.Calendar.MINUTE)
+                
+                val isPast = (currentHour > reminderHour) || (currentHour == reminderHour && currentMinute >= reminderMinute)
+                
+                if (isPast) {
+                    indicator.setBackgroundResource(R.drawable.bg_circle_gray)
+                } else {
+                    indicator.setBackgroundResource(R.drawable.bg_circle_green)
+                }
             }
-            
-            // Set indicator color based on category
-            val colorRes = when (habit.category.lowercase()) {
-                "nutrition" -> R.drawable.bg_circle_green
-                "mental" -> R.drawable.bg_circle_blue
-                "fitness" -> R.drawable.bg_circle_green // Reuse existing colors
-                "sleep" -> R.drawable.bg_circle_green
-                else -> R.drawable.bg_circle_blue
-            }
-            indicator.setBackgroundResource(colorRes)
             
             container.addView(reminderView)
         }
