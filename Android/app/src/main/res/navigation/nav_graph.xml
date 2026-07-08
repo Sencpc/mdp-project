@@ -80,34 +80,33 @@
         <action
             android:id="@+id/action_nav_habits_to_nav_form_habits"
             app:destination="@id/nav_form_habits" />
+        <action
+            android:id="@+id/action_nav_habits_to_nav_habit_detail"
+            app:destination="@id/nav_habit_detail" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_habit_detail"
+        android:name="mad.project.mdp_project.ui.HabitDetailFragment"
+        android:label="Habit Detail"
+        tools:layout="@layout/fragment_habit_detail">
+        <argument
+            android:name="habitId"
+            app:argType="integer" />
+        <action
+            android:id="@+id/action_nav_habit_detail_to_nav_form_habits"
+            app:destination="@id/nav_form_habits" />
     </fragment>
 
     <fragment
         android:id="@+id/nav_form_habits"
         android:name="mad.project.mdp_project.ui.FormHabitsFragment"
-        android:label="Add Habit"
+        android:label="Form Habit"
         tools:layout="@layout/fragment_form_habits">
-        <!-- NavArgs: habitId untuk edit mode (-1 = add baru) -->
         <argument
             android:name="habitId"
             app:argType="integer"
             android:defaultValue="-1" />
-        <argument
-            android:name="habitName"
-            app:argType="string"
-            android:defaultValue="" />
-        <argument
-            android:name="habitCategory"
-            app:argType="string"
-            android:defaultValue="Mental" />
-        <argument
-            android:name="habitSubtitle"
-            app:argType="string"
-            android:defaultValue="" />
-        <argument
-            android:name="reminderTime"
-            app:argType="long"
-            android:defaultValue="-1L" />
     </fragment>
 
     <fragment

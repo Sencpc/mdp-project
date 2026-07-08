@@ -43,14 +43,8 @@ class HabitsFragment : Fragment() {
     private fun setupRecyclerView() {
         habitAdapter = HabitAdapter(
             onHabitClick = { habit ->
-                // Navigasi ke FormHabits dengan NavArgs untuk edit mode
-                val action = HabitsFragmentDirections.actionNavHabitsToNavFormHabits(
-                    habitId = habit.id,
-                    habitName = habit.name,
-                    habitCategory = habit.category,
-                    habitSubtitle = habit.subtitle,
-                    reminderTime = habit.reminderTime ?: -1L
-                )
+                // Navigasi ke HabitDetailFragment
+                val action = HabitsFragmentDirections.actionNavHabitsToNavHabitDetail(habit.id)
                 findNavController().navigate(action)
             },
             onAddClick = {
