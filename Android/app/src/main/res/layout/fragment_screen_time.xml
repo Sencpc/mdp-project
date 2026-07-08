@@ -45,10 +45,11 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <ImageView
-                android:id="@+id/btnNotification"
+                android:id="@+id/btnPermission"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/ic_dash_notification"
+                android:contentDescription="@string/permission_settings"
+                android:src="@drawable/ic_settings"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
@@ -191,10 +192,11 @@
                     app:layout_constraintTop_toBottomOf="@id/progressTotal" />
 
                 <TextView
+                    android:id="@+id/tvGoalLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Goal: 4h"
+                    android:text="Goal: 4h 0m"
                     android:textColor="#616161"
                     android:textSize="12sp"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -258,7 +260,7 @@
                 android:orientation="vertical"
                 android:showDividers="middle">
 
-                <!-- Nudge 1 -->
+                <!-- Daily Limit Alert -->
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -277,9 +279,10 @@
                         app:layout_constraintTop_toTopOf="parent" />
 
                     <TextView
+                        android:id="@+id/tvNudge1Subtitle"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Notify when near 4h"
+                        android:text="Notify when reaching limit"
                         android:textColor="#616161"
                         android:textSize="12sp"
                         app:layout_constraintEnd_toStartOf="@id/switchNudge1"
@@ -296,76 +299,44 @@
                         app:layout_constraintTop_toTopOf="parent" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <!-- Nudge 2 -->
+                <!-- Set Daily Limit -->
                 <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/layoutSetLimit"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
                     android:padding="16dp">
 
                     <TextView
-                        android:id="@+id/tvNudge2Title"
+                        android:id="@+id/tvSetLimitTitle"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Social Media Focus"
+                        android:text="Set Daily Limit"
                         android:textColor="#212121"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        app:layout_constraintEnd_toStartOf="@id/switchNudge2"
+                        app:layout_constraintEnd_toStartOf="@id/tvLimitValue"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Block after 2h usage"
+                        android:text="Tap to change the daily limit"
                         android:textColor="#616161"
                         android:textSize="12sp"
-                        app:layout_constraintEnd_toStartOf="@id/switchNudge2"
+                        app:layout_constraintEnd_toStartOf="@id/tvLimitValue"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/tvNudge2Title" />
-
-                    <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/switchNudge2"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-                </androidx.constraintlayout.widget.ConstraintLayout>
-
-                <!-- Nudge 3 -->
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="16dp">
+                        app:layout_constraintTop_toBottomOf="@id/tvSetLimitTitle" />
 
                     <TextView
-                        android:id="@+id/tvNudge3Title"
-                        android:layout_width="0dp"
+                        android:id="@+id/tvLimitValue"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Bedtime Wind Down"
-                        android:textColor="#212121"
-                        android:textSize="14sp"
+                        android:text="4h 0m"
+                        android:textColor="#003538"
+                        android:textSize="16sp"
                         android:textStyle="bold"
-                        app:layout_constraintEnd_toStartOf="@id/switchNudge3"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="Grayscale at 10 PM"
-                        android:textColor="#616161"
-                        android:textSize="12sp"
-                        app:layout_constraintEnd_toStartOf="@id/switchNudge3"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/tvNudge3Title" />
-
-                    <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/switchNudge3"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checked="true"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />

@@ -1,6 +1,7 @@
 package mad.project.mdp_project.ui
 
 import android.app.AppOpsManager
+import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -46,8 +47,16 @@ class ScreenTimeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupUI()
         setupRecyclerView()
+        setupNudgeToggles()
         observeViewModel()
         startAutoRefresh()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Refresh the limit display and toggle state when returning
+        updateLimitDisplay()
+        binding.switchNudge1.isChecked = ScreenTimeService.isDailyLimitEnabled(requireContext())
     }
 
     private fun setupRecyclerView() {
@@ -79,10 +88,72 @@ class ScreenTimeFragment : Fragment() {
     }
 
     private fun setupUI() {
-        binding.btnNotification.setOnClickListener {
+        binding.btnPermission.setOnClickListener {
             // Buka pengaturan Usage Access jika belum diberi permission
             startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
         }
+    }
+
+    /**
+     * Wires up the Daily Limit Alert nudge toggle switch and the
+     * "Set Daily Limit" row that opens a time picker dialog.
+     */
+    private fun setupNudgeToggles() {
+        val context = requireContext()
+
+        // Daily Limit Alert toggle — controls whether the notification fires
+        binding.switchNudge1.isChecked = ScreenTimeService.isDailyLimitEnabled(context)
+        binding.switchNudge1.setOnCheckedChangeListener { _, isChecked ->
+            ScreenTimeService.setDailyLimitEnabled(context, isChecked)
+        }
+
+        // Display the current limit value
+        updateLimitDisplay()
+
+        // "Set Daily Limit" row — tapping opens a time picker
+        binding.layoutSetLimit.setOnClickListener {
+            showLimitTimePicker()
+        }
+    }
+
+    /**
+     * Shows a TimePickerDialog configured for selecting a duration (hours + minutes)
+     * for the daily screen time limit.
+     */
+    private fun showLimitTimePicker() {
+        val context = requireContext()
+        val currentHours = ScreenTimeService.getLimitHours(context)
+        val currentMinutes = ScreenTimeService.getLimitMinutes(context)
+
+        val picker = TimePickerDialog(
+            context,
+            { _, selectedHour, selectedMinute ->
+                // Ensure at least 1 minute is set
+                val finalHour = if (selectedHour == 0 && selectedMinute == 0) 0 else selectedHour
+                val finalMinute = if (selectedHour == 0 && selectedMinute == 0) 1 else selectedMinute
+
+                ScreenTimeService.setDailyLimit(context, finalHour, finalMinute)
+                updateLimitDisplay()
+
+                // Notify the ViewModel to recalculate progress with the new limit
+                viewModel.loadTodayUsage()
+            },
+            currentHours,
+            currentMinutes,
+            true // 24-hour format works well for duration
+        )
+        picker.setTitle("Set Daily Limit (hours : minutes)")
+        picker.show()
+    }
+
+    /**
+     * Updates the "Set Daily Limit" value label and the goal label on the progress bar.
+     */
+    private fun updateLimitDisplay() {
+        val context = requireContext()
+        val limitStr = ScreenTimeService.formatLimit(context)
+        binding.tvLimitValue.text = limitStr
+        binding.tvGoalLabel.text = "Goal: $limitStr"
     }
 
     private fun observeViewModel() {
