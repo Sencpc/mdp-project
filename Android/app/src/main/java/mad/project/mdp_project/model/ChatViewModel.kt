@@ -43,4 +43,16 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     fun sendQuickAction(action: String) {
         sendMessage(action)
     }
+
+    fun clearHistory() {
+        viewModelScope.launch {
+            repository.clearHistory(userId)
+        }
+    }
+
+    fun resetMemory() {
+        viewModelScope.launch {
+            repository.resetMemory(userId)
+        }
+    }
 }

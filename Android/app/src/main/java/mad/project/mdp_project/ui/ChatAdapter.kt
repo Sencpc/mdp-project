@@ -5,11 +5,14 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import io.noties.markwon.Markwon
 import mad.project.mdp_project.data.ChatMessage
 import mad.project.mdp_project.databinding.ItemChatBotBinding
 import mad.project.mdp_project.databinding.ItemChatUserBinding
 
 class ChatAdapter : ListAdapter<ChatMessage, RecyclerView.ViewHolder>(DiffCallback()) {
+
+    private var markwon: Markwon? = null
 
     companion object {
         private const val VIEW_TYPE_BOT = 1
@@ -22,8 +25,11 @@ class ChatAdapter : ListAdapter<ChatMessage, RecyclerView.ViewHolder>(DiffCallba
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
+        if (markwon == null) {
+            markwon = Markwon.create(parent.context)
+        }
         return if (viewType == VIEW_TYPE_BOT) {
-            BotViewHolder(ItemChatBotBinding.inflate(inflater, parent, false))
+            BotViewHolder(ItemChatBotBinding.inflate(inflater, parent, false), markwon!!)
         } else {
             UserViewHolder(ItemChatUserBinding.inflate(inflater, parent, false))
         }
@@ -38,9 +44,9 @@ class ChatAdapter : ListAdapter<ChatMessage, RecyclerView.ViewHolder>(DiffCallba
         }
     }
 
-    class BotViewHolder(private val binding: ItemChatBotBinding) : RecyclerView.ViewHolder(binding.root) {
+    class BotViewHolder(private val binding: ItemChatBotBinding, private val markwon: Markwon) : RecyclerView.ViewHolder(binding.root) {
         fun bind(message: ChatMessage) {
-            binding.tvMessage.text = message.message
+            markwon.setMarkdown(binding.tvMessage, message.message)
         }
     }
 
