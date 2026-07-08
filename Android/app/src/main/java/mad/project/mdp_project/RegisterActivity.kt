@@ -5,6 +5,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
+import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -28,7 +29,9 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
-        binding.ivBack.setOnClickListener { finish() }
+        binding.ivBack.setOnClickListener {
+            finish()
+        }
         
         binding.tvLogin.setOnClickListener {
             finish()
@@ -60,6 +63,19 @@ class RegisterActivity : AppCompatActivity() {
         viewModel.isLoading.observe(this) { isLoading ->
             binding.btnCreateAccount.isEnabled = !isLoading && binding.cbTerms.isChecked
             binding.btnCreateAccount.alpha = if (isLoading) 0.5f else if (binding.cbTerms.isChecked) 1.0f else 0.5f
+        }
+
+        // Smart loading overlay — only shown after 500ms delay
+        viewModel.showLoadingOverlay.observe(this) { show ->
+            if (show) {
+                binding.loadingOverlay.alpha = 0f
+                binding.loadingOverlay.visibility = View.VISIBLE
+                binding.loadingOverlay.animate().alpha(1f).setDuration(200).start()
+            } else {
+                binding.loadingOverlay.animate().alpha(0f).setDuration(150).withEndAction {
+                    binding.loadingOverlay.visibility = View.GONE
+                }.start()
+            }
         }
     }
 
