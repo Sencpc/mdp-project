@@ -24,7 +24,6 @@ const PORT = process.env.PORT || 3000;
 require("dotenv").config();
 const { GoogleGenAI } = require("@google/genai");
 const multer = require("multer");
-const { marked } = require("marked");
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
@@ -376,7 +375,8 @@ app.post("/api/chat", async (req, res) => {
     1. You MUST ONLY answer questions regarding basic health, nutrition, light exercise, and sleep.
     2. Use very polite, empathetic, and simple English. Avoid complex medical jargon.
     3. You are not a doctor. Advise them to consult a real doctor if they mention severe symptoms.
-    4. Use the provided context to personalize your advice.
+    4. You MUST format your responses using Markdown. Do NOT use any HTML tags.
+    5. Use the provided context to personalize your advice.
     
     DAILY METRICS CONTEXT:
     - Calories consumed today: ${caloriesToday} kcal
@@ -398,7 +398,7 @@ app.post("/api/chat", async (req, res) => {
       contents: systemPrompt,
     });
     const aiReplyMarkdown = result.text;
-    const aiReply = marked.parse(aiReplyMarkdown).trim();
+    const aiReply = aiReplyMarkdown.trim();
     console.log(
       `[Chat API] Gemini API responded (Elapsed: ${Date.now() - startTime}ms)`,
     );
@@ -409,9 +409,9 @@ app.post("/api/chat", async (req, res) => {
       { userId, sender: "AI", message: aiReply, createdAt: Date.now() },
     ]);
 
-    // 7. Trigger Background Summarization if memory gets too long (e.g., > 10 messages)
+    // 7. Trigger Background Summarization if memory gets too long (e.g., >= 4 messages)
     // We add +2 because we just added the new user message and AI reply
-    if (recentChats.length + 2 >= 10) {
+    if (recentChats.length + 2 >= 4) {
       // Fetch them again to include the two we just inserted
       const chatsToSummarize = await ChatLog.findAll({
         where: { userId, isSummarized: false },
