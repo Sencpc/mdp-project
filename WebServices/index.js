@@ -376,6 +376,7 @@ app.post("/api/chat", async (req, res) => {
     2. Use very polite, empathetic, and simple English. Avoid complex medical jargon.
     3. You are not a doctor. Advise them to consult a real doctor if they mention severe symptoms.
     4. Use the provided context to personalize your advice.
+    5. Formatting: Do NOT use Markdown (like **bold**). Instead, strictly use basic HTML tags like <b>bold</b>, <i>italic</i>, and <br> for newlines.
     
     DAILY METRICS CONTEXT:
     - Calories consumed today: ${caloriesToday} kcal
@@ -389,13 +390,17 @@ app.post("/api/chat", async (req, res) => {
     USER: "${message}"`;
 
     // 5. Generate AI Response
-    console.log(`[Chat API] Calling Gemini API (Elapsed: ${Date.now() - startTime}ms)`);
+    console.log(
+      `[Chat API] Calling Gemini API (Elapsed: ${Date.now() - startTime}ms)`,
+    );
     const result = await ai.models.generateContent({
       model: GEMINI_MODEL,
       contents: systemPrompt,
     });
     const aiReply = result.text;
-    console.log(`[Chat API] Gemini API responded (Elapsed: ${Date.now() - startTime}ms)`);
+    console.log(
+      `[Chat API] Gemini API responded (Elapsed: ${Date.now() - startTime}ms)`,
+    );
 
     // 6. Save the new messages to the database
     await ChatLog.bulkCreate([
@@ -415,7 +420,9 @@ app.post("/api/chat", async (req, res) => {
       updateChatSummary(userId, user.chatSummary, chatsToSummarize);
     }
 
-    console.log(`[Chat API] Sending response to client (Total time: ${Date.now() - startTime}ms)`);
+    console.log(
+      `[Chat API] Sending response to client (Total time: ${Date.now() - startTime}ms)`,
+    );
     return res.status(200).json({ reply: aiReply });
   } catch (err) {
     console.error("Chatbot Error:", err);

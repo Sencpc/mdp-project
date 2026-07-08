@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import androidx.core.text.HtmlCompat
 import mad.project.mdp_project.data.ChatMessage
 import mad.project.mdp_project.databinding.ItemChatBotBinding
 import mad.project.mdp_project.databinding.ItemChatUserBinding
@@ -40,7 +41,10 @@ class ChatAdapter : ListAdapter<ChatMessage, RecyclerView.ViewHolder>(DiffCallba
 
     class BotViewHolder(private val binding: ItemChatBotBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(message: ChatMessage) {
-            binding.tvMessage.text = message.message
+            binding.tvMessage.text = HtmlCompat.fromHtml(
+                message.message,
+                HtmlCompat.FROM_HTML_MODE_LEGACY
+            )
         }
     }
 
