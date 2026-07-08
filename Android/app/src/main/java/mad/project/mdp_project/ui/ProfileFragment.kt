@@ -1,5 +1,6 @@
 package mad.project.mdp_project.ui
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -17,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -40,6 +42,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.fragment.findNavController
 import coil.compose.AsyncImage
+import mad.project.mdp_project.LoginActivity
 import mad.project.mdp_project.R
 import mad.project.mdp_project.data.AppDatabase
 import mad.project.mdp_project.data.SessionManager
@@ -68,7 +71,15 @@ class ProfileFragment : Fragment() {
 
                 ProfileScreen(
                     viewModel = viewModel,
-                    onBackClick = { findNavController().popBackStack() }
+                    onBackClick = { findNavController().popBackStack() },
+                    onLogoutClick = {
+                        sessionManager.clearSession()
+                        val intent = Intent(requireContext(), LoginActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        }
+                        startActivity(intent)
+                        activity?.finish()
+                    }
                 )
             }
         }
@@ -79,7 +90,8 @@ class ProfileFragment : Fragment() {
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onLogoutClick: () -> Unit
 ) {
     // Menggunakan draftUser agar perubahan terlihat di UI sebelum di-save ke DB
     val user by viewModel.draftUser.collectAsState()
@@ -95,6 +107,7 @@ fun ProfileScreen(
     var showDatePicker by remember { mutableStateOf(false) }
     var showEmergencyDialog by remember { mutableStateOf(false) }
     var showConditionsLibrary by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
     // Image Pickers Logic
     var tempImageUri by remember { mutableStateOf<Uri?>(null) }
@@ -205,6 +218,15 @@ fun ProfileScreen(
                         color = Color.Gray
                     )
                 }
+                // Logout icon — top-right of profile header
+                IconButton(onClick = { showLogoutDialog = true }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                        contentDescription = "Logout",
+                        modifier = Modifier.size(24.dp),
+                        tint = Color(0xFFD32F2F)
+                    )
+                }
             }
 
             Text("Personal Data", style = MaterialTheme.typography.titleMedium.copy(
@@ -255,6 +277,23 @@ fun ProfileScreen(
     }
 
     // --- Dialog Implementations ---
+
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text("Logout") },
+            text = { Text("Are you sure you want to log out?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showLogoutDialog = false
+                    onLogoutClick()
+                }) { Text("Logout", color = Color(0xFFD32F2F)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
 
     if (showConditionsLibrary) {
         ConditionsLibraryDialog(
