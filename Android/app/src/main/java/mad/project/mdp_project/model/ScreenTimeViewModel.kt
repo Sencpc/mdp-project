@@ -69,9 +69,7 @@ class ScreenTimeViewModel(application: Application) : AndroidViewModel(applicati
     private val _totalMs = MutableLiveData(0L)
     val totalMs: LiveData<Long> = _totalMs
 
-    companion object {
-        private const val DAILY_GOAL_MS = 4 * 60 * 60 * 1000L // 4 hours
-    }
+
 
     /**
      * Ambil data penggunaan app hari ini menggunakan queryEvents() untuk
@@ -182,8 +180,12 @@ class ScreenTimeViewModel(application: Application) : AndroidViewModel(applicati
                 _productivityTime.postValue(formatMs(productivityMs))
                 _entertainmentTime.postValue(formatMs(entertainmentMs))
 
-                // Calculate progress percentages
-                _totalProgress.postValue(((totalMs.toDouble() / DAILY_GOAL_MS) * 100).toInt().coerceIn(0, 100))
+                // Calculate progress percentages using user-configured limit
+                val dailyGoalMs = ScreenTimeService.getDailyLimitMs(context)
+                val progressPercent = if (dailyGoalMs > 0) {
+                    ((totalMs.toDouble() / dailyGoalMs) * 100).toInt().coerceIn(0, 100)
+                } else 0
+                _totalProgress.postValue(progressPercent)
                 _socialProgress.postValue(calcCategoryProgress(socialMs, totalMs))
                 _productivityProgress.postValue(calcCategoryProgress(productivityMs, totalMs))
                 _entertainmentProgress.postValue(calcCategoryProgress(entertainmentMs, totalMs))

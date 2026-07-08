@@ -24,8 +24,9 @@ class App : Application() {
         // Start the screen time tracking service
         startScreenTimeService()
 
-        // Create notification channel for habit reminders
+        // Create notification channels
         createReminderNotificationChannel()
+        createScreenTimeNudgeChannel()
     }
 
     private fun startScreenTimeService() {
@@ -47,6 +48,21 @@ class App : Application() {
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 description = "Notifications for habit reminders"
+                enableVibration(true)
+            }
+            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            manager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun createScreenTimeNudgeChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                ScreenTimeService.NUDGE_CHANNEL_ID,
+                "Screen Time Alerts",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Alerts when you reach your daily screen time limit"
                 enableVibration(true)
             }
             val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
