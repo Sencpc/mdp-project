@@ -5,6 +5,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mad.project.mdp_project.data.AppDatabase
 import mad.project.mdp_project.data.User
@@ -21,6 +23,12 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
 
     private val _isLoading = MutableLiveData(false)
     val isLoading: LiveData<Boolean> = _isLoading
+
+    // Smart loading: only show overlay after 500ms delay
+    private val _showLoadingOverlay = MutableLiveData(false)
+    val showLoadingOverlay: LiveData<Boolean> = _showLoadingOverlay
+
+    private var delayedLoadingJob: Job? = null
 
     init {
         val db = AppDatabase.getDatabase(application)
@@ -39,8 +47,18 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
         }
 
         _isLoading.value = true
+
+        // Start a delayed job: show overlay only if request takes > 500ms
+        delayedLoadingJob = viewModelScope.launch {
+            delay(500L)
+            _showLoadingOverlay.value = true
+        }
+
         viewModelScope.launch {
             val result = userRepository.register(username, password, fullName)
+            // Cancel the delayed overlay job if it hasn't fired yet
+            delayedLoadingJob?.cancel()
+            _showLoadingOverlay.value = false
             _registerResult.value = result
             _isLoading.value = false
         }

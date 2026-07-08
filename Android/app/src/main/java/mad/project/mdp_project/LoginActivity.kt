@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
+import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -67,6 +68,19 @@ class LoginActivity : AppCompatActivity() {
         viewModel.isLoading.observe(this) { isLoading ->
             binding.btnLogin.isEnabled = !isLoading
             binding.btnLogin.alpha = if (isLoading) 0.5f else 1.0f
+        }
+
+        // Smart loading overlay — only shown after 500ms delay
+        viewModel.showLoadingOverlay.observe(this) { show ->
+            if (show) {
+                binding.loadingOverlay.alpha = 0f
+                binding.loadingOverlay.visibility = View.VISIBLE
+                binding.loadingOverlay.animate().alpha(1f).setDuration(200).start()
+            } else {
+                binding.loadingOverlay.animate().alpha(0f).setDuration(150).withEndAction {
+                    binding.loadingOverlay.visibility = View.GONE
+                }.start()
+            }
         }
     }
 
