@@ -13,6 +13,12 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+// Basic logging middleware
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
 const PORT = process.env.PORT || 3000;
 
 require("dotenv").config();
@@ -20,7 +26,7 @@ const { GoogleGenAI } = require("@google/genai");
 const multer = require("multer");
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
 const upload = multer({ storage: multer.memoryStorage() });
 
 // ==========================================
@@ -316,6 +322,8 @@ app.post("/api/nutrition/analyze", upload.single("image"), async (req, res) => {
 app.post("/api/chat", async (req, res) => {
   try {
     const { userId, message } = req.body;
+    console.log(`[Chat API] Start handling chat request for User ${userId}`);
+    const startTime = Date.now();
 
     // 1. Fetch User data to get the existing chatSummary
     const user = await User.findByPk(userId);
@@ -381,11 +389,13 @@ app.post("/api/chat", async (req, res) => {
     USER: "${message}"`;
 
     // 5. Generate AI Response
+    console.log(`[Chat API] Calling Gemini API (Elapsed: ${Date.now() - startTime}ms)`);
     const result = await ai.models.generateContent({
       model: GEMINI_MODEL,
       contents: systemPrompt,
     });
     const aiReply = result.text;
+    console.log(`[Chat API] Gemini API responded (Elapsed: ${Date.now() - startTime}ms)`);
 
     // 6. Save the new messages to the database
     await ChatLog.bulkCreate([
@@ -405,6 +415,7 @@ app.post("/api/chat", async (req, res) => {
       updateChatSummary(userId, user.chatSummary, chatsToSummarize);
     }
 
+    console.log(`[Chat API] Sending response to client (Total time: ${Date.now() - startTime}ms)`);
     return res.status(200).json({ reply: aiReply });
   } catch (err) {
     console.error("Chatbot Error:", err);
