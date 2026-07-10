@@ -64,7 +64,8 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
                     habit.reminders.forEachIndexed { index, time ->
                         val requestCode = habit.id * 100 + index
                         mad.project.mdp_project.service.ReminderScheduler.scheduleReminder(
-                            application, requestCode, habit.id, habit.name, time
+                            application, requestCode, habit.id, habit.name, time,
+                            habit.useRingtone, habit.useVibration
                         )
                     }
                 }

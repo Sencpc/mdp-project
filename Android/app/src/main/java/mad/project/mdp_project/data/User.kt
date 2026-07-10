@@ -17,5 +17,6 @@ data class User(
     val conditions: String = "", // Comma-separated or JSON string
     val emergencyContactName: String? = null,
     val emergencyContactPhone: String? = null,
-    val profilePicturePath: String? = null
+    val profilePicturePath: String? = null,
+    val chatSummary: String? = null
 )

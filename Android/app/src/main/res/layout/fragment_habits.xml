@@ -7,6 +7,17 @@
     android:background="#FAFAFA"
     tools:context="mad.project.mdp_project.ui.HabitsFragment">
 
+    <ImageView
+        android:id="@+id/iv_notification"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginEnd="24dp"
+        android:src="@drawable/ic_dash_notification"
+        app:layout_constraintBottom_toBottomOf="@+id/tvHabitsTitle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/tvHabitsTitle"
+        app:tint="#004B4F" />
+
     <TextView
         android:id="@+id/tvHabitsTitle"
         android:layout_width="wrap_content"

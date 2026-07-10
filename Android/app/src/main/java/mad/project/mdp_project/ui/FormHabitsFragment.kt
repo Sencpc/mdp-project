@@ -90,7 +90,20 @@ class FormHabitsFragment : Fragment() {
             }
         }
 
-
+        // Notification settings
+        viewModel.useRingtone.observe(viewLifecycleOwner) {
+            binding.switchRingtone.isChecked = it
+        }
+        binding.switchRingtone.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.useRingtone.value = isChecked
+        }
+        
+        viewModel.useVibration.observe(viewLifecycleOwner) {
+            binding.switchVibration.isChecked = it
+        }
+        binding.switchVibration.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.useVibration.value = isChecked
+        }
 
         viewModel.habitCategory.observe(viewLifecycleOwner) { category ->
             updateCategoryUI(category)

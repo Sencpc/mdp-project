@@ -17,11 +17,15 @@ class ReminderReceiver : BroadcastReceiver() {
         const val CHANNEL_ID = "HabitReminderChannel"
         const val EXTRA_HABIT_ID = "extra_habit_id"
         const val EXTRA_HABIT_NAME = "extra_habit_name"
+        const val EXTRA_USE_RINGTONE = "extra_use_ringtone"
+        const val EXTRA_USE_VIBRATION = "extra_use_vibration"
     }
 
     override fun onReceive(context: Context, intent: Intent) {
         val habitId = intent.getIntExtra(EXTRA_HABIT_ID, -1)
         val habitName = intent.getStringExtra(EXTRA_HABIT_NAME) ?: "Habit Reminder"
+        val useRingtone = intent.getBooleanExtra(EXTRA_USE_RINGTONE, true)
+        val useVibration = intent.getBooleanExtra(EXTRA_USE_VIBRATION, true)
 
         createNotificationChannel(context)
 
@@ -34,15 +38,22 @@ class ReminderReceiver : BroadcastReceiver() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification_logo)
             .setContentTitle("Habit Reminder")
             .setContentText("It's time for: $habitName")
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setDefaults(NotificationCompat.DEFAULT_ALL)
-            .build()
+
+        var defaults = 0
+        if (useRingtone) defaults = defaults or NotificationCompat.DEFAULT_SOUND
+        if (useVibration) defaults = defaults or NotificationCompat.DEFAULT_VIBRATE
+        if (defaults != 0) {
+            builder.setDefaults(defaults)
+        }
+
+        val notification = builder.build()
 
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

@@ -30,6 +30,7 @@ data class UserResponse(
     val conditions: String? = null,
     val emergencyContactName: String? = null,
     val emergencyContactPhone: String? = null,
+    val chatSummary: String? = null,
     val error: String? = null
 )
 
@@ -56,7 +57,9 @@ data class HabitRequest(
     val streak: Int = 0,
     val startTime: Long,
     val endTime: Long,
-    val reminders: List<Long> = emptyList()
+    val reminders: List<Long> = emptyList(),
+    val useRingtone: Boolean? = true,
+    val useVibration: Boolean? = true
 )
 
 @JsonClass(generateAdapter = true)
@@ -71,6 +74,8 @@ data class HabitResponse(
     val startTime: Long,
     val endTime: Long,
     val reminders: List<Long>? = emptyList(),
+    val useRingtone: Boolean? = true,
+    val useVibration: Boolean? = true,
     val createdAt: Long? = null,
     val deletedAt: Long? = null
 )

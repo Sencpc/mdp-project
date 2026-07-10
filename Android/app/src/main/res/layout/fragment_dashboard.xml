@@ -35,17 +35,19 @@
             app:layout_constraintStart_toEndOf="@id/profile_circle"
             app:layout_constraintTop_toTopOf="@id/profile_circle" />
 
+        <!-- Greeting -->
         <ImageView
-            android:id="@+id/iv_notification"
+            android:id="@+id/iv_history"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:contentDescription="Notifications"
-            android:src="@drawable/ic_dash_notification"
+            android:src="@android:drawable/ic_menu_save"
+            android:tint="#004A4E"
             app:layout_constraintBottom_toBottomOf="@id/profile_circle"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/profile_circle" />
+            app:layout_constraintTop_toTopOf="@id/profile_circle"
+            app:layout_constraintVertical_bias="0.375" />
 
-        <!-- Greeting -->
         <TextView
             android:id="@+id/tv_greeting"
             android:layout_width="wrap_content"

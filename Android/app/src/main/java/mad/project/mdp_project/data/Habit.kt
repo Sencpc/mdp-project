@@ -23,7 +23,9 @@ data class Habit(
     var endTime: Long,
     val createdAt: Long = System.currentTimeMillis(),
     var deletedAt: Long? = null,
-    var reminders: List<Long> = emptyList()
+    var reminders: List<Long> = emptyList(),
+    var useRingtone: Boolean = true,
+    var useVibration: Boolean = true
 ) : Parcelable {
 
     fun getDurationMillis(): Long = endTime - startTime

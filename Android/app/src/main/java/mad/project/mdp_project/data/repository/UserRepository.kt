@@ -171,6 +171,7 @@ class UserRepository(
                     conditions = apiUser.conditions ?: "",
                     emergencyContactName = apiUser.emergencyContactName,
                     emergencyContactPhone = apiUser.emergencyContactPhone,
+                    chatSummary = apiUser.chatSummary,
                     // Keep existing local profile picture if there is one
                     profilePicturePath = userDao.getUserByIdOnce(userId)?.profilePicturePath
                 )

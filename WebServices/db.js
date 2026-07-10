@@ -122,6 +122,14 @@ Habit.init(
       type: DataTypes.JSON,
       defaultValue: [],
     },
+    useRingtone: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
+    useVibration: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
     createdAt: {
       type: DataTypes.BIGINT,
       defaultValue: () => Date.now(),

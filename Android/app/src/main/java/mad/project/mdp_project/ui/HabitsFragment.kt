@@ -37,7 +37,14 @@ class HabitsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
+        setupClickListeners()
         observeViewModel()
+    }
+
+    private fun setupClickListeners() {
+        binding.ivNotification.setOnClickListener {
+            findNavController().navigate(R.id.action_nav_home_to_nav_settings)
+        }
     }
 
     private fun setupRecyclerView() {
