@@ -28,10 +28,6 @@ class HabitRepository(
         return habitDao.getHabitById(habitId)
     }
 
-    fun getHabitsWithReminder(userId: Int): Flow<List<Habit>> {
-        return habitDao.getHabitsWithReminder(userId)
-    }
-
     /**
      * Add habit: simpan ke Room, lalu sync ke server.
      */
@@ -48,7 +44,8 @@ class HabitRepository(
                     category = habit.category,
                     subtitle = habit.subtitle,
                     startTime = habit.startTime,
-                    endTime = habit.endTime
+                    endTime = habit.endTime,
+                    reminders = habit.reminders
                 ))
                 
                 if (response.isSuccessful && response.body() != null) {
@@ -106,7 +103,8 @@ class HabitRepository(
                     isCompleted = habit.isCompleted,
                     streak = habit.streak,
                     startTime = habit.startTime,
-                    endTime = habit.endTime
+                    endTime = habit.endTime,
+                    reminders = habit.reminders
                 ))
             } catch (e: Exception) {
                 Log.w(TAG, "Gagal sync update habit ke server: ${e.message}")
@@ -167,7 +165,7 @@ class HabitRepository(
                         endTime = apiHabit.endTime,
                         createdAt = apiHabit.createdAt ?: System.currentTimeMillis(),
                         deletedAt = apiHabit.deletedAt,
-                        reminderTime = existingLocal?.reminderTime // Jaga reminderTime lokal
+                        reminders = apiHabit.reminders ?: existingLocal?.reminders ?: emptyList()
                     )
                     habitDao.insertHabit(localHabit)
                 }

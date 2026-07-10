@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import mad.project.mdp_project.data.AppDatabase
 import mad.project.mdp_project.data.ConsultationEntity
@@ -50,7 +51,8 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     val habits: StateFlow<List<Habit>> = habitRepository.getHabitsForUser(userId)
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    val habitsWithReminder: StateFlow<List<Habit>> = habitRepository.getHabitsWithReminder(userId)
+    val habitsWithReminder: StateFlow<List<Habit>> = habitRepository.getHabitsForUser(userId)
+        .map { list -> list.filter { it.reminders.isNotEmpty() } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val sleepLogs: StateFlow<List<SleepLog>> = sleepRepository.getSleepLogsForUser(userId)

@@ -18,7 +18,7 @@ class FormHabitViewModel(application: Application) : AndroidViewModel(applicatio
     val habitName = MutableLiveData<String>("")
     val habitSubtitle = MutableLiveData<String>("")
     val habitCategory = MutableLiveData<String>("Mental")
-    val reminderTime = MutableLiveData<Long?>(null)
+    val reminders = MutableLiveData<List<Long>>(emptyList())
     
     val isEditMode = MutableLiveData<Boolean>(false)
     private var currentHabitId: Int = -1
@@ -41,7 +41,7 @@ class FormHabitViewModel(application: Application) : AndroidViewModel(applicatio
                 habitName.value = it.name
                 habitSubtitle.value = it.subtitle
                 habitCategory.value = it.category
-                reminderTime.value = it.reminderTime
+                reminders.value = it.reminders
             }
         }
     }
@@ -58,7 +58,7 @@ class FormHabitViewModel(application: Application) : AndroidViewModel(applicatio
                         name = name,
                         subtitle = habitSubtitle.value ?: "",
                         category = habitCategory.value ?: "Mental",
-                        reminderTime = reminderTime.value
+                        reminders = reminders.value ?: emptyList()
                     )
                     repository.updateHabit(updated)
                 }
@@ -70,7 +70,7 @@ class FormHabitViewModel(application: Application) : AndroidViewModel(applicatio
                     category = habitCategory.value ?: "Mental",
                     startTime = System.currentTimeMillis(),
                     endTime = System.currentTimeMillis() + (24 * 60 * 60 * 1000L), // Default 24h
-                    reminderTime = reminderTime.value
+                    reminders = reminders.value ?: emptyList()
                 )
                 repository.addHabit(newHabit)
             }

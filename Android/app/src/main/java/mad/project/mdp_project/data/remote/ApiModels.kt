@@ -57,7 +57,8 @@ data class HabitRequest(
     val isCompleted: Boolean = false,
     val streak: Int = 0,
     val startTime: Long,
-    val endTime: Long
+    val endTime: Long,
+    val reminders: List<Long> = emptyList()
 )
 
 @JsonClass(generateAdapter = true)
@@ -71,6 +72,7 @@ data class HabitResponse(
     val streak: Int = 0,
     val startTime: Long,
     val endTime: Long,
+    val reminders: List<Long>? = emptyList(),
     val createdAt: Long? = null,
     val deletedAt: Long? = null
 )

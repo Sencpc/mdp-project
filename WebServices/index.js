@@ -53,6 +53,40 @@ app.post("/api/users/register", async (req, res) => {
       fullName: fullName || "",
     });
 
+    // Create template habits for the new user
+    const now = Date.now();
+    const oneDayMs = 24 * 60 * 60 * 1000;
+    
+    const eatReminders = [8 * 3600 * 1000, 13 * 3600 * 1000, 19 * 3600 * 1000];
+    const drinkReminders = [9 * 3600 * 1000, 11 * 3600 * 1000, 14 * 3600 * 1000, 16 * 3600 * 1000, 20 * 3600 * 1000];
+    const exerciseReminders = [7 * 3600 * 1000, 17 * 3600 * 1000];
+
+    const habitData = [
+      { name: "Eat Healthy", category: "Nutrition", subtitle: "General healthy meals", reminders: eatReminders },
+      { name: "Drink Water", category: "Nutrition", subtitle: "Stay hydrated", reminders: drinkReminders },
+      { name: "Exercise (Walking)", category: "Fitness", subtitle: "General healthy walking", reminders: exerciseReminders }
+    ];
+    
+    const habitsToCreate = [];
+    for (const data of habitData) {
+      const todayStart = new Date().setHours(0,0,0,0);
+      const absoluteReminders = data.reminders.map(offset => todayStart + offset);
+
+      habitsToCreate.push({
+        userId: user.id,
+        name: data.name,
+        category: data.category,
+        subtitle: data.subtitle,
+        isCompleted: false,
+        streak: 0,
+        startTime: now, 
+        endTime: now + oneDayMs, // 24 hour window
+        createdAt: now,
+        reminders: absoluteReminders,
+      });
+    }
+    await Habit.bulkCreate(habitsToCreate);
+
     return res.status(201).json({
       id: user.id,
       username: user.username,
@@ -147,7 +181,7 @@ app.put("/api/users/:id", async (req, res) => {
 // ==========================================
 app.post("/api/habits", async (req, res) => {
   try {
-    const { userId, name, category, subtitle, startTime, endTime } = req.body;
+    const { userId, name, category, subtitle, startTime, endTime, reminders } = req.body;
     const habit = await Habit.create({
       userId,
       name,
@@ -155,6 +189,7 @@ app.post("/api/habits", async (req, res) => {
       subtitle: subtitle || "",
       startTime,
       endTime,
+      reminders: reminders || [],
       createdAt: Date.now(),
     });
     return res.status(201).json(habit);
@@ -188,6 +223,7 @@ app.put("/api/habits/:id", async (req, res) => {
       streak,
       startTime,
       endTime,
+      reminders,
     } = req.body;
     await habit.update({
       name,
@@ -197,6 +233,7 @@ app.put("/api/habits/:id", async (req, res) => {
       streak,
       startTime,
       endTime,
+      reminders: reminders || habit.reminders,
     });
     return res.status(200).json(habit);
   } catch (err) {
@@ -415,9 +452,9 @@ app.post("/api/chat", async (req, res) => {
     const dateOpts = { month: "short", day: "numeric" };
     if (timezone) dateOpts.timeZone = timezone;
     const fmtTime = (ms) =>
-      new Date(Number(ms)).toLocaleTimeString("en-US", timeOpts);
+      new Date(Number(ms)).toLocaleTimeString("id-ID", timeOpts);
     const fmtDate = (ms) =>
-      new Date(Number(ms)).toLocaleDateString("en-US", dateOpts);
+      new Date(Number(ms)).toLocaleDateString("id-ID", dateOpts);
 
     const [allNutrition, sleepLogs, habits, recentChats] = await Promise.all([
       NutritionLog.findAll({

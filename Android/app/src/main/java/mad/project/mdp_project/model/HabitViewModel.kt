@@ -58,13 +58,13 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
                     }
 
                     // 2. Schedule Reminders (System Notification)
-                    if (habit.reminderTime != null) {
+                    mad.project.mdp_project.service.ReminderScheduler.cancelAllReminders(
+                        application, habit.id
+                    )
+                    habit.reminders.forEachIndexed { index, time ->
+                        val requestCode = habit.id * 100 + index
                         mad.project.mdp_project.service.ReminderScheduler.scheduleReminder(
-                            application, habit.id, habit.name, habit.reminderTime!!
-                        )
-                    } else {
-                        mad.project.mdp_project.service.ReminderScheduler.cancelReminder(
-                            application, habit.id
+                            application, requestCode, habit.id, habit.name, time
                         )
                     }
                 }
@@ -81,7 +81,7 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
         return calendar.timeInMillis
     }
 
-    fun addHabit(name: String, subtitle: String, category: String, reminderTime: Long? = null) {
+    fun addHabit(name: String, subtitle: String, category: String, reminders: List<Long> = emptyList()) {
         val userId = sessionManager.getUserId()
         if (userId != -1) {
             viewModelScope.launch {
@@ -92,14 +92,14 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
                     category = category,
                     startTime = System.currentTimeMillis(),
                     endTime = getTenPMEndTime(),
-                    reminderTime = reminderTime
+                    reminders = reminders
                 )
                 habitRepository.addHabit(newHabit)
             }
         }
     }
 
-    fun updateHabit(id: Int, name: String, subtitle: String, category: String, reminderTime: Long? = null) {
+    fun updateHabit(id: Int, name: String, subtitle: String, category: String, reminders: List<Long> = emptyList()) {
         viewModelScope.launch {
             val existingHabit = habitRepository.getHabitById(id)
             if (existingHabit != null) {
@@ -109,7 +109,7 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
                     category = category,
                     startTime = System.currentTimeMillis(),
                     endTime = getTenPMEndTime(),
-                    reminderTime = reminderTime
+                    reminders = reminders
                 )
                 habitRepository.updateHabit(updatedHabit)
             }

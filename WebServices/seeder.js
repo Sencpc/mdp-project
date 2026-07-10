@@ -71,20 +71,34 @@ async function seedDatabase() {
     // 3. Seed Habits
     console.log("Seeding Habits...");
     const habits = [];
-    const habitNames = ["Drink Water", "Read a Book", "Morning Run", "Meditate"];
-    const habitCategories = ["Nutrition", "Mental", "Fitness", "Mental"];
     
-    for (let i = 0; i < habitNames.length; i++) {
+    // Reminders offsets (milliseconds from midnight)
+    const eatReminders = [8 * 3600 * 1000, 13 * 3600 * 1000, 19 * 3600 * 1000]; // 8am, 1pm, 7pm
+    const drinkReminders = [9 * 3600 * 1000, 11 * 3600 * 1000, 14 * 3600 * 1000, 16 * 3600 * 1000, 20 * 3600 * 1000]; // 9am, 11am, 2pm, 4pm, 8pm
+    const exerciseReminders = [7 * 3600 * 1000, 17 * 3600 * 1000]; // 7am, 5pm
+
+    const habitData = [
+      { name: "Eat Healthy", category: "Nutrition", subtitle: "General healthy meals", reminders: eatReminders },
+      { name: "Drink Water", category: "Nutrition", subtitle: "Stay hydrated", reminders: drinkReminders },
+      { name: "Exercise (Walking)", category: "Fitness", subtitle: "General healthy walking", reminders: exerciseReminders }
+    ];
+    
+    for (const data of habitData) {
+      // Create absolute timestamps for reminders today, which Android uses to extract hour/minute
+      const todayStart = new Date().setHours(0,0,0,0);
+      const absoluteReminders = data.reminders.map(offset => todayStart + offset);
+
       habits.push({
         userId,
-        name: habitNames[i],
-        category: habitCategories[i],
-        subtitle: `Daily ${habitNames[i].toLowerCase()}`,
+        name: data.name,
+        category: data.category,
+        subtitle: data.subtitle,
         isCompleted: Math.random() > 0.5,
         streak: Math.floor(Math.random() * 15),
         startTime: now - 30 * oneDayMs, // Started 30 days ago
         endTime: now + 30 * oneDayMs,   // Ends in 30 days
         createdAt: now - 30 * oneDayMs,
+        reminders: absoluteReminders, // Multiple reminders
       });
     }
     await Habit.bulkCreate(habits);

@@ -56,9 +56,10 @@ class HabitDetailFragment : Fragment() {
                             b.tvStreak.text = "Current Streak: ${h.streak} days"
                             
                             // Tampilkan info reminder jika ada
-                            if (h.reminderTime != null) {
+                            if (h.reminders.isNotEmpty()) {
                                 val sdf = SimpleDateFormat("h:mm a", Locale.getDefault())
-                                b.tvStreak.append("\nReminder: ${sdf.format(Date(h.reminderTime!!))}")
+                                val reminderStrings = h.reminders.map { sdf.format(Date(it)) }
+                                b.tvStreak.append("\nReminders: ${reminderStrings.joinToString(", ")}")
                             }
                             
                             b.ivEdit.setOnClickListener {

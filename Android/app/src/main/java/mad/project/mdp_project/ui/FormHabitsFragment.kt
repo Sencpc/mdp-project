@@ -96,35 +96,56 @@ class FormHabitsFragment : Fragment() {
             updateCategoryUI(category)
         }
         
-        viewModel.reminderTime.observe(viewLifecycleOwner) { time ->
-            if (time != null) {
+        viewModel.reminders.observe(viewLifecycleOwner) { times ->
+            binding.llRemindersContainer.removeAllViews()
+            val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
+            
+            times.forEachIndexed { index, time ->
+                val view = LayoutInflater.from(requireContext()).inflate(R.layout.item_reminder_form, binding.llRemindersContainer, false)
+                val tvTime = view.findViewById<TextView>(R.id.tvReminderTime)
+                val ivClear = view.findViewById<View>(R.id.ivClearReminder)
+                
                 val calendar = Calendar.getInstance().apply { timeInMillis = time }
-                val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
-                binding.tvReminderTime.text = timeFormat.format(calendar.time)
-                binding.ivClearReminder.visibility = View.VISIBLE
+                tvTime.text = timeFormat.format(calendar.time)
+                
+                ivClear.setOnClickListener {
+                    val currentList = viewModel.reminders.value?.toMutableList() ?: mutableListOf()
+                    if (index < currentList.size) {
+                        currentList.removeAt(index)
+                        viewModel.reminders.value = currentList
+                    }
+                }
+                
+                binding.llRemindersContainer.addView(view)
+            }
+            
+            if (times.size >= 24) {
+                binding.btnAddReminder.visibility = View.GONE
             } else {
-                binding.tvReminderTime.text = "Not set"
-                binding.ivClearReminder.visibility = View.GONE
+                binding.btnAddReminder.visibility = View.VISIBLE
             }
         }
     }
 
     private fun setupReminder() {
-        binding.ivClearReminder.setOnClickListener {
-            viewModel.reminderTime.value = null
-        }
+        binding.btnAddReminder.setOnClickListener {
+            val currentList = viewModel.reminders.value?.toMutableList() ?: mutableListOf()
+            if (currentList.size >= 24) {
+                Toast.makeText(requireContext(), "Maximum 24 reminders allowed", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
-        binding.btnSelectReminderTime.setOnClickListener {
             val calendar = Calendar.getInstance()
-            viewModel.reminderTime.value?.let { calendar.timeInMillis = it }
-
             TimePickerDialog(requireContext(), { _, h, m ->
                 val selected = Calendar.getInstance().apply {
                     set(Calendar.HOUR_OF_DAY, h)
                     set(Calendar.MINUTE, m)
                     set(Calendar.SECOND, 0)
                 }
-                viewModel.reminderTime.value = selected.timeInMillis
+                currentList.add(selected.timeInMillis)
+                // sort reminders
+                currentList.sort()
+                viewModel.reminders.value = currentList
             }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), false).show()
         }
     }

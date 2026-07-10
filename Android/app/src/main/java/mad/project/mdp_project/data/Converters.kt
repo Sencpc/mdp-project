@@ -16,4 +16,15 @@ class Converters {
     fun toLocalDateTime(value: String?): LocalDateTime? {
         return value?.let { LocalDateTime.parse(it, formatter) }
     }
+
+    @TypeConverter
+    fun fromLongList(value: List<Long>?): String? {
+        return value?.joinToString(",")
+    }
+
+    @TypeConverter
+    fun toLongList(value: String?): List<Long>? {
+        if (value.isNullOrEmpty()) return emptyList()
+        return value.split(",").mapNotNull { it.toLongOrNull() }
+    }
 }

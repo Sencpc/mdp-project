@@ -270,11 +270,24 @@ class DashboardFragment : Fragment() {
         }
         
         binding.tvNoReminders.visibility = View.GONE
-        
         val timeFormat = java.text.SimpleDateFormat("h:mm a", java.util.Locale.getDefault())
         
+        // Collect all reminders across all habits
+        val allReminders = mutableListOf<Pair<mad.project.mdp_project.data.Habit, Long>>()
+        reminders.forEach { habit ->
+            habit.reminders.forEach { time ->
+                allReminders.add(Pair(habit, time))
+            }
+        }
+        
+        // Sort by time
+        allReminders.sortBy { it.second }
+        
         // Take at most 3 upcoming reminders
-        reminders.take(3).forEach { habit ->
+        allReminders.take(3).forEach { pair ->
+            val habit = pair.first
+            val time = pair.second
+            
             val reminderView = layoutInflater.inflate(R.layout.item_dashboard_reminder, container, false)
             
             val tvName = reminderView.findViewById<TextView>(R.id.tv_reminder_name)
@@ -283,23 +296,21 @@ class DashboardFragment : Fragment() {
             
             tvName.text = habit.name
             
-            habit.reminderTime?.let { time ->
-                val reminderCal = java.util.Calendar.getInstance().apply { timeInMillis = time }
-                tvTime.text = timeFormat.format(reminderCal.time)
-                
-                val nowCal = java.util.Calendar.getInstance()
-                val currentHour = nowCal.get(java.util.Calendar.HOUR_OF_DAY)
-                val currentMinute = nowCal.get(java.util.Calendar.MINUTE)
-                val reminderHour = reminderCal.get(java.util.Calendar.HOUR_OF_DAY)
-                val reminderMinute = reminderCal.get(java.util.Calendar.MINUTE)
-                
-                val isPast = (currentHour > reminderHour) || (currentHour == reminderHour && currentMinute >= reminderMinute)
-                
-                if (isPast) {
-                    indicator.setBackgroundResource(R.drawable.bg_circle_gray)
-                } else {
-                    indicator.setBackgroundResource(R.drawable.bg_circle_green)
-                }
+            val reminderCal = java.util.Calendar.getInstance().apply { timeInMillis = time }
+            tvTime.text = timeFormat.format(reminderCal.time)
+            
+            val nowCal = java.util.Calendar.getInstance()
+            val currentHour = nowCal.get(java.util.Calendar.HOUR_OF_DAY)
+            val currentMinute = nowCal.get(java.util.Calendar.MINUTE)
+            val reminderHour = reminderCal.get(java.util.Calendar.HOUR_OF_DAY)
+            val reminderMinute = reminderCal.get(java.util.Calendar.MINUTE)
+            
+            val isPast = (currentHour > reminderHour) || (currentHour == reminderHour && currentMinute >= reminderMinute)
+            
+            if (isPast) {
+                indicator.setBackgroundResource(R.drawable.bg_circle_gray)
+            } else {
+                indicator.setBackgroundResource(R.drawable.bg_circle_green)
             }
             
             container.addView(reminderView)

@@ -122,6 +122,10 @@ Habit.init(
       type: DataTypes.BIGINT,
       allowNull: false,
     },
+    reminders: {
+      type: DataTypes.JSON,
+      defaultValue: [],
+    },
     createdAt: {
       type: DataTypes.BIGINT,
       defaultValue: () => Date.now(),
