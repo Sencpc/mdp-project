@@ -155,7 +155,7 @@ class UserRepository(
      */
     suspend fun syncFromServer(userId: Int) {
         try {
-            val response = apiService.getUserById(userId)
+            val response = apiService.getUser(userId)
             if (response.isSuccessful && response.body() != null) {
                 val apiUser = response.body()!!
                 
