@@ -66,6 +66,9 @@ class ConsultationViewModel(application: Application) : AndroidViewModel(applica
 
     fun loadFacilitiesForDoctor(doctorId: Int) {
         viewModelScope.launch {
+            // Sync facilities from backend → Room (skips if cache is fresh)
+            facilityRepository.syncFacilities()
+
             val doctor = db.doctorDao().getDoctorById(doctorId)
             if (doctor != null && doctor.supportedFacilityIds.isNotEmpty()) {
                 facilityRepository.getFacilitiesByIds(doctor.supportedFacilityIds).collect {

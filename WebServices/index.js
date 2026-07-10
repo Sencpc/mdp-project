@@ -48,25 +48,30 @@ async function getSatuSehatHospitals() {
   }
 
   try {
-    // 1. Get OAuth Token
-    const authResponse = await fetch(
-      "https://api-satusehat-stg.dto.kemkes.go.id/oauth2/v1/accesstoken",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: `client_id=${SATUSEHAT_CLIENT_ID}&client_secret=${SATUSEHAT_CLIENT_SECRET}`,
-      },
-    );
-    const authData = await authResponse.json();
-    if (!authData.access_token)
-      throw new Error("Failed to get SatuSehat token");
+    let token = process.env.SATUSEHAT_HARDCODED_TOKEN;
+
+    // 1. Get OAuth Token if not hardcoded
+    if (!token) {
+      const authResponse = await fetch(
+        "https://api-satusehat-stg.dto.kemkes.go.id/oauth2/v1/accesstoken",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: `client_id=${SATUSEHAT_CLIENT_ID}&client_secret=${SATUSEHAT_CLIENT_SECRET}&grant_type=client_credentials`,
+        },
+      );
+      const authData = await authResponse.json();
+      if (!authData.access_token)
+        throw new Error("Failed to get SatuSehat token (OAuth2 rejected)");
+      token = authData.access_token;
+    }
 
     // 2. Fetch Hospitals (jenis_sarana=104 is Rumah Sakit)
     const msiResponse = await fetch(
       "https://api-satusehat-stg.dto.kemkes.go.id/masterdata/v1/mastersaranaindex/mastersarana?limit=5&page=1&jenis_sarana=104",
       {
         method: "GET",
-        headers: { Authorization: `Bearer ${authData.access_token}` },
+        headers: { Authorization: `Bearer ${token}` },
       },
     );
     const msiData = await msiResponse.json();
@@ -99,20 +104,24 @@ async function getSatuSehatFacilitiesStructured() {
     return cachedFacilitiesStructured;
   }
 
-  // 1. Get OAuth Token (server-side only)
-  const authResponse = await fetch(
-    "https://api-satusehat-stg.dto.kemkes.go.id/oauth2/v1/accesstoken",
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: `client_id=${SATUSEHAT_CLIENT_ID}&client_secret=${SATUSEHAT_CLIENT_SECRET}`,
-    },
-  );
-  const authData = await authResponse.json();
-  if (!authData.access_token)
-    throw new Error("Failed to get SatuSehat token");
+  let token = process.env.SATUSEHAT_HARDCODED_TOKEN;
 
-  const token = authData.access_token;
+  // 1. Get OAuth Token (if hardcoded token is not provided)
+  if (!token) {
+    const authResponse = await fetch(
+      "https://api-satusehat-stg.dto.kemkes.go.id/oauth2/v1/accesstoken",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `client_id=${SATUSEHAT_CLIENT_ID}&client_secret=${SATUSEHAT_CLIENT_SECRET}&grant_type=client_credentials`,
+      },
+    );
+    const authData = await authResponse.json();
+    if (!authData.access_token)
+      throw new Error("Failed to get SatuSehat token (OAuth2 rejected)");
+    token = authData.access_token;
+  }
+
   let allFacilities = [];
 
   // 2. Fetch Hospitals (jenis_sarana=104)
