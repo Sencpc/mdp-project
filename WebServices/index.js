@@ -30,6 +30,51 @@ const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
 const upload = multer({ storage: multer.memoryStorage() });
 
 // ==========================================
+// SATUSEHAT LIVE INTEGRATION CACHE
+// ==========================================
+const SATUSEHAT_CLIENT_ID = process.env.SATUSEHAT_CLIENT_ID || "CXaAyZAAaGAx8szZib7PGmV0BJVqvfKhcFZCBPQcp83KjOw3";
+const SATUSEHAT_CLIENT_SECRET = process.env.SATUSEHAT_CLIENT_SECRET || "cZKYNGrXMj4bwBfsQXKjXjlYUE8UOOMfGiJkOhnRpGT9DytkxQlF4hWHQfyyqZJn";
+
+let cachedHospitals = null;
+let cachedHospitalsTimestamp = 0;
+
+async function getSatuSehatHospitals() {
+  const CACHE_DURATION_MS = 60 * 60 * 1000; // 1 hour
+  if (cachedHospitals && Date.now() - cachedHospitalsTimestamp < CACHE_DURATION_MS) {
+    return cachedHospitals;
+  }
+  
+  try {
+    // 1. Get OAuth Token
+    const authResponse = await fetch("https://api-satusehat-stg.dto.kemkes.go.id/oauth2/v1/accesstoken", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `client_id=${SATUSEHAT_CLIENT_ID}&client_secret=${SATUSEHAT_CLIENT_SECRET}`
+    });
+    const authData = await authResponse.json();
+    if (!authData.access_token) throw new Error("Failed to get SatuSehat token");
+    
+    // 2. Fetch Hospitals (jenis_sarana=104 is Rumah Sakit)
+    const msiResponse = await fetch("https://api-satusehat-stg.dto.kemkes.go.id/masterdata/v1/mastersaranaindex/mastersarana?limit=5&page=1&jenis_sarana=104", {
+      method: "GET",
+      headers: { "Authorization": `Bearer ${authData.access_token}` }
+    });
+    const msiData = await msiResponse.json();
+    
+    if (msiData && msiData.data && msiData.data.length > 0) {
+      cachedHospitals = msiData.data.map(h => `    - ${h.nama}`).join("\n");
+      cachedHospitalsTimestamp = Date.now();
+      return cachedHospitals;
+    }
+  } catch (error) {
+    console.error("SatuSehat Live Fetch Error:", error.message);
+  }
+  
+  // Fallback
+  return `    - RSUP Nasional Dr. Cipto Mangunkusumo (RSCM)\n    - RS Pondok Indah\n    - RS Siloam Hospitals`;
+}
+
+// ==========================================
 // 1. ROUTES UNTUK AUTH (REGISTER & LOGIN)
 // ==========================================
 app.post("/api/users/register", async (req, res) => {
@@ -540,6 +585,18 @@ app.post("/api/chat", async (req, res) => {
       ? new Date().toLocaleString("id-ID", { timeZone: timezone })
       : new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
 
+    // 3.5. Prepare Medical Recommendations Context (SatuSehat & Doctors)
+    const liveHospitals = await getSatuSehatHospitals();
+    const medicalRecommendationContext = `
+    AVAILABLE MEDICAL PROFESSIONALS (You can recommend these specific doctors if the user needs help):
+    - General Practice: Dr. Sarah Jenkins, Dr. Kevin Smith, Dr. Amelia Brown, Dr. David Wilson, Dr. Olivia Clark
+    - Therapy & Mental Health: Dr. Michael Chen, Dr. Emily White, Dr. Daniel Moore, Dr. Sophia Taylor, Dr. Ethan Scott
+    - Nutritionists: Dr. Elena Rodriguez, Dr. Chloe Evans, Dr. Lucas Hall, Dr. Grace Young, Dr. Ryan Adams
+
+    AVAILABLE SATUSEHAT HOSPITALS/FASYANKES (For physical checkups, dynamically fetched):
+${liveHospitals}
+    `;
+
     const systemPrompt = `You are a Digital Wellness Assistant. Your SOLE purpose is to help users maintain their health.
     STRICT RULES:
     1. You MUST ONLY answer questions regarding basic health, nutrition, light exercise, and sleep.
@@ -567,6 +624,9 @@ app.post("/api/chat", async (req, res) => {
 
     LONG-TERM USER SUMMARY:
     ${user.chatSummary || "No previous summary."}
+
+    MEDICAL RECOMMENDATIONS LIST:
+    ${medicalRecommendationContext}
 
     ${recentChatContext}
     
