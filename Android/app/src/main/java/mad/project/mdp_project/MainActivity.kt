@@ -48,6 +48,96 @@ class MainActivity : AppCompatActivity() {
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = navHostFragment.navController
 
-        binding.bottomNavigation.setupWithNavController(navController)
+        // Custom swipe logic and navigation setup
+        setupBottomNavigationAndSwipe(navController)
+    }
+
+    private lateinit var gestureDetector: android.view.GestureDetector
+
+    private fun setupBottomNavigationAndSwipe(navController: androidx.navigation.NavController) {
+        val menu = binding.bottomNavigation.menu
+
+        // Handle Click (fixes Dashboard not being clickable)
+        binding.bottomNavigation.setOnItemSelectedListener { item ->
+            val builder = androidx.navigation.NavOptions.Builder()
+                .setLaunchSingleTop(true)
+                .setRestoreState(true)
+
+            val startDest = navController.graph.startDestinationId
+            if (item.itemId == startDest) {
+                builder.setPopUpTo(startDest, false)
+            } else {
+                builder.setPopUpTo(startDest, false, true)
+            }
+
+            try {
+                navController.navigate(item.itemId, null, builder.build())
+                true
+            } catch (e: IllegalArgumentException) {
+                false
+            }
+        }
+
+        // Sync BottomNavigation selection with NavController (when navigating via back button or swipe)
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            val size = menu.size()
+            for (i in 0 until size) {
+                if (menu.getItem(i).itemId == destination.id) {
+                    menu.getItem(i).isChecked = true
+                    break
+                }
+            }
+        }
+
+        // Setup Swipe Detection
+        gestureDetector = android.view.GestureDetector(this, object : android.view.GestureDetector.SimpleOnGestureListener() {
+            private val SWIPE_THRESHOLD = 100
+            private val SWIPE_VELOCITY_THRESHOLD = 100
+
+            override fun onFling(e1: android.view.MotionEvent?, e2: android.view.MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+                if (e1 != null) {
+                    val diffY = e2.y - e1.y
+                    val diffX = e2.x - e1.x
+                    if (Math.abs(diffX) > Math.abs(diffY)) {
+                        if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                            if (diffX > 0) {
+                                navigateSwipe(false, navController) // Swipe right (Previous tab)
+                            } else {
+                                navigateSwipe(true, navController) // Swipe left (Next tab)
+                            }
+                        }
+                    }
+                }
+                return false
+            }
+        })
+    }
+
+    private fun navigateSwipe(isNext: Boolean, navController: androidx.navigation.NavController) {
+        val currentId = navController.currentDestination?.id ?: return
+        val menu = binding.bottomNavigation.menu
+        var currentIndex = -1
+        
+        for (i in 0 until menu.size()) {
+            if (menu.getItem(i).itemId == currentId) {
+                currentIndex = i
+                break
+            }
+        }
+
+        if (currentIndex != -1) {
+            val nextIndex = if (isNext) currentIndex + 1 else currentIndex - 1
+            if (nextIndex in 0 until menu.size()) {
+                val nextItemId = menu.getItem(nextIndex).itemId
+                binding.bottomNavigation.selectedItemId = nextItemId
+            }
+        }
+    }
+
+    override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {
+        if (::gestureDetector.isInitialized) {
+            gestureDetector.onTouchEvent(ev)
+        }
+        return super.dispatchTouchEvent(ev)
     }
 }

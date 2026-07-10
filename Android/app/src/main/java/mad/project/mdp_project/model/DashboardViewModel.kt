@@ -21,7 +21,6 @@ import mad.project.mdp_project.data.SessionManager
 import mad.project.mdp_project.data.SleepLog
 import mad.project.mdp_project.data.User
 import mad.project.mdp_project.data.remote.RetrofitClient
-import mad.project.mdp_project.data.repository.DoctorRepository
 import mad.project.mdp_project.data.repository.ConsultationRepository
 import mad.project.mdp_project.data.repository.HabitRepository
 import mad.project.mdp_project.data.repository.NutritionRepository
@@ -39,11 +38,9 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
 
     private val db = AppDatabase.getDatabase(application)
     private val api = RetrofitClient.apiService
-
     private val userRepository = UserRepository(db.userDao(), api)
     private val habitRepository = HabitRepository(db.habitDao(), api)
     private val sleepRepository = SleepRepository(db.sleepLogDao(), api)
-    private val doctorRepository = DoctorRepository(db.doctorDao(), db.consultationDao())
     private val nutritionRepository = NutritionRepository(db.nutritionLogDao(), api)
     private val consultationRepository = ConsultationRepository(db.consultationDao(), db.reviewDao())
 
