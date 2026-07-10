@@ -250,15 +250,26 @@ app.get("/api/sleep/user/:userId", async (req, res) => {
 // ==========================================
 // 5. ROUTES UNTUK NUTRITION LOGS
 // ==========================================
+// Helper: auto-classify meal type based on hour of day
+function classifyMealType(timestampMs) {
+  const hour = new Date(timestampMs).getHours();
+  if (hour >= 5 && hour < 11) return "breakfast";
+  if (hour >= 11 && hour < 15) return "lunch";
+  if (hour >= 17 && hour < 21) return "dinner";
+  return "additional";
+}
+
 app.post("/api/nutrition", async (req, res) => {
   try {
-    const { userId, food_name, calories, image_url } = req.body;
+    const { userId, food_name, calories, image_url, meal_type } = req.body;
+    const consumedAt = Date.now();
     const nutritionLog = await NutritionLog.create({
       userId,
       food_name,
       calories,
       image_url,
-      consumed_at: Date.now(),
+      consumed_at: consumedAt,
+      meal_type: meal_type || classifyMealType(consumedAt),
     });
     return res.status(201).json(nutritionLog);
   } catch (err) {
@@ -273,6 +284,23 @@ app.get("/api/nutrition/user/:userId", async (req, res) => {
       order: [["consumed_at", "DESC"]],
     });
     return res.status(200).json(logs);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+app.put("/api/nutrition/:id", async (req, res) => {
+  try {
+    const log = await NutritionLog.findByPk(req.params.id);
+    if (!log) return res.status(404).json({ error: "Nutrition log not found" });
+
+    const { meal_type } = req.body;
+    if (!meal_type || !["breakfast", "lunch", "dinner", "additional"].includes(meal_type)) {
+      return res.status(400).json({ error: "Invalid meal_type. Must be: breakfast, lunch, dinner, or additional" });
+    }
+
+    await log.update({ meal_type });
+    return res.status(200).json(log);
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
@@ -294,9 +322,39 @@ app.post("/api/nutrition/analyze", upload.single("image"), async (req, res) => {
       },
     };
 
-    const prompt = `Analyze the food in this image. Estimate the standard portion size and total calories. 
-    Return ONLY a valid JSON object in this exact format without any additional text or markdown formatting: 
-    {"food_name": "Food Name", "calories": 1500}`;
+    const prompt = `You are a strict food/drink recognition and calorie estimation system.
+
+    STEP 1 — VALIDATION (do this FIRST before any analysis):
+    - Determine if the image contains a clearly recognizable food item or beverage.
+    - REJECT the image by returning the error JSON (see below) if ANY of the following are true:
+      • The image does NOT contain food or drink (e.g. a person, animal, object, scenery, text, meme, document).
+      • The item is NOT edible or drinkable by humans (e.g. pet food, raw inedible plants, chemicals, soap, candles).
+      • The image is too blurry, dark, or obscured to reliably identify the food.
+      • The image contains multiple very different dishes that cannot be reasonably grouped into one meal entry.
+      • The image is a close-up of a package/label or a menu/poster (no real food visible).
+      • The image is a generic stock photo or illustration.
+
+    STEP 2 — ANALYSIS (only if validation passes):
+    - Identify the specific food or drink as precisely as possible (e.g. "Nasi Goreng" not just "Fried Rice", "Cappuccino" not just "Coffee").
+    - Estimate a realistic single-serving portion size based on visual cues (plate size, cup size, utensils for scale).
+    - Estimate total calories for the visible portion. Use standard nutritional databases as your reference. Round to the nearest 5 kcal.
+    - If the image shows a meal with multiple components on one plate (e.g. rice + chicken + vegetables), combine them into one entry with a descriptive name.
+
+    STEP 3 — MEAL TYPE CLASSIFICATION:
+    - Based on the food/drink identified, classify it into one of these categories:
+      • "breakfast" — typical morning foods (cereal, toast, eggs, pancakes, oatmeal, coffee, juice, etc.)
+      • "lunch" — typical midday meals (rice dishes, sandwiches, pasta, salads, soups, etc.)
+      • "dinner" — typical evening meals (heavier dishes, steak, curry, full course meals, etc.)
+      • "additional" — snacks, desserts, standalone drinks, supplements, or anything that doesn't clearly fit a main meal
+    - If the food could fit multiple categories, pick the MOST LIKELY one based on common eating patterns.
+
+    RESPONSE FORMAT — Return ONLY a valid JSON object, no markdown, no explanation, no extra text:
+
+    On SUCCESS:
+    {"food_name": "Specific Food Name", "calories": 350, "meal_type": "lunch"}
+
+    On REJECTION (validation failed):
+    {"food_name": null, "calories": 0, "error": "Brief reason why this was rejected"}`;
 
     const result = await ai.models.generateContent({
       model: GEMINI_MODEL,
@@ -306,6 +364,15 @@ app.post("/api/nutrition/analyze", upload.single("image"), async (req, res) => {
 
     const cleanJson = responseText.replace(/```json|```/g, "").trim();
     const parsedData = JSON.parse(cleanJson);
+
+    // Server-side guardrail: if the AI flagged it as non-food, return 422
+    if (parsedData.error || !parsedData.food_name) {
+      return res.status(422).json({
+        error:
+          parsedData.error ||
+          "Could not identify any food or drink in the image.",
+      });
+    }
 
     return res.status(200).json(parsedData);
   } catch (err) {
@@ -329,51 +396,100 @@ app.post("/api/chat", async (req, res) => {
     const user = await User.findByPk(userId);
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    // 2. Fetch daily metrics (Calories & Sleep)
+    // 2. Fetch all user data in parallel for efficiency
+    const now = Date.now();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const todayMs = today.getTime();
+    const sevenDaysAgoMs = todayMs - 7 * 24 * 60 * 60 * 1000;
+    const threeMonthsAgo = now - 90 * 24 * 60 * 60 * 1000;
 
-    const todayNutrition = await NutritionLog.findAll({ where: { userId } });
-    const caloriesToday = todayNutrition
-      .filter((log) => log.consumed_at >= today.getTime())
-      .reduce((sum, log) => sum + log.calories, 0);
+    const timeOpts = { hour: "2-digit", minute: "2-digit" };
+    if (timezone) timeOpts.timeZone = timezone;
+    const dateOpts = { month: "short", day: "numeric" };
+    if (timezone) dateOpts.timeZone = timezone;
+    const fmtTime = (ms) =>
+      new Date(Number(ms)).toLocaleTimeString("en-US", timeOpts);
+    const fmtDate = (ms) =>
+      new Date(Number(ms)).toLocaleDateString("en-US", dateOpts);
 
-    const lastSleep = await SleepLog.findOne({
-      where: { userId },
-      order: [["date", "DESC"]],
-    });
+    const [allNutrition, sleepLogs, habits, recentChats] = await Promise.all([
+      NutritionLog.findAll({
+        where: { userId },
+        order: [["consumed_at", "DESC"]],
+      }),
+      SleepLog.findAll({
+        where: { userId, date: { [Op.gte]: sevenDaysAgoMs } },
+        order: [["date", "DESC"]],
+        limit: 7,
+      }),
+      Habit.findAll({
+        where: { userId, deletedAt: null },
+        order: [["createdAt", "DESC"]],
+      }),
+      ChatLog.findAll({
+        where: {
+          userId,
+          isSummarized: false,
+          createdAt: { [Op.gte]: threeMonthsAgo },
+        },
+        order: [["createdAt", "ASC"]],
+      }),
+    ]);
 
-    let sleepDuration = "No data yet";
-    let sleepTimeDetails = "";
-    if (lastSleep && lastSleep.startTime && lastSleep.endTime) {
-      const hours =
-        (lastSleep.endTime - lastSleep.startTime) / (1000 * 60 * 60);
-      sleepDuration = `${hours.toFixed(1)} hours`;
+    // --- Build NUTRITION context (token-optimized) ---
+    const todayMeals = allNutrition.filter((l) => l.consumed_at >= todayMs);
+    const caloriesToday = todayMeals.reduce((s, l) => s + l.calories, 0);
 
-      const timeOpts = { hour: "2-digit", minute: "2-digit" };
-      if (timezone) timeOpts.timeZone = timezone;
-
-      const startStr = new Date(Number(lastSleep.startTime)).toLocaleTimeString(
-        "en-US",
-        timeOpts,
-      );
-      const endStr = new Date(Number(lastSleep.endTime)).toLocaleTimeString(
-        "en-US",
-        timeOpts,
-      );
-      sleepTimeDetails = ` (Fell asleep at: ${startStr}, Woke up at: ${endStr})`;
+    let nutritionContext = `Today's Total: ${caloriesToday} kcal`;
+    if (todayMeals.length > 0) {
+      nutritionContext += `\nToday's Meals: ${todayMeals.map((m) => `${m.food_name}(${m.calories}kcal)`).join(", ")}`;
     }
 
-    // 3. Fetch recent unsummarized chat history (max 3 months old)
-    const threeMonthsAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
-    const recentChats = await ChatLog.findAll({
-      where: {
-        userId,
-        isSummarized: false,
-        createdAt: { [Op.gte]: threeMonthsAgo }, // Strictly limit to last 3 months
-      },
-      order: [["createdAt", "ASC"]],
-    });
+    // 7-day daily calorie summary (excluding today)
+    const past7 = allNutrition.filter(
+      (l) => l.consumed_at >= sevenDaysAgoMs && l.consumed_at < todayMs,
+    );
+    if (past7.length > 0) {
+      const byDay = {};
+      past7.forEach((l) => {
+        const key = fmtDate(l.consumed_at);
+        byDay[key] = (byDay[key] || 0) + l.calories;
+      });
+      const trend = Object.entries(byDay)
+        .map(([d, cal]) => `${d}:${cal}`)
+        .join(", ");
+      nutritionContext += `\n7-Day Trend (kcal/day): ${trend}`;
+    }
+
+    // --- Build SLEEP context (token-optimized) ---
+    let sleepContext = "No sleep data.";
+    if (sleepLogs.length > 0) {
+      const rows = sleepLogs.map((s) => {
+        const hrs = ((s.endTime - s.startTime) / (1000 * 60 * 60)).toFixed(1);
+        const q = s.quality ? `Q${s.quality}/5` : "N/A";
+        return `${fmtDate(s.date)}: ${hrs}h ${fmtTime(s.startTime)}-${fmtTime(s.endTime)} ${q}`;
+      });
+      const avgHrs = (
+        sleepLogs.reduce(
+          (s, l) => s + (l.endTime - l.startTime) / (1000 * 60 * 60),
+          0,
+        ) / sleepLogs.length
+      ).toFixed(1);
+      sleepContext = `7-Day Avg: ${avgHrs}h\n${rows.join("\n")}`;
+    }
+
+    // --- Build HABITS context (token-optimized) ---
+    let habitsContext = "No habits tracked.";
+    if (habits.length > 0) {
+      const rows = habits.map((h) => {
+        const done = h.isCompleted ? "✓" : "✗";
+        const time = `${fmtTime(h.startTime)}-${fmtTime(h.endTime)}`;
+        return `${done} ${h.name} [${h.category}] streak:${h.streak} ${time}`;
+      });
+      const completedCount = habits.filter((h) => h.isCompleted).length;
+      habitsContext = `${completedCount}/${habits.length} completed today\n${rows.join("\n")}`;
+    }
 
     // Format recent chats for the prompt
     let recentChatContext = "";
@@ -395,7 +511,7 @@ app.post("/api/chat", async (req, res) => {
     const bloodTypeStr = user.bloodType || "Unknown";
     const conditionsStr = user.conditions || "None";
 
-    // 4. Construct the Agentic System Prompt
+    // 3. Construct the Agentic System Prompt
     const currentTimeStr = timezone
       ? new Date().toLocaleString("en-US", { timeZone: timezone })
       : new Date().toLocaleString("en-US");
@@ -407,19 +523,22 @@ app.post("/api/chat", async (req, res) => {
     3. You are not a doctor. Advise them to consult a real doctor if they mention severe symptoms.
     4. You MUST format your responses using Markdown. Do NOT use any HTML tags.
     5. Be highly natural and varied in your responses. Do NOT use repetitive, templated greetings or robotic transitions (e.g., avoid saying "It's great that you asked about sleep!" every time). Act like a real, casual human friend but polite enough.
-    6. You have access to the user's physical profile below. Use it silently for medical/health reasoning. Do NOT awkwardly announce their stats to them (e.g. NEVER say "Since you are 162cm and 24 years old..."). Only mention these stats if directly asked.
-    
-    USER PROFILE CONTEXT:
-    - Age: ${ageStr}
-    - Height: ${heightStr}
-    - Weight: ${weightStr}
-    - Blood Type: ${bloodTypeStr}
-    - Medical Conditions: ${conditionsStr}
+    6. You have access to the user's full health data below. Use it silently for reasoning. Do NOT awkwardly announce their stats (e.g. NEVER say "Since you are 162cm and 24 years old..."). Only mention specific data if directly asked or if it's clinically relevant to give advice.
 
-    DAILY METRICS CONTEXT:
-    - User's Current Local Time: ${currentTimeStr}
-    - Calories consumed today: ${caloriesToday} kcal
-    - Last recorded sleep: ${sleepDuration}${sleepTimeDetails}
+    USER PROFILE:
+    Age:${ageStr} | Height:${heightStr} | Weight:${weightStr} | Blood:${bloodTypeStr}
+    Conditions: ${conditionsStr}
+
+    NUTRITION DATA:
+    ${nutritionContext}
+
+    SLEEP DATA:
+    ${sleepContext}
+
+    HABITS:
+    ${habitsContext}
+
+    Current Time: ${currentTimeStr} (${timezone || "UTC"})
 
     LONG-TERM USER SUMMARY:
     ${user.chatSummary || "No previous summary."}
@@ -428,7 +547,7 @@ app.post("/api/chat", async (req, res) => {
     
     USER: "${message}"`;
 
-    // 5. Generate AI Response
+    // 4. Generate AI Response
     console.log(
       `[Chat API] Calling Gemini API (Elapsed: ${Date.now() - startTime}ms)`,
     );
@@ -442,13 +561,13 @@ app.post("/api/chat", async (req, res) => {
       `[Chat API] Gemini API responded (Elapsed: ${Date.now() - startTime}ms)`,
     );
 
-    // 6. Save the new messages to the database
+    // 5. Save the new messages to the database
     await ChatLog.bulkCreate([
       { userId, sender: "USER", message: message, createdAt: Date.now() },
       { userId, sender: "AI", message: aiReply, createdAt: Date.now() },
     ]);
 
-    // 7. Trigger Background Summarization if memory gets too long (e.g., >= 4 messages)
+    // 6. Trigger Background Summarization if memory gets too long (e.g., >= 4 messages)
     // We add +2 because we just added the new user message and AI reply
     if (recentChats.length + 2 >= 4) {
       // Fetch them again to include the two we just inserted
@@ -504,18 +623,34 @@ async function updateChatSummary(userId, currentSummary, unsummarizedChats) {
       .map((c) => `${c.sender}: ${c.message}`)
       .join("\n");
 
-    const summarizerPrompt = `
-        You are an AI memory manager for a health app. 
-        Update the following user profile summary using the new conversation transcript. 
-        Focus ONLY on extracting long-term health facts, goals, and user preferences. Drop irrelevant chit-chat. Keep it concise.
-        
-        CURRENT SUMMARY:
-        ${currentSummary || "No summary yet."}
-        
-        NEW TRANSCRIPT:
-        ${chatTranscript}
-        
-        Output ONLY the updated plain text summary, nothing else.`;
+    const summarizerPrompt = `You are an AI memory manager for a health & wellness app. Your job is to maintain a living user profile summary that the wellness chatbot reads for personalized advice.
+
+    INSTRUCTIONS:
+    1. Merge the NEW TRANSCRIPT into the CURRENT SUMMARY below.
+    2. PRESERVE all existing facts — never drop something just to be shorter. It is better to be slightly longer than to lose a meaningful detail.
+    3. ADD any new information from the transcript that falls into the categories below.
+    4. Only DROP content that is purely conversational filler with zero long-term value (e.g. "hi", "thanks", "ok").
+    5. If new information CONTRADICTS an older fact, replace the old fact with the new one (e.g. weight changed, goal updated).
+    6. Write in concise bullet points, grouped by category. Skip empty categories.
+
+    CATEGORIES TO TRACK:
+    • HEALTH PROFILE — chronic conditions, allergies, injuries, medications, recent diagnoses, physical limitations
+    • BODY & VITALS — weight changes, BMI observations, blood pressure mentions, any self-reported vitals over time
+    • GOALS — fitness goals, weight targets, sleep improvement goals, dietary goals, habit-building goals
+    • DIET & PREFERENCES — food preferences, dietary restrictions (vegetarian, halal, etc.), disliked foods, eating patterns, fasting habits
+    • SLEEP PATTERNS — recurring sleep issues, preferred sleep schedule, insomnia mentions, nap habits
+    • EXERCISE & ACTIVITY — workout routines, preferred exercises, activity level, sports
+    • EMOTIONAL & MENTAL — stress triggers, anxiety mentions, mood patterns, motivation struggles, mental health notes
+    • KEY EVENTS — doctor visits, medical test results, injuries, significant life changes affecting health
+    • PERSONAL CONTEXT — relevant lifestyle details (student, night-shift worker, new parent, etc.) that affect health advice
+
+    CURRENT SUMMARY:
+    ${currentSummary || "No summary yet."}
+
+    NEW TRANSCRIPT:
+    ${chatTranscript}
+
+    Output ONLY the updated summary in the bullet-point format above. No preamble, no explanation.`;
 
     const result = await ai.models.generateContent({
       model: GEMINI_MODEL,

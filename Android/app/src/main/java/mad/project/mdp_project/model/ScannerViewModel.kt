@@ -23,7 +23,8 @@ import java.util.Calendar
  */
 data class ScanPreview(
     val foodName: String,
-    val calories: Int
+    val calories: Int,
+    val mealType: String = "additional"
 )
 
 class ScannerViewModel(application: Application) : AndroidViewModel(application) {
@@ -98,7 +99,8 @@ class ScannerViewModel(application: Application) : AndroidViewModel(application)
                 result.onSuccess { analysis ->
                     _scanPreview.value = ScanPreview(
                         foodName = analysis.food_name,
-                        calories = analysis.calories
+                        calories = analysis.calories,
+                        mealType = analysis.meal_type ?: "additional"
                     )
                 }.onFailure { e ->
                     _error.value = e.message ?: "Failed to analyze food image."
@@ -121,7 +123,7 @@ class ScannerViewModel(application: Application) : AndroidViewModel(application)
             _isLogging.value = true
             _error.value = null
 
-            val result = repository.logMeal(userId, preview.foodName, preview.calories)
+            val result = repository.logMeal(userId, preview.foodName, preview.calories, preview.mealType)
             result.onSuccess {
                 _logSuccess.value = true
             }.onFailure { e ->

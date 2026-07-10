@@ -100,7 +100,8 @@ data class NutritionRequest(
     val userId: Int,
     val food_name: String,
     val calories: Int,
-    val image_url: String? = null
+    val image_url: String? = null,
+    val meal_type: String? = null
 )
 
 @JsonClass(generateAdapter = true)
@@ -110,14 +111,21 @@ data class NutritionResponse(
     val food_name: String,
     val calories: Int,
     val image_url: String? = null,
-    val consumed_at: Long? = null
+    val consumed_at: Long? = null,
+    val meal_type: String? = null
 )
 
 // Response from /api/nutrition/analyze — AI prediction only, not saved to DB yet
 @JsonClass(generateAdapter = true)
 data class AnalyzeResponse(
     val food_name: String,
-    val calories: Int
+    val calories: Int,
+    val meal_type: String? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class UpdateMealTypeRequest(
+    val meal_type: String
 )
 
 // ========== GENERIC ==========

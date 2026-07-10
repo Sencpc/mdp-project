@@ -16,4 +16,8 @@
         android:id="@+id/nav_sleep"
         android:icon="@drawable/ic_nav_sleep"
         android:title="Sleep" />
+    <item
+        android:id="@+id/nav_nutrition_log"
+        android:icon="@drawable/ic_habit_nutrition"
+        android:title="Nutrition" />
 </menu>

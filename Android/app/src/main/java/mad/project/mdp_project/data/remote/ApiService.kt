@@ -48,6 +48,9 @@ interface ApiService {
     @GET("api/nutrition/user/{userId}")
     suspend fun getNutritionLogsForUser(@Path("userId") userId: Int): Response<List<NutritionResponse>>
 
+    @PUT("api/nutrition/{id}")
+    suspend fun updateNutritionLog(@Path("id") logId: Int, @Body request: UpdateMealTypeRequest): Response<NutritionResponse>
+
     // ========== AI CALORIE SCANNER ==========
     @Multipart
     @POST("api/nutrition/analyze")

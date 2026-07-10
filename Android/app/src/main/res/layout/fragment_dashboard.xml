@@ -469,6 +469,92 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Calorie Intake Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_calories"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:strokeColor="#EEEEEE"
+            app:strokeWidth="1dp"
+            app:layout_constraintTop_toBottomOf="@id/card_screen">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp">
+
+                <ImageView
+                    android:id="@+id/iv_calories_icon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_habit_nutrition"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="#004B4F" />
+
+                <TextView
+                    android:id="@+id/tv_calories_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Calorie Intake"
+                    android:textColor="#004B4F"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    app:layout_constraintBottom_toBottomOf="@id/iv_calories_icon"
+                    app:layout_constraintStart_toEndOf="@id/iv_calories_icon"
+                    app:layout_constraintTop_toTopOf="@id/iv_calories_icon" />
+
+                <TextView
+                    android:id="@+id/tv_calories_badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_badge"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="2dp"
+                    android:text="This Week"
+                    android:textColor="#757575"
+                    android:textSize="10sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tv_weekly_calories"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="0 kcal"
+                    android:textColor="#333333"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/iv_calories_icon" />
+
+                <TextView
+                    android:id="@+id/tv_calories_baseline_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="avg/day"
+                    android:textColor="#757575"
+                    android:textSize="12sp"
+                    app:layout_constraintBottom_toBottomOf="@id/tv_weekly_calories"
+                    app:layout_constraintStart_toEndOf="@id/tv_weekly_calories"
+                    app:layout_constraintTop_toTopOf="@id/tv_weekly_calories" />
+
+                <mad.project.mdp_project.ui.CalorieChartView
+                    android:id="@+id/calorie_chart_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    app:layout_constraintTop_toBottomOf="@id/tv_weekly_calories" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- Next Reminders Card -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_reminders"
@@ -480,7 +566,7 @@
             app:cardElevation="0dp"
             app:strokeColor="#EEEEEE"
             app:strokeWidth="1dp"
-            app:layout_constraintTop_toBottomOf="@id/card_screen">
+            app:layout_constraintTop_toBottomOf="@id/card_calories">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"

@@ -9,5 +9,6 @@ data class NutritionLog(
     val userId: Int,
     val foodName: String,
     val calories: Int,
+    val mealType: String = "additional",
     val consumedAt: Long = System.currentTimeMillis()
 )

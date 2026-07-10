@@ -203,6 +203,11 @@ NutritionLog.init(
       type: DataTypes.BIGINT,
       defaultValue: () => Date.now(),
     },
+    meal_type: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      defaultValue: "additional",
+    },
   },
   {
     sequelize,

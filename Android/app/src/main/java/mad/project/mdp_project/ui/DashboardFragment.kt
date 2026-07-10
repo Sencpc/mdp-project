@@ -116,6 +116,52 @@ class DashboardFragment : Fragment() {
                     }
                 }
 
+                // Observe Weekly Nutrition Logs for Calorie Chart
+                launch {
+                    viewModel.weeklyNutritionLogs.collectLatest { logs ->
+                        val user = viewModel.user.value
+
+                        // Calculate daily calorie baseline using Mifflin-St Jeor
+                        val baseline = if (user?.height != null && user.weight != null) {
+                            val heightCm = user.height!!.toDouble()
+                            val weightKg = user.weight!!.toDouble()
+                            val age = if (user.birthDate != null) {
+                                val ageDifMs = System.currentTimeMillis() - user.birthDate!!
+                                val ageDate = java.util.Date(ageDifMs)
+                                val cal = java.util.Calendar.getInstance()
+                                cal.time = ageDate
+                                Math.abs(cal.get(java.util.Calendar.YEAR) - 1970)
+                            } else 25 // default age
+
+                            // Average of male and female Mifflin-St Jeor
+                            val male = 10 * weightKg + 6.25 * heightCm - 5 * age + 5
+                            val female = 10 * weightKg + 6.25 * heightCm - 5 * age - 161
+                            ((male + female) / 2).toInt()
+                        } else {
+                            2000 // Default fallback
+                        }
+
+                        // Group logs by day-of-week
+                        val dailyCalories = mutableMapOf<Int, Int>()
+                        logs.forEach { log ->
+                            val logCal = java.util.Calendar.getInstance()
+                            logCal.timeInMillis = log.consumedAt
+                            val dow = logCal.get(java.util.Calendar.DAY_OF_WEEK)
+                            dailyCalories[dow] = (dailyCalories[dow] ?: 0) + log.calories
+                        }
+
+                        // Update chart
+                        binding.calorieChartView.setData(dailyCalories, baseline)
+
+                        // Update weekly total and avg/day text
+                        val totalWeek = logs.sumOf { it.calories }
+                        val daysWithData = dailyCalories.size.coerceAtLeast(1)
+                        val avgPerDay = totalWeek / daysWithData
+                        binding.tvWeeklyCalories.text = "${String.format(java.util.Locale.getDefault(), "%,d", avgPerDay)} kcal"
+                        binding.tvCaloriesBaselineLabel.text = "avg/day (target: $baseline)"
+                    }
+                }
+
                 // Observe Sleep Logs for Dashboard
                 launch {
                     viewModel.sleepLogs.collectLatest { logs ->
@@ -313,6 +359,9 @@ class DashboardFragment : Fragment() {
         }
         binding.btnFotoCalori.setOnClickListener {
             findNavController().navigate(R.id.action_nav_dashboard_to_nav_scanner)
+        }
+        binding.cardCalories.setOnClickListener {
+            findNavController().navigate(R.id.action_nav_dashboard_to_nav_nutrition_log)
         }
     }
 

@@ -16,12 +16,14 @@ import kotlinx.coroutines.launch
 import mad.project.mdp_project.data.AppDatabase
 import mad.project.mdp_project.data.ConsultationEntity
 import mad.project.mdp_project.data.Habit
+import mad.project.mdp_project.data.NutritionLog
 import mad.project.mdp_project.data.SessionManager
 import mad.project.mdp_project.data.SleepLog
 import mad.project.mdp_project.data.User
 import mad.project.mdp_project.data.remote.RetrofitClient
 import mad.project.mdp_project.data.repository.DoctorRepository
 import mad.project.mdp_project.data.repository.HabitRepository
+import mad.project.mdp_project.data.repository.NutritionRepository
 import mad.project.mdp_project.data.repository.SleepRepository
 import mad.project.mdp_project.data.repository.UserRepository
 import mad.project.mdp_project.service.ScreenTimeService
@@ -41,6 +43,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     private val habitRepository = HabitRepository(db.habitDao(), api)
     private val sleepRepository = SleepRepository(db.sleepLogDao(), api)
     private val doctorRepository = DoctorRepository(db.doctorDao(), db.consultationDao())
+    private val nutritionRepository = NutritionRepository(db.nutritionLogDao(), api)
 
     val user: StateFlow<User?> = userRepository.getUserById(userId)
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
@@ -57,6 +60,20 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     val upcomingConsultations: StateFlow<List<ConsultationEntity>> = doctorRepository.getUpcomingConsultations()
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
+    val weeklyNutritionLogs: StateFlow<List<NutritionLog>> = run {
+        val cal = Calendar.getInstance()
+        // Go back to Monday of this week
+        var dow = cal.get(Calendar.DAY_OF_WEEK)
+        if (dow == Calendar.SUNDAY) dow = 8
+        cal.add(Calendar.DAY_OF_YEAR, -(dow - Calendar.MONDAY))
+        cal.set(Calendar.HOUR_OF_DAY, 0)
+        cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        nutritionRepository.getWeeklyLogs(userId, cal.timeInMillis)
+            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    }
+
     // Screen time data for dashboard
     private val _screenTimeValue = MutableLiveData("0h 0m")
     val screenTimeValue: LiveData<String> = _screenTimeValue
@@ -72,6 +89,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         viewModelScope.launch {
             habitRepository.syncFromServer(userId)
             sleepRepository.syncFromServer(userId)
+            nutritionRepository.syncFromServer(userId)
         }
         // Load screen time data
         loadScreenTimeData()

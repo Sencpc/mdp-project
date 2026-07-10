@@ -25,6 +25,9 @@
         <action
             android:id="@+id/action_nav_dashboard_to_nav_scanner"
             app:destination="@id/nav_scanner" />
+        <action
+            android:id="@+id/action_nav_dashboard_to_nav_nutrition_log"
+            app:destination="@id/nav_nutrition_log" />
     </fragment>
 
     <fragment
@@ -124,5 +127,11 @@
         android:name="mad.project.mdp_project.ui.ScannerFragment"
         android:label="Calorie Scanner"
         tools:layout="@layout/fragment_scanner" />
+
+    <fragment
+        android:id="@+id/nav_nutrition_log"
+        android:name="mad.project.mdp_project.ui.NutritionLogFragment"
+        android:label="Nutrition Log"
+        tools:layout="@layout/fragment_nutrition_log" />
 
 </navigation>
