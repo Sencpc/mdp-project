@@ -261,7 +261,7 @@ app.put("/api/users/:id", async (req, res) => {
 // ==========================================
 app.post("/api/habits", async (req, res) => {
   try {
-    const { userId, name, category, subtitle, startTime, endTime, reminders } =
+    const { userId, name, category, subtitle, startTime, endTime, reminders, useRingtone, useVibration, enableNotification } =
       req.body;
     const habit = await Habit.create({
       userId,
@@ -271,6 +271,9 @@ app.post("/api/habits", async (req, res) => {
       startTime,
       endTime,
       reminders: reminders || [],
+      useRingtone: useRingtone !== false, // default true
+      useVibration: useVibration !== false, // default true
+      enableNotification: enableNotification !== false, // default true
       createdAt: Date.now(),
     });
     return res.status(201).json(habit);
@@ -305,6 +308,9 @@ app.put("/api/habits/:id", async (req, res) => {
       startTime,
       endTime,
       reminders,
+      useRingtone,
+      useVibration,
+      enableNotification
     } = req.body;
     await habit.update({
       name,
@@ -315,6 +321,9 @@ app.put("/api/habits/:id", async (req, res) => {
       startTime,
       endTime,
       reminders: reminders || habit.reminders,
+      useRingtone: useRingtone !== undefined ? useRingtone : habit.useRingtone,
+      useVibration: useVibration !== undefined ? useVibration : habit.useVibration,
+      enableNotification: enableNotification !== undefined ? enableNotification : habit.enableNotification,
     });
     return res.status(200).json(habit);
   } catch (err) {
@@ -712,7 +721,7 @@ ${liveHospitals}
   }
 });
 
-app.post("/api/chat/summary", async (req, res) => {
+app.post("/api/dashboard/weekly-summary", async (req, res) => {
   try {
     const {
       sleepHours,
@@ -723,18 +732,18 @@ app.post("/api/chat/summary", async (req, res) => {
     } = req.body;
 
     const prompt = `You are a friendly health and wellness AI assistant.
-    Your task is to write a highly personalized, empathetic, and motivational 1-2 sentence message for the user based on their daily stats.
+    Your task is to write a highly personalized, empathetic, and motivational 1-2 sentence message for the user based on their WEEKLY averages and totals.
 
-    USER'S DAILY STATS:
-    - Sleep: ${sleepHours.toFixed(1)} hours
-    - Calories Consumed: ${calories} kcal
-    - Screen Time: ${screenTimeMinutes} minutes
-    - Habits Completed: ${habitsCompleted} out of ${habitsTotal}
+    USER'S WEEKLY STATS (AVERAGES/TOTALS):
+    - Avg Sleep: ${sleepHours.toFixed(1)} hours/day
+    - Avg Calories: ${calories} kcal/day
+    - Avg Screen Time: ${screenTimeMinutes} minutes/day
+    - Habits Completed: ${habitsCompleted} out of ${habitsTotal} this week
 
     INSTRUCTIONS:
     1. DO NOT just list the numbers back to the user.
-    2. Provide positive reinforcement if they are doing well (e.g. good sleep, habits done).
-    3. Provide gentle, encouraging advice if they are struggling (e.g. high screen time, low sleep).
+    2. Provide positive reinforcement if they are doing well over the week.
+    3. Provide gentle, encouraging advice if they are struggling.
     4. Keep it strictly to 1 or 2 sentences max. Keep it punchy, warm, and natural.`;
 
     const result = await ai.models.generateContent({
@@ -745,7 +754,7 @@ app.post("/api/chat/summary", async (req, res) => {
     const summary = result.text.trim();
     return res.status(200).json({ summary });
   } catch (err) {
-    console.error("Chat Summary Error:", err);
+    console.error("Dashboard Weekly Summary Error:", err);
     return res.status(500).json({ error: "Failed to generate AI summary." });
   }
 });

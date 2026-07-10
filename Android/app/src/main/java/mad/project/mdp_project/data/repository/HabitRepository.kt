@@ -196,7 +196,10 @@ class HabitRepository(
                         endTime = apiHabit.endTime,
                         createdAt = apiHabit.createdAt ?: System.currentTimeMillis(),
                         deletedAt = apiHabit.deletedAt,
-                        reminders = apiHabit.reminders ?: existingLocal?.reminders ?: emptyList()
+                        reminders = apiHabit.reminders ?: existingLocal?.reminders ?: emptyList(),
+                        useRingtone = apiHabit.useRingtone ?: true,
+                        useVibration = apiHabit.useVibration ?: true,
+                        enableNotification = apiHabit.enableNotification ?: true
                     )
                     habitDao.insertHabit(localHabit)
                 }

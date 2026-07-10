@@ -171,6 +171,7 @@ class UserRepository(
                     conditions = apiUser.conditions ?: "",
                     emergencyContactName = apiUser.emergencyContactName,
                     emergencyContactPhone = apiUser.emergencyContactPhone,
+                    chatSummary = apiUser.chatSummary,
                     // Keep existing local profile picture if there is one
                     profilePicturePath = userDao.getUserByIdOnce(userId)?.profilePicturePath
                 )
@@ -179,7 +180,7 @@ class UserRepository(
                 val existing = userDao.getUserByIdOnce(userId)
                 val userToSave = existing?.let { localUser.copy(password = it.password) } ?: localUser
                 
-                userDao.updateUser(userToSave)
+                userDao.insertUser(userToSave)
                 Log.d(TAG, "User data synced dari server")
             }
         } catch (e: Exception) {

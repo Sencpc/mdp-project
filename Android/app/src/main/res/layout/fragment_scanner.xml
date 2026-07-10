@@ -51,7 +51,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="Capture"
-            android:src="@android:drawable/ic_menu_camera"
+            android:src="?android:attr/fingerprintAuthDrawable"
             app:backgroundTint="#299299"
             app:fabCustomSize="72dp"
             app:maxImageSize="36dp" />

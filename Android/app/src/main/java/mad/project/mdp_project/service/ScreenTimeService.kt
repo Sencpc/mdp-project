@@ -122,8 +122,9 @@ class ScreenTimeService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Screen Time Tracking")
-            .setContentText("Monitoring your app usage")
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentText("Monitoring your daily screen time")
+            .setSmallIcon(R.drawable.ic_notification_logo)
+            .setOngoing(true)
             .build()
 
         startForeground(FOREGROUND_NOTIFICATION_ID, notification)
@@ -240,9 +241,9 @@ class ScreenTimeService : Service() {
         )
 
         val notification = NotificationCompat.Builder(this, NUDGE_CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("Screen Time Limit Reached ⏰")
-            .setContentText("You've used your phone for ${hours}h ${minutes}m today. Consider taking a break!")
+            .setSmallIcon(R.drawable.ic_notification_logo)
+            .setContentTitle("Screen Time Limit Reached")
+            .setContentText("You've reached your daily screen time limit of $limitStr.")
             .setStyle(
                 NotificationCompat.BigTextStyle()
                     .bigText("You've used your phone for ${hours}h ${minutes}m today — that's past your $limitStr goal. Consider taking a break and doing something offline! 🌿")

@@ -21,7 +21,7 @@ class CalorieChartView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
-    private val dayLabels = arrayOf("M", "T", "W", "T", "F", "S", "S")
+    // We will generate labels dynamically based on today's date
 
     // Map of dayOfWeek (Calendar.MONDAY=2 .. Calendar.SUNDAY=1) to total calories
     private var dailyCalories: Map<Int, Int> = emptyMap()
@@ -102,12 +102,24 @@ class CalorieChartView @JvmOverloads constructor(
             1 // prevent division by zero
         )
 
-        // Day-of-week mapping: Monday=0, Tuesday=1, ..., Sunday=6
-        // Calendar: MONDAY=2, TUESDAY=3, ..., SATURDAY=7, SUNDAY=1
-        val calDays = intArrayOf(
-            Calendar.MONDAY, Calendar.TUESDAY, Calendar.WEDNESDAY,
-            Calendar.THURSDAY, Calendar.FRIDAY, Calendar.SATURDAY, Calendar.SUNDAY
-        )
+        val calDays = IntArray(7)
+        val dynamicLabels = Array(7) { "" }
+        for (i in 0 until 7) {
+            val offset = i - 6
+            var d = todayDayOfWeek + offset
+            if (d <= 0) d += 7
+            calDays[i] = d
+            dynamicLabels[i] = when(d) {
+                Calendar.MONDAY -> "M"
+                Calendar.TUESDAY -> "T"
+                Calendar.WEDNESDAY -> "W"
+                Calendar.THURSDAY -> "T"
+                Calendar.FRIDAY -> "F"
+                Calendar.SATURDAY -> "S"
+                Calendar.SUNDAY -> "S"
+                else -> ""
+            }
+        }
 
         // Draw bars
         for (i in 0 until barCount) {
@@ -135,7 +147,7 @@ class CalorieChartView @JvmOverloads constructor(
 
             // Draw day label below bar
             canvas.drawText(
-                dayLabels[i],
+                dynamicLabels[i],
                 x + barWidth / 2,
                 h - 4f * density,
                 labelPaint

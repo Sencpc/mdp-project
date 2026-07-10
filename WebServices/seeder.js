@@ -32,8 +32,12 @@ async function seedDatabase() {
 
     // Time generation helpers
     const now = Date.now();
+    const currentDate = new Date();
+    const startOfToday = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()).getTime();
     const oneDayMs = 24 * 60 * 60 * 1000;
-    const thirtyDaysAgo = now - 30 * oneDayMs;
+    
+    // Seed exactly up to yesterday
+    const thirtyDaysAgo = startOfToday - 30 * oneDayMs;
 
     // 2. Seed Sleep Logs (1 per day for the last 30 days)
     console.log("Seeding Sleep Logs...");

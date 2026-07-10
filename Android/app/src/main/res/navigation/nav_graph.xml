@@ -38,6 +38,12 @@
         <action
             android:id="@+id/action_nav_home_to_nav_habit_detail"
             app:destination="@id/nav_habit_detail" />
+        <action
+            android:id="@+id/action_nav_home_to_nav_history"
+            app:destination="@id/nav_history" />
+        <action
+            android:id="@+id/action_nav_home_to_nav_settings"
+            app:destination="@id/nav_settings" />
     </fragment>
 
     <fragment
@@ -150,5 +156,17 @@
         android:name="mad.project.mdp_project.ui.NutritionLogFragment"
         android:label="Nutrition Log"
         tools:layout="@layout/fragment_nutrition_log" />
+
+    <fragment
+        android:id="@+id/nav_history"
+        android:name="mad.project.mdp_project.ui.HistoryFragment"
+        android:label="Notification History"
+        tools:layout="@layout/fragment_history" />
+
+    <fragment
+        android:id="@+id/nav_settings"
+        android:name="mad.project.mdp_project.ui.SettingsFragment"
+        android:label="Settings"
+        tools:layout="@layout/fragment_settings" />
 
 </navigation>

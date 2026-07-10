@@ -26,13 +26,17 @@ object ReminderScheduler {
         requestCode: Int,
         habitId: Int,
         habitName: String,
-        reminderTimeMillis: Long
+        reminderTimeMillis: Long,
+        useRingtone: Boolean = true,
+        useVibration: Boolean = true
     ) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         val intent = Intent(context, ReminderReceiver::class.java).apply {
             putExtra(ReminderReceiver.EXTRA_HABIT_ID, habitId)
             putExtra(ReminderReceiver.EXTRA_HABIT_NAME, habitName)
+            putExtra(ReminderReceiver.EXTRA_USE_RINGTONE, useRingtone)
+            putExtra(ReminderReceiver.EXTRA_USE_VIBRATION, useVibration)
         }
 
         val pendingIntent = PendingIntent.getBroadcast(

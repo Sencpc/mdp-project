@@ -68,6 +68,6 @@ interface ApiService {
     @DELETE("api/chat/user/{userId}/memory")
     suspend fun resetAiMemory(@Path("userId") userId: Int): Response<MessageResponse>
 
-    @POST("api/chat/summary")
+    @POST("api/dashboard/weekly-summary")
     suspend fun getDailySummary(@Body request: DailySummaryRequest): Response<DailySummaryResponse>
 }

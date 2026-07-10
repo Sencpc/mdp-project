@@ -28,15 +28,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_dash_notification"
-                app:layout_constraintBottom_toBottomOf="@id/tv_title"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/tv_title"
-                app:tint="#004B4F" />
-
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <!-- Stats Row -->

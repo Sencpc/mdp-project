@@ -7,6 +7,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
+import android.widget.ArrayAdapter
+import android.widget.AdapterView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -90,7 +92,58 @@ class FormHabitsFragment : Fragment() {
             }
         }
 
-
+        // Notification settings mapping
+        val notificationModes = arrayOf("Off", "Ringtone + Vibrate", "Ringtone Only", "Vibrate Only", "Silent")
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, notificationModes)
+        binding.spinnerNotificationMode.adapter = adapter
+        
+        // Update spinner based on ViewModel state when loading
+        viewModel.enableNotification.observe(viewLifecycleOwner) { enabled ->
+            val ringtone = viewModel.useRingtone.value ?: true
+            val vibe = viewModel.useVibration.value ?: true
+            
+            val selectedIndex = if (!enabled) 0
+            else if (ringtone && vibe) 1
+            else if (ringtone && !vibe) 2
+            else if (!ringtone && vibe) 3
+            else 4 // Silent
+            
+            if (binding.spinnerNotificationMode.selectedItemPosition != selectedIndex) {
+                binding.spinnerNotificationMode.setSelection(selectedIndex)
+            }
+        }
+        
+        // Listen to Spinner changes
+        binding.spinnerNotificationMode.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                when (position) {
+                    0 -> { // Off
+                        viewModel.enableNotification.value = false
+                    }
+                    1 -> { // Ringtone + Vibrate
+                        viewModel.enableNotification.value = true
+                        viewModel.useRingtone.value = true
+                        viewModel.useVibration.value = true
+                    }
+                    2 -> { // Ringtone Only
+                        viewModel.enableNotification.value = true
+                        viewModel.useRingtone.value = true
+                        viewModel.useVibration.value = false
+                    }
+                    3 -> { // Vibrate Only
+                        viewModel.enableNotification.value = true
+                        viewModel.useRingtone.value = false
+                        viewModel.useVibration.value = true
+                    }
+                    4 -> { // Silent
+                        viewModel.enableNotification.value = true
+                        viewModel.useRingtone.value = false
+                        viewModel.useVibration.value = false
+                    }
+                }
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
 
         viewModel.habitCategory.observe(viewLifecycleOwner) { category ->
             updateCategoryUI(category)
