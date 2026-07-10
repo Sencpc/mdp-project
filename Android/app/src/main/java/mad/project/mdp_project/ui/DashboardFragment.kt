@@ -332,6 +332,7 @@ class DashboardFragment : Fragment() {
             val tvDoctorName = consultView.findViewById<TextView>(R.id.tv_consult_doctor_name)
             val tvCategory = consultView.findViewById<TextView>(R.id.tv_consult_category)
             val tvTime = consultView.findViewById<TextView>(R.id.tv_consult_time)
+            val tvFacility = consultView.findViewById<TextView>(R.id.tv_consult_facility)
             val tvStatus = consultView.findViewById<TextView>(R.id.tv_consult_status)
 
             tvDoctorName.text = consultation.doctorName
@@ -340,6 +341,15 @@ class DashboardFragment : Fragment() {
             val formattedDate = consultation.consultationTime.format(dateFormatter)
             val formattedTime = consultation.consultationTime.format(timeFormatter)
             tvTime.text = "$formattedDate • $formattedTime"
+
+            if (consultation.facilityName.isNotBlank()) {
+                tvFacility.text = consultation.facilityName
+                tvFacility.visibility = View.VISIBLE
+                consultView.findViewById<View>(R.id.ic_facility).visibility = View.VISIBLE
+            } else {
+                tvFacility.visibility = View.GONE
+                consultView.findViewById<View>(R.id.ic_facility).visibility = View.GONE
+            }
 
             tvStatus.text = consultation.status
 

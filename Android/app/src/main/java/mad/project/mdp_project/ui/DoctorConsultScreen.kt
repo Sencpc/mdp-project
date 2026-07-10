@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Eco
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LocalHospital
 import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.Psychology
@@ -82,7 +83,8 @@ private val SearchBg = Color(0xFFF5F5F5)
 fun DoctorConsultScreen(
     viewModel: DoctorViewModel,
     onBackClick: () -> Unit,
-    onConsultClick: (DoctorEntity) -> Unit
+    onConsultClick: (DoctorEntity) -> Unit,
+    onHistoryClick: () -> Unit = {}
 ) {
     val doctors by viewModel.doctors.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -110,7 +112,7 @@ fun DoctorConsultScreen(
                 )
             }
             Spacer(modifier = Modifier.width(4.dp))
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "Doctor Consult",
                     fontSize = 22.sp,
@@ -122,6 +124,13 @@ fun DoctorConsultScreen(
                     text = "Find and connect with available health professionals.",
                     fontSize = 13.sp,
                     color = TextSecondary
+                )
+            }
+            IconButton(onClick = onHistoryClick) {
+                Icon(
+                    imageVector = Icons.Default.History,
+                    contentDescription = "Consultation History",
+                    tint = TextPrimary
                 )
             }
         }

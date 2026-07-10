@@ -7,9 +7,14 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.content.ContextCompat
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import mad.project.mdp_project.data.AppDatabase
 import mad.project.mdp_project.service.ReminderReceiver
 import mad.project.mdp_project.service.ScreenTimeService
+import mad.project.mdp_project.worker.ConsultationStatusWorker
+import java.util.concurrent.TimeUnit
 
 class App : Application() {
     companion object {
@@ -27,6 +32,20 @@ class App : Application() {
         // Create notification channels
         createReminderNotificationChannel()
         createScreenTimeNudgeChannel()
+
+        // Schedule periodic workers
+        scheduleConsultationStatusWorker()
+    }
+
+    private fun scheduleConsultationStatusWorker() {
+        val workRequest = PeriodicWorkRequestBuilder<ConsultationStatusWorker>(
+            6, TimeUnit.HOURS
+        ).build()
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "consultation_status_updater",
+            ExistingPeriodicWorkPolicy.KEEP,
+            workRequest
+        )
     }
 
     private fun startScreenTimeService() {

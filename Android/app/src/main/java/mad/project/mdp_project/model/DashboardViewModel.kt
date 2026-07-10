@@ -22,6 +22,7 @@ import mad.project.mdp_project.data.SleepLog
 import mad.project.mdp_project.data.User
 import mad.project.mdp_project.data.remote.RetrofitClient
 import mad.project.mdp_project.data.repository.DoctorRepository
+import mad.project.mdp_project.data.repository.ConsultationRepository
 import mad.project.mdp_project.data.repository.HabitRepository
 import mad.project.mdp_project.data.repository.NutritionRepository
 import mad.project.mdp_project.data.repository.SleepRepository
@@ -44,6 +45,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     private val sleepRepository = SleepRepository(db.sleepLogDao(), api)
     private val doctorRepository = DoctorRepository(db.doctorDao(), db.consultationDao())
     private val nutritionRepository = NutritionRepository(db.nutritionLogDao(), api)
+    private val consultationRepository = ConsultationRepository(db.consultationDao(), db.reviewDao())
 
     val user: StateFlow<User?> = userRepository.getUserById(userId)
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
@@ -57,7 +59,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     val sleepLogs: StateFlow<List<SleepLog>> = sleepRepository.getSleepLogsForUser(userId)
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    val upcomingConsultations: StateFlow<List<ConsultationEntity>> = doctorRepository.getUpcomingConsultations()
+    val upcomingConsultations: StateFlow<List<ConsultationEntity>> = consultationRepository.getUpcomingConsultations()
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val weeklyNutritionLogs: StateFlow<List<NutritionLog>> = run {

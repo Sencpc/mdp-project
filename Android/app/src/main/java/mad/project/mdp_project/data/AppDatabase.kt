@@ -11,7 +11,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Database(
-    entities = [User::class, Habit::class, SleepLog::class, ScreenTimeLog::class, ChatMessage::class, DoctorEntity::class, ConsultationEntity::class, NutritionLog::class],
+    entities = [
+        User::class, Habit::class, SleepLog::class, ScreenTimeLog::class,
+        ChatMessage::class, DoctorEntity::class, ConsultationEntity::class,
+        NutritionLog::class, FacilityEntity::class, ReviewEntity::class
+    ],
     version = 14,
     exportSchema = false
 )
@@ -26,6 +30,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun doctorDao(): DoctorDao
     abstract fun consultationDao(): ConsultationDao
     abstract fun nutritionLogDao(): NutritionLogDao
+    abstract fun facilityDao(): FacilityDao
+    abstract fun reviewDao(): ReviewDao
 
     companion object {
         @Volatile

@@ -19,7 +19,7 @@ import mad.project.mdp_project.data.repository.DoctorRepository
 class DoctorViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = AppDatabase.getDatabase(application)
-    private val repository = DoctorRepository(db.doctorDao(), db.consultationDao())
+    private val repository = DoctorRepository(db.doctorDao())
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
