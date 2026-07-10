@@ -17,11 +17,7 @@ import kotlinx.coroutines.launch
         NutritionLog::class, FacilityEntity::class, ReviewEntity::class,
         NotificationEntity::class
     ],
-<<<<<<< Updated upstream
-    version = 20,
-=======
-    version = 22,
->>>>>>> Stashed changes
+    version = 23,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

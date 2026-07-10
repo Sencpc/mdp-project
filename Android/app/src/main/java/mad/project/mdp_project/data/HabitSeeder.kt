@@ -37,6 +37,22 @@ object HabitSeeder {
             )
         )
 
+        // 3. Night Sleep
+        habits.add(
+            Habit(
+                userId = userId,
+                name = "Night Sleep",
+                subtitle = "goodnight 🌙",
+                category = "Sleep",
+                startTime = getTodayTime(22, 0),
+                endTime = getTodayTime(6, 0) + (24 * 60 * 60 * 1000L),
+                reminders = listOf(
+                    getTodayTime(22, 0),
+                    getTodayTime(6, 0) + (24 * 60 * 60 * 1000L)
+                )
+            )
+        )
+
         return habits
     }
 

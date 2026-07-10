@@ -10,10 +10,12 @@ import mad.project.mdp_project.data.Habit
 import mad.project.mdp_project.data.SessionManager
 import mad.project.mdp_project.data.remote.RetrofitClient
 import mad.project.mdp_project.data.repository.HabitRepository
+import mad.project.mdp_project.data.repository.SleepRepository
 
 class HabitViewModel(application: Application) : AndroidViewModel(application) {
     private val sessionManager = SessionManager(application)
     private val habitRepository: HabitRepository
+    private val sleepRepository: SleepRepository
 
     val habits: Flow<List<Habit>>
     val isLoading = androidx.lifecycle.MutableLiveData<Boolean>(false)
@@ -21,6 +23,7 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
     init {
         val db = AppDatabase.getDatabase(application)
         habitRepository = HabitRepository(db.habitDao(), RetrofitClient.apiService)
+        sleepRepository = SleepRepository(db.sleepLogDao(), RetrofitClient.apiService)
         val userId = sessionManager.getUserId()
         habits = habitRepository.getHabitsForUser(userId)
 
@@ -39,6 +42,29 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
                 habitList.forEach { habit ->
                     // 1. Evaluate Streaks
                     if (now > habit.endTime) {
+                        if (habit.name == "Night Sleep") {
+                            val durationHours = (habit.endTime - habit.startTime).toDouble() / (1000 * 60 * 60)
+                            var calculatedQuality = 1.0f
+                            if (durationHours < 7.0) {
+                                calculatedQuality = (durationHours / 7.0).toFloat()
+                            } else if (durationHours > 9.0) {
+                                calculatedQuality = (9.0 / durationHours).toFloat()
+                            }
+                            if (calculatedQuality < 0f) calculatedQuality = 0f
+                            if (calculatedQuality > 1.0f) calculatedQuality = 1.0f
+                            val finalQuality = (calculatedQuality * 5).coerceIn(1f, 5f)
+
+                            val autoSleepLog = mad.project.mdp_project.data.SleepLog(
+                                userId = habit.userId,
+                                startTime = habit.startTime,
+                                endTime = habit.endTime,
+                                quality = finalQuality
+                            )
+                            viewModelScope.launch {
+                                sleepRepository.addSleepLog(autoSleepLog)
+                            }
+                        }
+
                         var newStreak = if (habit.isCompleted) habit.streak + 1 else 0
                         var newEndTime = habit.endTime
                         var newStartTime = habit.startTime
