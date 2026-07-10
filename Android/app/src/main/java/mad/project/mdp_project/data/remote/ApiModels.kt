@@ -152,6 +152,8 @@ data class ErrorResponse(
 data class ChatRequest(
     val userId: Int,
     val message: String,
+    val lat: Double? = null,
+    val lng: Double? = null,
     val timezone: String? = null
 )
 

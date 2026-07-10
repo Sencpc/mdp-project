@@ -225,6 +225,23 @@
                             android:textColor="#004B4F"
                             android:textSize="20sp"
                             android:textStyle="bold" />
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:text="Notification Mode"
+                            android:textColor="#333333"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <Spinner
+                            android:id="@+id/spinnerNotificationMode"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:background="@drawable/bg_edit_text"
+                            android:padding="12dp" />
 
                         <LinearLayout
                             android:id="@+id/llRemindersContainer"

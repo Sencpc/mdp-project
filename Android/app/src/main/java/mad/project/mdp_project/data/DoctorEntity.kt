@@ -14,5 +14,6 @@ data class DoctorEntity(
     val rating: Double,
     val availableTime: LocalDateTime,
     val profileIcon: String,
-    val supportedFacilityIds: List<String> = emptyList()
+    val supportedFacilityIds: List<String> = emptyList(),
+    val satusehatId: String? = null
 )

@@ -261,6 +261,65 @@ ChatLog.init(
   { sequelize, tableName: "chat_logs", timestamps: false },
 );
 
+// 6. Model: Doctor
+class Doctor extends Model {}
+Doctor.init(
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    satusehatId: {
+      type: DataTypes.STRING(50),
+      unique: true,
+      allowNull: false,
+    },
+    name: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+    },
+    displayName: {
+      type: DataTypes.STRING(255),
+    },
+    gender: {
+      type: DataTypes.STRING(20),
+    },
+    birthDate: {
+      type: DataTypes.STRING(50),
+    },
+    city: {
+      type: DataTypes.STRING(150),
+    },
+    category: {
+      type: DataTypes.STRING(100),
+      defaultValue: "General Practice",
+    },
+    description: {
+      type: DataTypes.TEXT,
+    },
+    rating: {
+      type: DataTypes.FLOAT,
+      defaultValue: 0.0,
+    },
+    profileIcon: {
+      type: DataTypes.STRING(100),
+      defaultValue: "medical_services",
+    },
+    availableTime: {
+      type: DataTypes.BIGINT, // Storing as unix timestamp for simplicity
+    },
+    raw_data: {
+      type: DataTypes.JSON,
+    },
+    createdAt: {
+      type: DataTypes.BIGINT,
+      defaultValue: () => Date.now(),
+    },
+  },
+  { sequelize, tableName: "doctors", timestamps: false },
+);
+
 // ==========================================
 // MENDEFINISIKAN RELASI (FOREIGN KEYS)
 // ==========================================
@@ -289,4 +348,5 @@ module.exports = {
   SleepLog,
   NutritionLog,
   ChatLog,
+  Doctor,
 };

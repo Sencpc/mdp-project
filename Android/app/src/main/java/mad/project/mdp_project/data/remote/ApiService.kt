@@ -71,7 +71,11 @@ interface ApiService {
     @POST("api/dashboard/weekly-summary")
     suspend fun getDailySummary(@Body request: DailySummaryRequest): Response<DailySummaryResponse>
 
-    // ========== FACILITIES (from Backend → SATUSEHAT MSI) ==========
+    // ========== FACILITIES (from Backend → SATUSEHAT) ==========
     @GET("api/facilities")
     suspend fun getFacilities(): Response<FacilityApiResponse>
+
+    // ========== DOCTORS (from Backend) ==========
+    @GET("api/doctors")
+    suspend fun getDoctors(): Response<DoctorListResponse>
 }

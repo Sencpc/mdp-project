@@ -92,14 +92,11 @@ class FormHabitsFragment : Fragment() {
             }
         }
 
-<<<<<<< Updated upstream
-        // Notification settings mapping
         val notificationModes = arrayOf("Off", "Ringtone + Vibrate", "Ringtone Only", "Vibrate Only", "Silent")
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, notificationModes)
         binding.spinnerNotificationMode.adapter = adapter
         
-        // Update spinner based on ViewModel state when loading
-        val updateSpinnerState = {
+        fun updateSpinnerState() {
             val enabled = viewModel.enableNotification.value ?: true
             val ringtone = viewModel.useRingtone.value ?: true
             val vibe = viewModel.useVibration.value ?: true
@@ -108,7 +105,7 @@ class FormHabitsFragment : Fragment() {
             else if (ringtone && vibe) 1
             else if (ringtone && !vibe) 2
             else if (!ringtone && vibe) 3
-            else 4 // Silent
+            else 4
             
             if (binding.spinnerNotificationMode.selectedItemPosition != selectedIndex) {
                 binding.spinnerNotificationMode.setSelection(selectedIndex, false)
@@ -119,9 +116,8 @@ class FormHabitsFragment : Fragment() {
         viewModel.useRingtone.observe(viewLifecycleOwner) { updateSpinnerState() }
         viewModel.useVibration.observe(viewLifecycleOwner) { updateSpinnerState() }
         
-        // Listen to Spinner changes
-        binding.spinnerNotificationMode.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+        binding.spinnerNotificationMode.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
                 val enabled = viewModel.enableNotification.value ?: true
                 val ringtone = viewModel.useRingtone.value ?: true
                 val vibe = viewModel.useVibration.value ?: true
@@ -132,39 +128,36 @@ class FormHabitsFragment : Fragment() {
                 else if (!ringtone && vibe) 3
                 else 4
                 
-                if (position == currentIndex) return // Break the infinite loop!
+                if (position == currentIndex) return
 
                 when (position) {
-                    0 -> { // Off
-                        viewModel.enableNotification.value = false
-                    }
-                    1 -> { // Ringtone + Vibrate
+                    0 -> viewModel.enableNotification.value = false
+                    1 -> { 
                         viewModel.enableNotification.value = true
                         viewModel.useRingtone.value = true
                         viewModel.useVibration.value = true
                     }
-                    2 -> { // Ringtone Only
+                    2 -> {
                         viewModel.enableNotification.value = true
                         viewModel.useRingtone.value = true
                         viewModel.useVibration.value = false
                     }
-                    3 -> { // Vibrate Only
+                    3 -> {
                         viewModel.enableNotification.value = true
                         viewModel.useRingtone.value = false
                         viewModel.useVibration.value = true
                     }
-                    4 -> { // Silent
+                    4 -> {
                         viewModel.enableNotification.value = true
                         viewModel.useRingtone.value = false
                         viewModel.useVibration.value = false
                     }
                 }
             }
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
         }
 
-=======
->>>>>>> Stashed changes
+
         viewModel.habitCategory.observe(viewLifecycleOwner) { category ->
             updateCategoryUI(category)
         }

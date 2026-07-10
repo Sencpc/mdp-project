@@ -1,5 +1,11 @@
 package mad.project.mdp_project.ui
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,6 +34,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import com.google.android.gms.location.LocationServices
 import mad.project.mdp_project.data.FacilityEntity
 import mad.project.mdp_project.model.BookingUiState
 import mad.project.mdp_project.model.ConsultationViewModel
@@ -78,9 +86,13 @@ fun ScheduleConsultationScreen(
         }
     }
 
-    // Load facilities and generate initial time slots
-    LaunchedEffect(doctorId, selectedDate) {
+    // Load facilities
+    LaunchedEffect(doctorId) {
         viewModel.loadFacilitiesForDoctor(doctorId)
+    }
+
+    // Load time slots
+    LaunchedEffect(doctorId, selectedDate) {
         timeSlots = viewModel.generateTimeSlots(selectedDate, doctorId)
         
         // Reset selected time if it's no longer available on this new date
@@ -321,6 +333,28 @@ fun ScheduleConsultationScreen(
                                             maxLines = 1,
                                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                         )
+                                    }
+                                }
+                                if (isSelected) {
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    androidx.compose.material3.TextButton(
+                                        onClick = {
+                                            if (facility.latitude.isNotBlank() && facility.longitude.isNotBlank()) {
+                                                val uri = Uri.parse("geo:${facility.latitude},${facility.longitude}?q=${facility.latitude},${facility.longitude}(${Uri.encode(facility.nama)})")
+                                                val intent = Intent(Intent.ACTION_VIEW, uri)
+                                                intent.setPackage("com.google.android.apps.maps")
+                                                if (intent.resolveActivity(context.packageManager) != null) {
+                                                    context.startActivity(intent)
+                                                } else {
+                                                    // Fallback to browser if Maps app is not installed
+                                                    val webUri = Uri.parse("https://www.google.com/maps/search/?api=1&query=${facility.latitude},${facility.longitude}")
+                                                    context.startActivity(Intent(Intent.ACTION_VIEW, webUri))
+                                                }
+                                            }
+                                        },
+                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                                    ) {
+                                        Text("Go Now", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = BrandPrimary)
                                     }
                                 }
                             }

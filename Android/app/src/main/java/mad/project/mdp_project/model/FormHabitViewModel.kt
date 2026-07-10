@@ -19,6 +19,9 @@ class FormHabitViewModel(application: Application) : AndroidViewModel(applicatio
     val habitSubtitle = MutableLiveData<String>("")
     val habitCategory = MutableLiveData<String>("Mental")
     val reminders = MutableLiveData<List<Long>>(emptyList())
+    val enableNotification = MutableLiveData<Boolean>(true)
+    val useRingtone = MutableLiveData<Boolean>(true)
+    val useVibration = MutableLiveData<Boolean>(true)
     
     val isLoading = MutableLiveData<Boolean>(false)
     val isEditMode = MutableLiveData<Boolean>(false)
@@ -43,6 +46,9 @@ class FormHabitViewModel(application: Application) : AndroidViewModel(applicatio
                 habitSubtitle.value = it.subtitle
                 habitCategory.value = it.category
                 reminders.value = it.reminders
+                enableNotification.value = it.enableNotification
+                useRingtone.value = it.useRingtone
+                useVibration.value = it.useVibration
             }
         }
     }
@@ -60,7 +66,10 @@ class FormHabitViewModel(application: Application) : AndroidViewModel(applicatio
                         name = name,
                         subtitle = habitSubtitle.value ?: "",
                         category = habitCategory.value ?: "Mental",
-                        reminders = reminders.value ?: emptyList()
+                        reminders = reminders.value ?: emptyList(),
+                        enableNotification = enableNotification.value ?: true,
+                        useRingtone = useRingtone.value ?: true,
+                        useVibration = useVibration.value ?: true
                     )
                     repository.updateHabit(updated)
                 }
@@ -72,7 +81,10 @@ class FormHabitViewModel(application: Application) : AndroidViewModel(applicatio
                     category = habitCategory.value ?: "Mental",
                     startTime = System.currentTimeMillis(),
                     endTime = System.currentTimeMillis() + (24 * 60 * 60 * 1000L), // Default 24h
-                    reminders = reminders.value ?: emptyList()
+                    reminders = reminders.value ?: emptyList(),
+                    enableNotification = enableNotification.value ?: true,
+                    useRingtone = useRingtone.value ?: true,
+                    useVibration = useVibration.value ?: true
                 )
                 repository.addHabit(newHabit)
             }

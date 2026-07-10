@@ -30,132 +30,79 @@ const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
 const upload = multer({ storage: multer.memoryStorage() });
 
 // ==========================================
-// SATUSEHAT LIVE INTEGRATION CACHE
+// SATUSEHAT API (FACILITIES)
 // ==========================================
 const SATUSEHAT_CLIENT_ID = process.env.SATUSEHAT_CLIENT_ID;
 const SATUSEHAT_CLIENT_SECRET = process.env.SATUSEHAT_CLIENT_SECRET;
 
-let cachedHospitals = null;
-let cachedHospitalsTimestamp = 0;
-
-async function getSatuSehatHospitals() {
-  const CACHE_DURATION_MS = 60 * 60 * 1000; // 1 hour
-  if (
-    cachedHospitals &&
-    Date.now() - cachedHospitalsTimestamp < CACHE_DURATION_MS
-  ) {
-    return cachedHospitals;
-  }
-
+app.get("/api/facilities", async (req, res) => {
   try {
-    let token = process.env.SATUSEHAT_HARDCODED_TOKEN;
-
-    // 1. Get OAuth Token if not hardcoded
-    if (!token) {
-      const authResponse = await fetch(
-        "https://api-satusehat-stg.dto.kemkes.go.id/oauth2/v1/accesstoken",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: `client_id=${SATUSEHAT_CLIENT_ID}&client_secret=${SATUSEHAT_CLIENT_SECRET}&grant_type=client_credentials`,
-        },
-      );
-      const authData = await authResponse.json();
-      if (!authData.access_token)
-        throw new Error("Failed to get SatuSehat token (OAuth2 rejected)");
-      token = authData.access_token;
+    if (!SATUSEHAT_CLIENT_ID || !SATUSEHAT_CLIENT_SECRET) {
+      throw new Error("SATUSEHAT credentials missing in .env");
     }
 
-    // 2. Fetch Hospitals (jenis_sarana=104 is Rumah Sakit)
-    const msiResponse = await fetch(
-      "https://api-satusehat-stg.dto.kemkes.go.id/masterdata/v1/mastersaranaindex/mastersarana?limit=5&page=1&jenis_sarana=104",
-      {
-        method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
-      },
-    );
-    const msiData = await msiResponse.json();
-
-    if (msiData && msiData.data && msiData.data.length > 0) {
-      cachedHospitals = msiData.data.map((h) => `    - ${h.nama}`).join("\n");
-      cachedHospitalsTimestamp = Date.now();
-      return cachedHospitals;
-    }
-  } catch (error) {
-    console.error("SatuSehat Live Fetch Error:", error.message);
-  }
-
-  // Fallback
-  return `    - RSUP Nasional Dr. Cipto Mangunkusumo (RSCM)\n    - RS Pondok Indah\n    - RS Siloam Hospitals`;
-}
-
-// ==========================================
-// SATUSEHAT STRUCTURED FACILITY API
-// ==========================================
-let cachedFacilitiesStructured = null;
-let cachedFacilitiesStructuredTimestamp = 0;
-
-async function getSatuSehatFacilitiesStructured() {
-  const CACHE_DURATION_MS = 60 * 60 * 1000; // 1 hour
-  if (
-    cachedFacilitiesStructured &&
-    Date.now() - cachedFacilitiesStructuredTimestamp < CACHE_DURATION_MS
-  ) {
-    return cachedFacilitiesStructured;
-  }
-
-  let token = process.env.SATUSEHAT_HARDCODED_TOKEN;
-
-  // 1. Get OAuth Token (if hardcoded token is not provided)
-  if (!token) {
+    // 1. Request OAuth Token
     const authResponse = await fetch(
-      "https://api-satusehat-stg.dto.kemkes.go.id/oauth2/v1/accesstoken",
+      "https://api-satusehat-stg.dto.kemkes.go.id/oauth2/v1/accesstoken?grant_type=client_credentials",
       {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: `client_id=${SATUSEHAT_CLIENT_ID}&client_secret=${SATUSEHAT_CLIENT_SECRET}&grant_type=client_credentials`,
+        body: `client_id=${SATUSEHAT_CLIENT_ID}&client_secret=${SATUSEHAT_CLIENT_SECRET}`,
       },
     );
+
     const authData = await authResponse.json();
-    if (!authData.access_token)
-      throw new Error("Failed to get SatuSehat token (OAuth2 rejected)");
-    token = authData.access_token;
-  }
+    if (!authData.access_token) {
+      throw new Error(`Failed to get SATUSEHAT token: ${JSON.stringify(authData)}`);
+    }
 
-  let allFacilities = [];
+    const token = authData.access_token;
 
-  // 2. Fetch Hospitals (jenis_sarana=104)
-  const hospitalRes = await fetch(
-    "https://api-satusehat-stg.dto.kemkes.go.id/masterdata/v1/mastersaranaindex/mastersarana?limit=50&page=1&jenis_sarana=104&status_aktif=true",
-    { headers: { Authorization: `Bearer ${token}` } },
-  );
-  const hospitalData = await hospitalRes.json();
-  if (hospitalData && hospitalData.data) {
-    allFacilities = allFacilities.concat(hospitalData.data);
-  }
+    // 2. Fetch Facilities (Hardcoded to Surabaya: kode_provinsi=35, kode_kabkota=3578)
+    const facilityRes = await fetch(
+      "https://api-satusehat-stg.dto.kemkes.go.id/masterdata/v1/mastersaranaindex/mastersarana?limit=50&page=1&jenis_sarana=104&status_aktif=true&kode_provinsi=35&kode_kabkota=3578&kode_kecamatan=357804",
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
 
-  // 3. Fetch Clinics (jenis_sarana=103)
-  const clinicRes = await fetch(
-    "https://api-satusehat-stg.dto.kemkes.go.id/masterdata/v1/mastersaranaindex/mastersarana?limit=50&page=1&jenis_sarana=103&status_aktif=true",
-    { headers: { Authorization: `Bearer ${token}` } },
-  );
-  const clinicData = await clinicRes.json();
-  if (clinicData && clinicData.data) {
-    allFacilities = allFacilities.concat(clinicData.data);
-  }
+    const facilityData = await facilityRes.json();
+    
+    if (facilityData.status_code !== 200 || !facilityData.data) {
+        throw new Error(`SATUSEHAT API error: ${JSON.stringify(facilityData)}`);
+    }
 
-  cachedFacilitiesStructured = allFacilities;
-  cachedFacilitiesStructuredTimestamp = Date.now();
-  return allFacilities;
-}
+    // Map to expected frontend format
+    const facilities = facilityData.data.map((place) => ({
+      kode_satusehat: place.kode_satusehat,
+      kode_sarana: place.kode_sarana,
+      nama: place.nama,
+      alamat: place.alamat || "",
+      telp: place.telp || null,
+      email: place.email || null,
+      latitude: place.latitude?.toString() || "",
+      longitude: place.longitude?.toString() || "",
+      operasional: place.operasional,
+      status_aktif: place.status_aktif,
+    }));
 
-// GET /api/facilities — Returns structured SATUSEHAT MSI facility data for Android
-app.get("/api/facilities", async (req, res) => {
-  try {
-    const facilities = await getSatuSehatFacilitiesStructured();
     res.json({ success: true, data: facilities });
   } catch (error) {
     console.error("Facilities API Error:", error.message);
+    res.status(500).json({ success: false, message: error.message, data: [] });
+  }
+});
+
+// ==========================================
+// SATUSEHAT API (DOCTORS)
+// ==========================================
+app.get("/api/doctors", async (req, res) => {
+  try {
+    const { Doctor } = require("./db"); // Import inside or rely on top-level
+    const doctors = await Doctor.findAll();
+    res.json({ success: true, data: doctors });
+  } catch (error) {
+    console.error("Doctors API Error:", error.message);
     res.status(500).json({ success: false, message: error.message, data: [] });
   }
 });
@@ -607,7 +554,7 @@ app.post("/api/nutrition/analyze", upload.single("image"), async (req, res) => {
 // ==========================================
 app.post("/api/chat", async (req, res) => {
   try {
-    const { userId, message, timezone } = req.body;
+    const { userId, message, chatHistory, lat, lng, timezone } = req.body;
     console.log(`[Chat API] Start handling chat request for User ${userId}`);
     const startTime = Date.now();
 
@@ -716,15 +663,45 @@ app.post("/api/chat", async (req, res) => {
       ? new Date().toLocaleString("id-ID", { timeZone: timezone })
       : new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
 
-    // 3.5. Prepare Medical Recommendations Context (SatuSehat & Doctors)
-    const liveHospitals = await getSatuSehatHospitals();
+    // 3.5. Prepare Medical Recommendations Context
+    let liveHospitals = `    - RSUP Nasional Dr. Cipto Mangunkusumo (RSCM)\n    - RS Pondok Indah\n    - RS Siloam Hospitals`;
+
+    // If user provided location, fetch nearby hospitals for the AI
+    if (
+      lat &&
+      lng &&
+      GOOGLE_MAPS_API_KEY &&
+      GOOGLE_MAPS_API_KEY !== "your_google_maps_api_key_here"
+    ) {
+      try {
+        const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=5000&type=hospital&key=${GOOGLE_MAPS_API_KEY}`;
+        const mapRes = await fetch(url);
+        const mapData = await mapRes.json();
+        if (
+          mapData.status === "OK" &&
+          mapData.results &&
+          mapData.results.length > 0
+        ) {
+          liveHospitals = mapData.results
+            .slice(0, 5)
+            .map(
+              (p) =>
+                `    - ${p.name} (${p.vicinity}) [Open Now: ${p.opening_hours ? p.opening_hours.open_now : "Unknown"}]`,
+            )
+            .join("\n");
+        }
+      } catch (e) {
+        console.error("Google Maps API AI context error:", e.message);
+      }
+    }
+
     const medicalRecommendationContext = `
     AVAILABLE MEDICAL PROFESSIONALS (You can recommend these specific doctors if the user needs help):
     - General Practice: Dr. Sarah Jenkins, Dr. Kevin Smith, Dr. Amelia Brown, Dr. David Wilson, Dr. Olivia Clark
     - Therapy & Mental Health: Dr. Michael Chen, Dr. Emily White, Dr. Daniel Moore, Dr. Sophia Taylor, Dr. Ethan Scott
     - Nutritionists: Dr. Elena Rodriguez, Dr. Chloe Evans, Dr. Lucas Hall, Dr. Grace Young, Dr. Ryan Adams
 
-    AVAILABLE SATUSEHAT HOSPITALS/FASYANKES (For physical checkups, dynamically fetched):
+    NEARBY HOSPITALS & CLINICS (Dynamically fetched from Google Maps within 5km):
 ${liveHospitals}
     `;
 

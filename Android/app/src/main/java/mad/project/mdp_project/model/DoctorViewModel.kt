@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import mad.project.mdp_project.data.AppDatabase
 import mad.project.mdp_project.data.DoctorEntity
 import mad.project.mdp_project.data.repository.DoctorRepository
@@ -26,6 +27,12 @@ class DoctorViewModel(application: Application) : AndroidViewModel(application) 
 
     private val _selectedCategory = MutableStateFlow("All")
     val selectedCategory: StateFlow<String> = _selectedCategory.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            repository.syncDoctors()
+        }
+    }
 
     /**
      * Reactive doctor list that automatically updates when search query or category changes.
