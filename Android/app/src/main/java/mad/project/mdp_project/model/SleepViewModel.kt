@@ -53,12 +53,15 @@ class SleepViewModel(application: Application) : AndroidViewModel(application) {
             if (calculatedQuality > 1.0f) {
                 calculatedQuality = 1.0f
             }
+            
+            // Scale to 1-5
+            val finalQuality = (calculatedQuality * 5).coerceIn(1f, 5f)
 
             val sleepLog = SleepLog(
                 userId = userId,
                 startTime = startTime,
                 endTime = endTime,
-                quality = calculatedQuality
+                quality = finalQuality
             )
             val result = sleepRepository.addSleepLog(sleepLog)
             _addResult.value = result
@@ -85,7 +88,7 @@ class SleepViewModel(application: Application) : AndroidViewModel(application) {
     fun getAverageQuality(): Float {
         val logs = sleepLogs.value
         if (logs.isEmpty()) return 0f
-        return logs.map { it.quality }.average().toFloat() * 5f
+        return logs.map { it.quality }.average().toFloat()
     }
 
     /**

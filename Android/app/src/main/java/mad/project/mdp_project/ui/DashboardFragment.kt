@@ -173,9 +173,9 @@ class DashboardFragment : Fragment() {
                                 recentLogs.map { (it.endTime - it.startTime).toDouble() / (1000 * 60 * 60) }.average()
                             } else 0.0
                             
-                            // Re-calculate average quality using 6 hours standard for the dashboard
+                            // Re-calculate average quality (now natively 1-5 scale)
                             val avgQuality = if (logs.isNotEmpty()) {
-                                logs.map { it.quality }.average().toFloat() * 5f
+                                logs.map { it.quality }.average().toFloat()
                             } else 0f
                             
                             // Display average sleep per day
@@ -216,16 +216,21 @@ class DashboardFragment : Fragment() {
                                     logCal.get(java.util.Calendar.DAY_OF_YEAR) == targetDay
                                 }
                                 
-                                val dayQuality = if (logsForDay.isNotEmpty()) logsForDay.map { it.quality }.average().toFloat() else 0.0f
+                                val totalSleepMs = logsForDay.sumOf { it.endTime - it.startTime }
+                                val hoursSlept = totalSleepMs.toDouble() / (1000 * 60 * 60)
                                 
                                 val bar = View(requireContext())
                                 val lp = android.widget.LinearLayout.LayoutParams(0, 0, 1f)
                                 lp.marginEnd = if (i == 6) 0 else 8
                                 
-                                val maxDp = 40
+                                // Max height is 60dp for 12 hours of sleep (5dp per hour)
+                                val maxDp = 60
+                                val maxHours = 12.0
+                                val heightRatio = (hoursSlept / maxHours).coerceAtMost(1.0).toFloat()
                                 val density = resources.displayMetrics.density
-                                val heightPx = (dayQuality * maxDp * density).toInt()
-                                lp.height = if (heightPx < 4) (2 * density).toInt() else heightPx
+                                val heightPx = (heightRatio * maxDp * density).toInt()
+                                
+                                lp.height = if (heightPx < 4 && hoursSlept > 0) (2 * density).toInt() else heightPx
                                 
                                 bar.layoutParams = lp
                                 bar.setBackgroundColor(if (isToday) android.graphics.Color.parseColor("#004B4F") else android.graphics.Color.parseColor("#E0E0E0"))

@@ -366,16 +366,30 @@
                     app:layout_constraintStart_toEndOf="@id/tv_sleep_value"
                     app:layout_constraintTop_toTopOf="@id/tv_sleep_value" />
 
-                <!-- Bar Chart -->
-                <LinearLayout
-                    android:id="@+id/ll_sleep_chart"
+                <!-- Bar Chart Area -->
+                <FrameLayout
                     android:layout_width="match_parent"
-                    android:layout_height="40dp"
+                    android:layout_height="60dp"
                     android:layout_marginTop="16dp"
-                    android:gravity="bottom"
-                    android:orientation="horizontal"
                     app:layout_constraintTop_toBottomOf="@id/tv_sleep_value">
-                </LinearLayout>
+                    
+                    <LinearLayout
+                        android:id="@+id/ll_sleep_chart"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="bottom"
+                        android:orientation="horizontal" />
+
+                    <!-- Dotted line for target sleep (e.g., 7 hours). Placed correctly based on a 12 hour scale (7/12 height from bottom = roughly 58% height) -->
+                    <View
+                        android:id="@+id/v_sleep_target_line"
+                        android:layout_width="match_parent"
+                        android:layout_height="2dp"
+                        android:layout_gravity="bottom"
+                        android:layout_marginBottom="35dp"
+                        android:background="@drawable/bg_dashed_line"
+                        android:layerType="software" />
+                </FrameLayout>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>

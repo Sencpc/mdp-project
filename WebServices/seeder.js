@@ -117,28 +117,27 @@ async function seedDatabase() {
     for (let i = 0; i < 30; i++) {
       const baseDate = thirtyDaysAgo + i * oneDayMs;
       
-      // 2 to 5 meals per day (more variation)
-      const mealsToday = Math.floor(Math.random() * 4) + 2;
+      // Every day definitely has Breakfast, Lunch, Dinner
+      const dailySchedule = [
+        { type: "breakfast", hour: 7 + Math.random() * 2 },
+        { type: "lunch", hour: 12 + Math.random() * 2 },
+        { type: "dinner", hour: 18 + Math.random() * 2 }
+      ];
       
-      for(let j = 0; j < mealsToday; j++) {
-        // If j >= 4, just make it an extra snack
-        const type = j < mealTypes.length ? mealTypes[j] : "snack";
-        const foodOptions = foods[type];
+      // Optionally add 1 or 2 snacks
+      if (Math.random() > 0.5) dailySchedule.push({ type: "snack", hour: 10 + Math.random() * 1 }); // Morning snack
+      if (Math.random() > 0.3) dailySchedule.push({ type: "snack", hour: 15 + Math.random() * 2 }); // Afternoon snack
+      
+      for(const meal of dailySchedule) {
+        const foodOptions = foods[meal.type];
         const selectedFood = foodOptions[Math.floor(Math.random() * foodOptions.length)];
-        
-        // Random time during the day depending on meal type
-        let timeOffsetHours;
-        if(type === 'breakfast') timeOffsetHours = 7 + Math.random() * 2;
-        else if(type === 'lunch') timeOffsetHours = 12 + Math.random() * 2;
-        else if(type === 'dinner') timeOffsetHours = 18 + Math.random() * 2;
-        else timeOffsetHours = 15 + Math.random() * 2; // snack
         
         nutritionLogs.push({
           userId,
           food_name: selectedFood.name,
           calories: selectedFood.calories,
-          consumed_at: baseDate + timeOffsetHours * 60 * 60 * 1000,
-          meal_type: type
+          consumed_at: baseDate + meal.hour * 60 * 60 * 1000,
+          meal_type: meal.type
         });
       }
     }
