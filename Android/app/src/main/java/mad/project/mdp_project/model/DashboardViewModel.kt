@@ -85,6 +85,24 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     private val _screenTimeStatus = MutableLiveData("")
     val screenTimeStatus: LiveData<String> = _screenTimeStatus
 
+    private val _aiSummary = MutableLiveData<String>()
+    val aiSummary: LiveData<String> = _aiSummary
+
+    private val _summaryLoading = MutableLiveData<Boolean>(false)
+    val summaryLoading: LiveData<Boolean> = _summaryLoading
+
+    private val _pillarSleep = MutableLiveData<Boolean>(false)
+    val pillarSleep: LiveData<Boolean> = _pillarSleep
+
+    private val _pillarFood = MutableLiveData<Boolean>(false)
+    val pillarFood: LiveData<Boolean> = _pillarFood
+
+    private val _pillarScreen = MutableLiveData<Boolean>(false)
+    val pillarScreen: LiveData<Boolean> = _pillarScreen
+
+    private val _pillarHabits = MutableLiveData<Boolean>(false)
+    val pillarHabits: LiveData<Boolean> = _pillarHabits
+
     init {
         // Sync data dari server saat dashboard dibuka
         viewModelScope.launch {
@@ -218,6 +236,78 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     fun getLatestSleepDuration(): String {
         val latest = sleepLogs.value.firstOrNull() ?: return "--"
         return latest.getFormattedDuration()
+    }
+
+    fun fetchAiSummary() {
+        _summaryLoading.value = true
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val todayCal = Calendar.getInstance()
+                val todayYear = todayCal.get(Calendar.YEAR)
+                val todayDay = todayCal.get(Calendar.DAY_OF_YEAR)
+
+                // 1. Sleep
+                val todaySleepLogs = sleepLogs.value.filter { log ->
+                    val cal = Calendar.getInstance().apply { timeInMillis = log.date }
+                    cal.get(Calendar.YEAR) == todayYear && cal.get(Calendar.DAY_OF_YEAR) == todayDay
+                }
+                val todaySleepMs = todaySleepLogs.sumOf { it.endTime - it.startTime }
+                val sleepHours = todaySleepMs.toDouble() / (1000 * 60 * 60)
+                _pillarSleep.postValue(sleepHours >= 7.0)
+
+                // 2. Food
+                val todayNutritionLogs = weeklyNutritionLogs.value.filter { log ->
+                    val cal = Calendar.getInstance().apply { timeInMillis = log.date }
+                    cal.get(Calendar.YEAR) == todayYear && cal.get(Calendar.DAY_OF_YEAR) == todayDay
+                }
+                val todayCalories = todayNutritionLogs.sumOf { it.calories }
+                val recommendedCals = calculateRecommendedCalories(user.value)
+                _pillarFood.postValue(todayCalories >= recommendedCals * 0.8)
+
+                // 3. Screen Time
+                val context = getApplication<Application>()
+                val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+                val todayTotalMs = getTodayScreenTime(usageStatsManager)
+                val screenTimeMinutes = (todayTotalMs / (1000 * 60)).toInt()
+                val limitMs = ScreenTimeService.getDailyLimitMs(context)
+                _pillarScreen.postValue(todayTotalMs <= limitMs)
+
+                // 4. Habits
+                val habitsTotal = getTotalHabitsCount()
+                val habitsCompleted = getCompletedHabitsCount()
+                _pillarHabits.postValue(habitsTotal > 0 && habitsCompleted == habitsTotal)
+
+                val req = mad.project.mdp_project.data.remote.DailySummaryRequest(
+                    sleepHours = sleepHours,
+                    calories = todayCalories,
+                    screenTimeMinutes = screenTimeMinutes,
+                    habitsCompleted = habitsCompleted,
+                    habitsTotal = habitsTotal
+                )
+
+                val res = api.getDailySummary(req)
+                if (res.isSuccessful && res.body() != null) {
+                    _aiSummary.postValue(res.body()!!.summary)
+                } else {
+                    _aiSummary.postValue("Could not fetch summary at this time.")
+                }
+            } catch (e: Exception) {
+                _aiSummary.postValue("Error fetching summary: ${e.message}")
+            } finally {
+                _summaryLoading.postValue(false)
+            }
+        }
+    }
+
+    private fun calculateRecommendedCalories(user: User?): Int {
+        if (user == null || user.height == null || user.weight == null || user.birthDate == null) {
+            return 2000
+        }
+        val cal = Calendar.getInstance()
+        cal.timeInMillis = user.birthDate
+        val age = Calendar.getInstance().get(Calendar.YEAR) - cal.get(Calendar.YEAR)
+        val bmr = (10 * user.weight) + (6.25 * user.height) - (5 * age) + 5
+        return (bmr * 1.2).toInt()
     }
 }
 

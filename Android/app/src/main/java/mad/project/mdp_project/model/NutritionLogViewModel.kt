@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import mad.project.mdp_project.data.AppDatabase
@@ -16,6 +17,7 @@ import mad.project.mdp_project.data.NutritionLog
 import mad.project.mdp_project.data.SessionManager
 import mad.project.mdp_project.data.remote.RetrofitClient
 import mad.project.mdp_project.data.repository.NutritionRepository
+import mad.project.mdp_project.data.repository.UserRepository
 import java.util.Calendar
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -26,6 +28,30 @@ class NutritionLogViewModel(application: Application) : AndroidViewModel(applica
     private val userId = sessionManager.getUserId()
 
     private val repository = NutritionRepository(db.nutritionLogDao(), RetrofitClient.apiService)
+    private val userRepository = UserRepository(db.userDao(), RetrofitClient.apiService)
+
+    // Calculate recommended calories dynamically from user height, weight, and age
+    val recommendedCalories: StateFlow<Int> = userRepository.getUserById(userId)
+        .map { user ->
+            if (user?.height != null && user.weight != null) {
+                val heightCm = user.height!!.toDouble()
+                val weightKg = user.weight!!.toDouble()
+                val age = if (user.birthDate != null) {
+                    val ageDifMs = System.currentTimeMillis() - user.birthDate!!
+                    val ageDate = java.util.Date(ageDifMs)
+                    val cal = java.util.Calendar.getInstance()
+                    cal.time = ageDate
+                    Math.abs(cal.get(java.util.Calendar.YEAR) - 1970)
+                } else 25
+
+                val male = 10 * weightKg + 6.25 * heightCm - 5 * age + 5
+                val female = 10 * weightKg + 6.25 * heightCm - 5 * age - 161
+                ((male + female) / 2).toInt()
+            } else {
+                2000
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 2000)
 
     // Currently selected date (start of day in millis)
     private val _selectedDate = MutableStateFlow(getStartOfToday())

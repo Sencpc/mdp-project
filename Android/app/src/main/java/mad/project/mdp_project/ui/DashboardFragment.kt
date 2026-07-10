@@ -50,6 +50,32 @@ class DashboardFragment : Fragment() {
     }
 
     private fun observeViewModel() {
+        viewModel.aiSummary.observe(viewLifecycleOwner) { summary ->
+            binding.tvAiInsight.text = summary
+        }
+        viewModel.summaryLoading.observe(viewLifecycleOwner) { isLoading ->
+            if (isLoading) {
+                binding.btnGetSummary.visibility = View.INVISIBLE
+                binding.pbSummaryLoading.visibility = View.VISIBLE
+                binding.tvAiInsight.text = "Generating insight..."
+            } else {
+                binding.btnGetSummary.visibility = View.VISIBLE
+                binding.pbSummaryLoading.visibility = View.GONE
+            }
+        }
+        viewModel.pillarSleep.observe(viewLifecycleOwner) { met ->
+            binding.ivPillarSleep.setColorFilter(if (met) android.graphics.Color.parseColor("#4CAF50") else android.graphics.Color.parseColor("#BDBDBD"))
+        }
+        viewModel.pillarFood.observe(viewLifecycleOwner) { met ->
+            binding.ivPillarFood.setColorFilter(if (met) android.graphics.Color.parseColor("#4CAF50") else android.graphics.Color.parseColor("#BDBDBD"))
+        }
+        viewModel.pillarScreen.observe(viewLifecycleOwner) { met ->
+            binding.ivPillarScreen.setColorFilter(if (met) android.graphics.Color.parseColor("#4CAF50") else android.graphics.Color.parseColor("#BDBDBD"))
+        }
+        viewModel.pillarHabits.observe(viewLifecycleOwner) { met ->
+            binding.ivPillarHabits.setColorFilter(if (met) android.graphics.Color.parseColor("#4CAF50") else android.graphics.Color.parseColor("#BDBDBD"))
+        }
+
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 // Observe User Data
@@ -185,62 +211,22 @@ class DashboardFragment : Fragment() {
                             
                             // Display average sleep quality
                             binding.tvSleepStatus.text = String.format(java.util.Locale.getDefault(), "Quality: %.1f/5", avgQuality)
-                            
                             // Draw chart for the current week (Monday to Sunday)
-                            binding.llSleepChart.removeAllViews()
-                            
-                            val todayCal = java.util.Calendar.getInstance()
-                            val todayYear = todayCal.get(java.util.Calendar.YEAR)
-                            val todayDayOfYear = todayCal.get(java.util.Calendar.DAY_OF_YEAR)
-                            
-                            val startOfWeekCal = java.util.Calendar.getInstance()
-                            var dayOfWeek = startOfWeekCal.get(java.util.Calendar.DAY_OF_WEEK)
-                            if (dayOfWeek == java.util.Calendar.SUNDAY) {
-                                dayOfWeek = 8 // Treat Sunday as the end of the week
+                            val dailySleep = mutableMapOf<Int, Double>()
+                            logs.forEach { log ->
+                                val logCal = java.util.Calendar.getInstance()
+                                logCal.timeInMillis = log.date
+                                val dow = logCal.get(java.util.Calendar.DAY_OF_WEEK)
+                                val durationHours = (log.endTime - log.startTime).toDouble() / (1000 * 60 * 60)
+                                dailySleep[dow] = (dailySleep[dow] ?: 0.0) + durationHours
                             }
-                            // Subtract days to get back to Monday (day 2)
-                            startOfWeekCal.add(java.util.Calendar.DAY_OF_YEAR, -(dayOfWeek - 2))
                             
-                            for (i in 0..6) {
-                                val dayCal = startOfWeekCal.clone() as java.util.Calendar
-                                dayCal.add(java.util.Calendar.DAY_OF_YEAR, i)
-                                val targetYear = dayCal.get(java.util.Calendar.YEAR)
-                                val targetDay = dayCal.get(java.util.Calendar.DAY_OF_YEAR)
-                                
-                                val isToday = (targetYear == todayYear && targetDay == todayDayOfYear)
-                                
-                                val logsForDay = logs.filter { log ->
-                                    val logCal = java.util.Calendar.getInstance()
-                                    logCal.timeInMillis = log.date
-                                    logCal.get(java.util.Calendar.YEAR) == targetYear &&
-                                    logCal.get(java.util.Calendar.DAY_OF_YEAR) == targetDay
-                                }
-                                
-                                val totalSleepMs = logsForDay.sumOf { it.endTime - it.startTime }
-                                val hoursSlept = totalSleepMs.toDouble() / (1000 * 60 * 60)
-                                
-                                val bar = View(requireContext())
-                                val lp = android.widget.LinearLayout.LayoutParams(0, 0, 1f)
-                                lp.marginEnd = if (i == 6) 0 else 8
-                                
-                                // Max height is 60dp for 12 hours of sleep (5dp per hour)
-                                val maxDp = 60
-                                val maxHours = 12.0
-                                val heightRatio = (hoursSlept / maxHours).coerceAtMost(1.0).toFloat()
-                                val density = resources.displayMetrics.density
-                                val heightPx = (heightRatio * maxDp * density).toInt()
-                                
-                                lp.height = if (heightPx < 4 && hoursSlept > 0) (2 * density).toInt() else heightPx
-                                
-                                bar.layoutParams = lp
-                                bar.setBackgroundColor(if (isToday) android.graphics.Color.parseColor("#004B4F") else android.graphics.Color.parseColor("#E0E0E0"))
-                                
-                                binding.llSleepChart.addView(bar)
-                            }
+                            binding.sleepChartView.setData(dailySleep, 7.0) // 7.0 hours as recommended baseline
+                            binding.sleepChartView.visibility = View.VISIBLE
                         } else {
                             binding.tvSleepValue.text = "0h 0m"
                             binding.tvSleepStatus.text = "Quality: 0/5"
-                            binding.llSleepChart.removeAllViews()
+                            binding.sleepChartView.visibility = View.INVISIBLE
                         }
                     }
                 }
@@ -374,6 +360,9 @@ class DashboardFragment : Fragment() {
     }
 
     private fun setupClickListeners() {
+        binding.btnGetSummary.setOnClickListener {
+            viewModel.fetchAiSummary()
+        }
         binding.profileCircle.setOnClickListener {
             findNavController().navigate(R.id.action_nav_home_to_nav_profile)
         }

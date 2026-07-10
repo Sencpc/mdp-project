@@ -69,6 +69,162 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_greeting" />
 
+        <!-- AI Health Summary & Checkmarks Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_ai_summary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:strokeColor="#EEEEEE"
+            app:strokeWidth="1dp"
+            app:layout_constraintTop_toBottomOf="@id/tv_subtitle">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <!-- 4 Pillars Checkmarks -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:baselineAligned="false">
+
+                    <!-- Sleep -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
+                        <ImageView
+                            android:id="@+id/iv_pillar_sleep"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/ic_dash_sleep"
+                            app:tint="#BDBDBD" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Sleep"
+                            android:textSize="10sp"
+                            android:textColor="#757575" />
+                    </LinearLayout>
+
+                    <!-- Food -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
+                        <ImageView
+                            android:id="@+id/iv_pillar_food"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/ic_habit_nutrition"
+                            app:tint="#BDBDBD" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Food"
+                            android:textSize="10sp"
+                            android:textColor="#757575" />
+                    </LinearLayout>
+
+                    <!-- Screen -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
+                        <ImageView
+                            android:id="@+id/iv_pillar_screen"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/ic_nav_screen"
+                            app:tint="#BDBDBD" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Screen"
+                            android:textSize="10sp"
+                            android:textColor="#757575" />
+                    </LinearLayout>
+
+                    <!-- Habits -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
+                        <ImageView
+                            android:id="@+id/iv_pillar_habits"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/ic_dash_checklist"
+                            app:tint="#BDBDBD" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Habits"
+                            android:textSize="10sp"
+                            android:textColor="#757575" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#EEEEEE"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="16dp" />
+
+                <!-- AI Insight Area -->
+                <TextView
+                    android:id="@+id/tv_ai_insight"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Generate a daily AI summary of your health progress!"
+                    android:textColor="#333333"
+                    android:textSize="14sp"
+                    android:gravity="center" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_get_summary"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:layout_gravity="center"
+                    android:text="✨ Get AI Insight"
+                    app:cornerRadius="8dp"
+                    app:strokeColor="#004B4F"
+                    android:textColor="#004B4F" />
+
+                <ProgressBar
+                    android:id="@+id/pb_summary_loading"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginTop="12dp"
+                    android:layout_gravity="center"
+                    android:visibility="gone"
+                    android:indeterminateTint="#004B4F" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- Daily Progress Card -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_progress"
@@ -367,29 +523,12 @@
                     app:layout_constraintTop_toTopOf="@id/tv_sleep_value" />
 
                 <!-- Bar Chart Area -->
-                <FrameLayout
+                <mad.project.mdp_project.ui.SleepChartView
+                    android:id="@+id/sleep_chart_view"
                     android:layout_width="match_parent"
-                    android:layout_height="60dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    app:layout_constraintTop_toBottomOf="@id/tv_sleep_value">
-                    
-                    <LinearLayout
-                        android:id="@+id/ll_sleep_chart"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:gravity="bottom"
-                        android:orientation="horizontal" />
-
-                    <!-- Dotted line for target sleep (e.g., 7 hours). Placed correctly based on a 12 hour scale (7/12 height from bottom = roughly 58% height) -->
-                    <View
-                        android:id="@+id/v_sleep_target_line"
-                        android:layout_width="match_parent"
-                        android:layout_height="2dp"
-                        android:layout_gravity="bottom"
-                        android:layout_marginBottom="35dp"
-                        android:background="@drawable/bg_dashed_line"
-                        android:layerType="software" />
-                </FrameLayout>
+                    app:layout_constraintTop_toBottomOf="@id/tv_sleep_value" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>

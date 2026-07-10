@@ -11,11 +11,11 @@ import android.view.View
 import java.util.Calendar
 
 /**
- * Custom View that renders a 7-day calorie bar chart with a dotted baseline line.
- * Each bar represents one day's total calories (Mon–Sun).
+ * Custom View that renders a 7-day sleep bar chart with a dotted baseline line.
+ * Each bar represents one day's total sleep hours (Mon–Sun).
  * Today's bar is highlighted with the app's primary color.
  */
-class CalorieChartView @JvmOverloads constructor(
+class SleepChartView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
@@ -23,9 +23,9 @@ class CalorieChartView @JvmOverloads constructor(
 
     private val dayLabels = arrayOf("M", "T", "W", "T", "F", "S", "S")
 
-    // Map of dayOfWeek (Calendar.MONDAY=2 .. Calendar.SUNDAY=1) to total calories
-    private var dailyCalories: Map<Int, Int> = emptyMap()
-    private var baseline: Int = 2000
+    // Map of dayOfWeek (Calendar.MONDAY=2 .. Calendar.SUNDAY=1) to total sleep hours
+    private var dailySleep: Map<Int, Double> = emptyMap()
+    private var baseline: Double = 7.0
     private var todayDayOfWeek: Int = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
 
     private val barPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -63,12 +63,12 @@ class CalorieChartView @JvmOverloads constructor(
 
     /**
      * Set chart data.
-     * @param calories Map of Calendar day-of-week constant to total calories for that day
-     * @param baselineCalories The recommended daily calorie intake (dotted line)
+     * @param sleep Map of Calendar day-of-week constant to total sleep hours for that day
+     * @param baselineHours The recommended daily sleep hours (dotted line)
      */
-    fun setData(calories: Map<Int, Int>, baselineCalories: Int) {
-        dailyCalories = calories
-        baseline = baselineCalories
+    fun setData(sleep: Map<Int, Double>, baselineHours: Double) {
+        dailySleep = sleep
+        baseline = baselineHours
         todayDayOfWeek = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
         invalidate()
     }
@@ -86,34 +86,30 @@ class CalorieChartView @JvmOverloads constructor(
         val h = height.toFloat()
         val density = resources.displayMetrics.density
 
-        val labelHeight = 32f * density // space for day labels at bottom
-        val topPadding = 12f * density // space for value labels on top
+        val labelHeight = 32f * density
+        val topPadding = 12f * density
         val chartHeight = h - labelHeight - topPadding
         val barCount = 7
         val barSpacing = 8f * density
         val totalSpacing = barSpacing * (barCount - 1)
-        val barWidth = (w - totalSpacing - 16f * density) / barCount // 16dp total side padding
+        val barWidth = (w - totalSpacing - 16f * density) / barCount
         val startX = 8f * density
 
-        // Determine the max value for scaling (at least baseline * 1.3 to leave room)
-        val maxCalories = maxOf(
-            dailyCalories.values.maxOrNull() ?: 0,
-            (baseline * 1.3).toInt(),
-            1 // prevent division by zero
+        val maxSleep = maxOf(
+            dailySleep.values.maxOrNull() ?: 0.0,
+            baseline * 1.3,
+            1.0
         )
 
-        // Day-of-week mapping: Monday=0, Tuesday=1, ..., Sunday=6
-        // Calendar: MONDAY=2, TUESDAY=3, ..., SATURDAY=7, SUNDAY=1
         val calDays = intArrayOf(
             Calendar.MONDAY, Calendar.TUESDAY, Calendar.WEDNESDAY,
             Calendar.THURSDAY, Calendar.FRIDAY, Calendar.SATURDAY, Calendar.SUNDAY
         )
 
-        // Draw bars
         for (i in 0 until barCount) {
             val calDay = calDays[i]
-            val cal = dailyCalories[calDay] ?: 0
-            val barHeight = if (cal > 0) (cal.toFloat() / maxCalories * chartHeight) else (2f * density)
+            val sleepVal = dailySleep[calDay] ?: 0.0
+            val barHeight = if (sleepVal > 0) (sleepVal.toFloat() / maxSleep.toFloat() * chartHeight) else (2f * density)
 
             val x = startX + i * (barWidth + barSpacing)
             val barTop = topPadding + chartHeight - barHeight
@@ -123,17 +119,17 @@ class CalorieChartView @JvmOverloads constructor(
             val paint = if (calDay == todayDayOfWeek) todayBarPaint else barPaint
             canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
 
-            // Draw calorie value above bar (only if > 0)
-            if (cal > 0) {
+            if (sleepVal > 0) {
+                // Round to 1 decimal place
+                val text = String.format(java.util.Locale.getDefault(), "%.1f", sleepVal)
                 canvas.drawText(
-                    cal.toString(),
+                    text,
                     x + barWidth / 2,
                     barTop - 4f * density,
                     valuePaint
                 )
             }
 
-            // Draw day label below bar
             canvas.drawText(
                 dayLabels[i],
                 x + barWidth / 2,
@@ -142,8 +138,7 @@ class CalorieChartView @JvmOverloads constructor(
             )
         }
 
-        // Draw baseline dotted line
-        val average = if (dailyCalories.isNotEmpty()) dailyCalories.values.average() else 0.0
+        val average = if (dailySleep.isNotEmpty()) dailySleep.values.average() else 0.0
         if (average >= baseline) {
             baselinePaint.color = Color.parseColor("#4CAF50")
             baselineLabelPaint.color = Color.parseColor("#4CAF50")
@@ -152,13 +147,12 @@ class CalorieChartView @JvmOverloads constructor(
             baselineLabelPaint.color = Color.parseColor("#FF6B6B")
         }
 
-        val baselineY = topPadding + chartHeight - (baseline.toFloat() / maxCalories * chartHeight)
+        val baselineY = topPadding + chartHeight - (baseline.toFloat() / maxSleep.toFloat() * chartHeight)
         if (baselineY > topPadding && baselineY < topPadding + chartHeight) {
             canvas.drawLine(startX, baselineY, w - startX, baselineY, baselinePaint)
 
-            // Draw baseline label
             canvas.drawText(
-                "${baseline}",
+                String.format(java.util.Locale.getDefault(), "%.1f", baseline),
                 w - startX,
                 baselineY - 6f * density,
                 baselineLabelPaint

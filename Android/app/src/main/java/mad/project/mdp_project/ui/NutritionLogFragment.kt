@@ -95,8 +95,9 @@ class NutritionLogFragment : Fragment() {
     private fun renderMealSections(logs: List<NutritionLog>) {
         val grouped = logs.groupBy { it.mealType }
 
+        val recommended = viewModel.recommendedCalories.value
         val totalCalories = logs.sumOf { it.calories }
-        binding.tvTotalCalories.text = "Total: ${String.format(Locale.getDefault(), "%,d", totalCalories)} kcal"
+        binding.tvTotalCalories.text = "Total: ${String.format(Locale.getDefault(), "%,d", totalCalories)} / ${String.format(Locale.getDefault(), "%,d", recommended)} kcal"
 
         renderSection(
             container = binding.llBreakfastItems,

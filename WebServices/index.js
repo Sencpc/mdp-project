@@ -32,44 +32,58 @@ const upload = multer({ storage: multer.memoryStorage() });
 // ==========================================
 // SATUSEHAT LIVE INTEGRATION CACHE
 // ==========================================
-const SATUSEHAT_CLIENT_ID = process.env.SATUSEHAT_CLIENT_ID || "CXaAyZAAaGAx8szZib7PGmV0BJVqvfKhcFZCBPQcp83KjOw3";
-const SATUSEHAT_CLIENT_SECRET = process.env.SATUSEHAT_CLIENT_SECRET || "cZKYNGrXMj4bwBfsQXKjXjlYUE8UOOMfGiJkOhnRpGT9DytkxQlF4hWHQfyyqZJn";
+const SATUSEHAT_CLIENT_ID =
+  process.env.SATUSEHAT_CLIENT_ID ||
+  "CXaAyZAAaGAx8szZib7PGmV0BJVqvfKhcFZCBPQcp83KjOw3";
+const SATUSEHAT_CLIENT_SECRET =
+  process.env.SATUSEHAT_CLIENT_SECRET ||
+  "cZKYNGrXMj4bwBfsQXKjXjlYUE8UOOMfGiJkOhnRpGT9DytkxQlF4hWHQfyyqZJn";
 
 let cachedHospitals = null;
 let cachedHospitalsTimestamp = 0;
 
 async function getSatuSehatHospitals() {
   const CACHE_DURATION_MS = 60 * 60 * 1000; // 1 hour
-  if (cachedHospitals && Date.now() - cachedHospitalsTimestamp < CACHE_DURATION_MS) {
+  if (
+    cachedHospitals &&
+    Date.now() - cachedHospitalsTimestamp < CACHE_DURATION_MS
+  ) {
     return cachedHospitals;
   }
-  
+
   try {
     // 1. Get OAuth Token
-    const authResponse = await fetch("https://api-satusehat-stg.dto.kemkes.go.id/oauth2/v1/accesstoken", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: `client_id=${SATUSEHAT_CLIENT_ID}&client_secret=${SATUSEHAT_CLIENT_SECRET}`
-    });
+    const authResponse = await fetch(
+      "https://api-satusehat-stg.dto.kemkes.go.id/oauth2/v1/accesstoken",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `client_id=${SATUSEHAT_CLIENT_ID}&client_secret=${SATUSEHAT_CLIENT_SECRET}`,
+      },
+    );
     const authData = await authResponse.json();
-    if (!authData.access_token) throw new Error("Failed to get SatuSehat token");
-    
+    if (!authData.access_token)
+      throw new Error("Failed to get SatuSehat token");
+
     // 2. Fetch Hospitals (jenis_sarana=104 is Rumah Sakit)
-    const msiResponse = await fetch("https://api-satusehat-stg.dto.kemkes.go.id/masterdata/v1/mastersaranaindex/mastersarana?limit=5&page=1&jenis_sarana=104", {
-      method: "GET",
-      headers: { "Authorization": `Bearer ${authData.access_token}` }
-    });
+    const msiResponse = await fetch(
+      "https://api-satusehat-stg.dto.kemkes.go.id/masterdata/v1/mastersaranaindex/mastersarana?limit=5&page=1&jenis_sarana=104",
+      {
+        method: "GET",
+        headers: { Authorization: `Bearer ${authData.access_token}` },
+      },
+    );
     const msiData = await msiResponse.json();
-    
+
     if (msiData && msiData.data && msiData.data.length > 0) {
-      cachedHospitals = msiData.data.map(h => `    - ${h.nama}`).join("\n");
+      cachedHospitals = msiData.data.map((h) => `    - ${h.nama}`).join("\n");
       cachedHospitalsTimestamp = Date.now();
       return cachedHospitals;
     }
   } catch (error) {
     console.error("SatuSehat Live Fetch Error:", error.message);
   }
-  
+
   // Fallback
   return `    - RSUP Nasional Dr. Cipto Mangunkusumo (RSCM)\n    - RS Pondok Indah\n    - RS Siloam Hospitals`;
 }
@@ -101,21 +115,44 @@ app.post("/api/users/register", async (req, res) => {
     // Create template habits for the new user
     const now = Date.now();
     const oneDayMs = 24 * 60 * 60 * 1000;
-    
+
     const eatReminders = [8 * 3600 * 1000, 13 * 3600 * 1000, 19 * 3600 * 1000];
-    const drinkReminders = [9 * 3600 * 1000, 11 * 3600 * 1000, 14 * 3600 * 1000, 16 * 3600 * 1000, 20 * 3600 * 1000];
+    const drinkReminders = [
+      9 * 3600 * 1000,
+      11 * 3600 * 1000,
+      14 * 3600 * 1000,
+      16 * 3600 * 1000,
+      20 * 3600 * 1000,
+    ];
     const exerciseReminders = [7 * 3600 * 1000, 17 * 3600 * 1000];
 
     const habitData = [
-      { name: "Eat Healthy", category: "Nutrition", subtitle: "General healthy meals", reminders: eatReminders },
-      { name: "Drink Water", category: "Nutrition", subtitle: "Stay hydrated", reminders: drinkReminders },
-      { name: "Exercise (Walking)", category: "Fitness", subtitle: "General healthy walking", reminders: exerciseReminders }
+      {
+        name: "Eat Healthy",
+        category: "Nutrition",
+        subtitle: "General healthy meals",
+        reminders: eatReminders,
+      },
+      {
+        name: "Drink Water",
+        category: "Nutrition",
+        subtitle: "Stay hydrated",
+        reminders: drinkReminders,
+      },
+      {
+        name: "Exercise (Walking)",
+        category: "Fitness",
+        subtitle: "General healthy walking",
+        reminders: exerciseReminders,
+      },
     ];
-    
+
     const habitsToCreate = [];
     for (const data of habitData) {
-      const todayStart = new Date().setHours(0,0,0,0);
-      const absoluteReminders = data.reminders.map(offset => todayStart + offset);
+      const todayStart = new Date().setHours(0, 0, 0, 0);
+      const absoluteReminders = data.reminders.map(
+        (offset) => todayStart + offset,
+      );
 
       habitsToCreate.push({
         userId: user.id,
@@ -124,7 +161,7 @@ app.post("/api/users/register", async (req, res) => {
         subtitle: data.subtitle,
         isCompleted: false,
         streak: 0,
-        startTime: now, 
+        startTime: now,
         endTime: now + oneDayMs, // 24 hour window
         createdAt: now,
         reminders: absoluteReminders,
@@ -224,7 +261,8 @@ app.put("/api/users/:id", async (req, res) => {
 // ==========================================
 app.post("/api/habits", async (req, res) => {
   try {
-    const { userId, name, category, subtitle, startTime, endTime, reminders } = req.body;
+    const { userId, name, category, subtitle, startTime, endTime, reminders } =
+      req.body;
     const habit = await Habit.create({
       userId,
       name,
@@ -671,6 +709,44 @@ ${liveHospitals}
     return res
       .status(500)
       .json({ error: "Virtual assistant is currently unavailable." });
+  }
+});
+
+app.post("/api/chat/summary", async (req, res) => {
+  try {
+    const {
+      sleepHours,
+      calories,
+      screenTimeMinutes,
+      habitsCompleted,
+      habitsTotal,
+    } = req.body;
+
+    const prompt = `You are a friendly health and wellness AI assistant.
+    Your task is to write a highly personalized, empathetic, and motivational 1-2 sentence message for the user based on their daily stats.
+
+    USER'S DAILY STATS:
+    - Sleep: ${sleepHours.toFixed(1)} hours
+    - Calories Consumed: ${calories} kcal
+    - Screen Time: ${screenTimeMinutes} minutes
+    - Habits Completed: ${habitsCompleted} out of ${habitsTotal}
+
+    INSTRUCTIONS:
+    1. DO NOT just list the numbers back to the user.
+    2. Provide positive reinforcement if they are doing well (e.g. good sleep, habits done).
+    3. Provide gentle, encouraging advice if they are struggling (e.g. high screen time, low sleep).
+    4. Keep it strictly to 1 or 2 sentences max. Keep it punchy, warm, and natural.`;
+
+    const result = await ai.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: prompt,
+    });
+
+    const summary = result.text.trim();
+    return res.status(200).json({ summary });
+  } catch (err) {
+    console.error("Chat Summary Error:", err);
+    return res.status(500).json({ error: "Failed to generate AI summary." });
   }
 });
 
