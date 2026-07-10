@@ -16,11 +16,11 @@ object SatuSehatConfig {
     const val AUTH_PATH = "oauth2/v1/accesstoken"
 
     // Organization ID for reference
-    const val ORGANIZATION_ID = "f17fcfc5-9d03-4821-af6e-b02bd844b683"
+    val ORGANIZATION_ID = mad.project.mdp_project.BuildConfig.SATUSEHAT_ORGANIZATION_ID
 
     // Staging credentials
-    const val CLIENT_ID = "CXaAyZAAaGAx8szZib7PGmV0BJVqvfKhcFZCBPQcp83KjOw3"
-    const val CLIENT_SECRET = "cZKYNGrXMj4bwBfsQXKjXjlYUE8UOOMfGiJkOhnRpGT9DytkxQlF4hWHQfyyqZJn"
+    val CLIENT_ID = mad.project.mdp_project.BuildConfig.SATUSEHAT_CLIENT_ID
+    val CLIENT_SECRET = mad.project.mdp_project.BuildConfig.SATUSEHAT_CLIENT_SECRET
 
     // MSI facility type codes (from documentation)
     const val JENIS_SARANA_PRAKTEK_MANDIRI = 101
