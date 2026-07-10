@@ -23,6 +23,7 @@ class FormHabitViewModel(application: Application) : AndroidViewModel(applicatio
     val useVibration = MutableLiveData<Boolean>(true)
     val enableNotification = MutableLiveData<Boolean>(true)
     
+    val isLoading = MutableLiveData<Boolean>(false)
     val isEditMode = MutableLiveData<Boolean>(false)
     private var currentHabitId: Int = -1
 
@@ -54,8 +55,9 @@ class FormHabitViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun saveHabit(onSuccess: () -> Unit) {
         val name = habitName.value ?: ""
-        if (name.isBlank()) return
+        if (name.isBlank() || isLoading.value == true) return
 
+        isLoading.value = true
         viewModelScope.launch {
             if (isEditMode.value == true) {
                 val existing = repository.getHabitById(currentHabitId)
@@ -86,6 +88,7 @@ class FormHabitViewModel(application: Application) : AndroidViewModel(applicatio
                 )
                 repository.addHabit(newHabit)
             }
+            isLoading.value = false
             onSuccess()
         }
     }

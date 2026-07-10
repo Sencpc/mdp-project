@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import mad.project.mdp_project.data.Habit
 import mad.project.mdp_project.data.HabitDao
+import mad.project.mdp_project.data.HabitSeeder
 import mad.project.mdp_project.data.remote.ApiService
 import mad.project.mdp_project.data.remote.HabitRequest
 
@@ -15,6 +16,36 @@ class HabitRepository(
 ) {
     companion object {
         private const val TAG = "HabitRepository"
+    }
+
+    suspend fun seedStandardHabits(userId: Int) {
+        val standardHabits = HabitSeeder.getStandardHabits(userId)
+        
+        // Special cleanup: Delete duplicates or Indonesian versions
+        val allHabits = habitDao.getHabitsForUserOnce(userId)
+        allHabits.forEach { h ->
+            if ((h.name == "Drink Water" || h.name == "Minum Air") && 
+                h.subtitle == "Minum 8 gelas air setiap hari untuk tetap terhidrasi") {
+                deleteHabit(h)
+                Log.d(TAG, "Deleted Indonesian Drink Water habit for user $userId")
+            }
+        }
+
+        standardHabits.forEach { habit ->
+            val existing = habitDao.getHabitByName(userId, habit.name)
+
+            if (existing == null) {
+                addHabit(habit)
+                Log.d(TAG, "Seeded standard habit: ${habit.name} for user $userId")
+            } else {
+                // Update reminders if it's a standard habit but has different reminders
+                if (existing.reminders != habit.reminders) {
+                    val updated = existing.copy(reminders = habit.reminders)
+                    updateHabit(updated)
+                    Log.d(TAG, "Updated reminders for standard habit: ${habit.name}")
+                }
+            }
+        }
     }
 
     /**
