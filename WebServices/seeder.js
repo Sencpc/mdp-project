@@ -40,10 +40,10 @@ async function seedDatabase() {
     const sleepLogs = [];
     for (let i = 0; i < 30; i++) {
       const date = thirtyDaysAgo + i * oneDayMs;
-      // Randomize sleep start time between 22:00 and 01:00
-      const startOffsetMs = Math.floor(Math.random() * 3 * 60 * 60 * 1000) - 2 * 60 * 60 * 1000; 
-      // Sleep duration between 6 to 9 hours
-      const sleepDurationMs = Math.floor(Math.random() * 3 * 60 * 60 * 1000) + 6 * 60 * 60 * 1000;
+      // Randomize sleep start time between 21:00 and 03:00
+      const startOffsetMs = Math.floor(Math.random() * 6 * 60 * 60 * 1000) - 3 * 60 * 60 * 1000; 
+      // Sleep duration between 4 to 11 hours (some very low, some high)
+      const sleepDurationMs = Math.floor(Math.random() * 7 * 60 * 60 * 1000) + 4 * 60 * 60 * 1000;
       
       const startTime = date + startOffsetMs;
       const endTime = startTime + sleepDurationMs;
@@ -108,17 +108,17 @@ async function seedDatabase() {
     const nutritionLogs = [];
     const mealTypes = ["breakfast", "lunch", "dinner", "snack"];
     const foods = {
-      breakfast: [ { name: "Oatmeal", calories: 150 }, { name: "Eggs & Toast", calories: 350 }, { name: "Pancakes", calories: 450 } ],
-      lunch: [ { name: "Chicken Salad", calories: 400 }, { name: "Burger", calories: 600 }, { name: "Pasta", calories: 500 } ],
-      dinner: [ { name: "Steak & Veggies", calories: 700 }, { name: "Salmon", calories: 550 }, { name: "Soup", calories: 300 } ],
-      snack: [ { name: "Apple", calories: 95 }, { name: "Protein Bar", calories: 200 }, { name: "Almonds", calories: 160 } ]
+      breakfast: [ { name: "Oatmeal", calories: 150 }, { name: "Eggs & Toast", calories: 350 }, { name: "Pancakes", calories: 450 }, { name: "Donut & Coffee", calories: 600 }, { name: "Fruit Bowl", calories: 100 } ],
+      lunch: [ { name: "Chicken Salad", calories: 400 }, { name: "Burger & Fries", calories: 900 }, { name: "Pasta", calories: 500 }, { name: "Light Soup", calories: 200 }, { name: "Pizza Slice", calories: 450 } ],
+      dinner: [ { name: "Steak & Veggies", calories: 700 }, { name: "Salmon", calories: 550 }, { name: "Fried Chicken", calories: 850 }, { name: "Small Salad", calories: 250 }, { name: "Large Pizza", calories: 1200 } ],
+      snack: [ { name: "Apple", calories: 95 }, { name: "Protein Bar", calories: 200 }, { name: "Almonds", calories: 160 }, { name: "Ice Cream", calories: 400 }, { name: "Chips", calories: 300 } ]
     };
 
     for (let i = 0; i < 30; i++) {
       const baseDate = thirtyDaysAgo + i * oneDayMs;
       
-      // 3 to 4 meals per day
-      const mealsToday = Math.random() > 0.5 ? 4 : 3;
+      // 2 to 5 meals per day (more variation)
+      const mealsToday = Math.floor(Math.random() * 4) + 2;
       
       for(let j = 0; j < mealsToday; j++) {
         const type = mealTypes[j];
