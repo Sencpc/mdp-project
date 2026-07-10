@@ -7,8 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
-import android.widget.ArrayAdapter
-import android.widget.AdapterView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -91,72 +89,6 @@ class FormHabitsFragment : Fragment() {
                 binding.etSubtitle.setText(subtitle)
             }
         }
-
-        val notificationModes = arrayOf("Off", "Ringtone + Vibrate", "Ringtone Only", "Vibrate Only", "Silent")
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, notificationModes)
-        binding.spinnerNotificationMode.adapter = adapter
-        
-        fun updateSpinnerState() {
-            val enabled = viewModel.enableNotification.value ?: true
-            val ringtone = viewModel.useRingtone.value ?: true
-            val vibe = viewModel.useVibration.value ?: true
-            
-            val selectedIndex = if (!enabled) 0
-            else if (ringtone && vibe) 1
-            else if (ringtone && !vibe) 2
-            else if (!ringtone && vibe) 3
-            else 4
-            
-            if (binding.spinnerNotificationMode.selectedItemPosition != selectedIndex) {
-                binding.spinnerNotificationMode.setSelection(selectedIndex, false)
-            }
-        }
-        
-        viewModel.enableNotification.observe(viewLifecycleOwner) { updateSpinnerState() }
-        viewModel.useRingtone.observe(viewLifecycleOwner) { updateSpinnerState() }
-        viewModel.useVibration.observe(viewLifecycleOwner) { updateSpinnerState() }
-        
-        binding.spinnerNotificationMode.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
-                val enabled = viewModel.enableNotification.value ?: true
-                val ringtone = viewModel.useRingtone.value ?: true
-                val vibe = viewModel.useVibration.value ?: true
-                
-                val currentIndex = if (!enabled) 0
-                else if (ringtone && vibe) 1
-                else if (ringtone && !vibe) 2
-                else if (!ringtone && vibe) 3
-                else 4
-                
-                if (position == currentIndex) return
-
-                when (position) {
-                    0 -> viewModel.enableNotification.value = false
-                    1 -> { 
-                        viewModel.enableNotification.value = true
-                        viewModel.useRingtone.value = true
-                        viewModel.useVibration.value = true
-                    }
-                    2 -> {
-                        viewModel.enableNotification.value = true
-                        viewModel.useRingtone.value = true
-                        viewModel.useVibration.value = false
-                    }
-                    3 -> {
-                        viewModel.enableNotification.value = true
-                        viewModel.useRingtone.value = false
-                        viewModel.useVibration.value = true
-                    }
-                    4 -> {
-                        viewModel.enableNotification.value = true
-                        viewModel.useRingtone.value = false
-                        viewModel.useVibration.value = false
-                    }
-                }
-            }
-            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
-        }
-
 
         viewModel.habitCategory.observe(viewLifecycleOwner) { category ->
             updateCategoryUI(category)
