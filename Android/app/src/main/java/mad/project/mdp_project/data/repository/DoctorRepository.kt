@@ -53,12 +53,20 @@ class DoctorRepository(
 
     /**
      * Sync doctors from backend and save to local database.
+     * Preserves existing facility assignments to avoid re-mapping.
      */
     suspend fun syncDoctors() {
         try {
             val response = RetrofitClient.apiService.getDoctors()
             if (response.isSuccessful) {
                 val doctorList = response.body()?.data ?: emptyList()
+
+                // Load existing doctors to preserve their facility mappings
+                val existingDoctors = doctorDao.getAllDoctorsOnce()
+                val existingFacilityMap = existingDoctors.associate {
+                    it.id to it.supportedFacilityIds
+                }
+
                 val entities = doctorList.map { dto ->
                     // Convert availableTime (Unix ms) to LocalDateTime
                     val dateTime = Instant.ofEpochMilli(dto.availableTime)
@@ -73,12 +81,13 @@ class DoctorRepository(
                         rating = dto.rating,
                         availableTime = dateTime,
                         profileIcon = dto.profileIcon,
-                        satusehatId = dto.satusehatId
+                        satusehatId = dto.satusehatId,
+                        // Preserve existing facility assignments
+                        supportedFacilityIds = existingFacilityMap[dto.id] ?: emptyList()
                     )
                 }
                 
                 if (entities.isNotEmpty()) {
-                    // Update the local DB
                     doctorDao.insertAll(entities)
                 }
             }

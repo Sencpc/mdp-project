@@ -335,21 +335,26 @@ fun ScheduleConsultationScreen(
                                         )
                                     }
                                 }
-                                if (isSelected) {
+                                    if (isSelected) {
                                     Spacer(modifier = Modifier.width(8.dp))
                                     androidx.compose.material3.TextButton(
                                         onClick = {
-                                            if (facility.latitude.isNotBlank() && facility.longitude.isNotBlank()) {
-                                                val uri = Uri.parse("geo:${facility.latitude},${facility.longitude}?q=${facility.latitude},${facility.longitude}(${Uri.encode(facility.nama)})")
-                                                val intent = Intent(Intent.ACTION_VIEW, uri)
-                                                intent.setPackage("com.google.android.apps.maps")
-                                                if (intent.resolveActivity(context.packageManager) != null) {
-                                                    context.startActivity(intent)
-                                                } else {
-                                                    // Fallback to browser if Maps app is not installed
-                                                    val webUri = Uri.parse("https://www.google.com/maps/search/?api=1&query=${facility.latitude},${facility.longitude}")
-                                                    context.startActivity(Intent(Intent.ACTION_VIEW, webUri))
-                                                }
+                                            // Search by address name since lat/long may be empty
+                                            val searchQuery = if (facility.alamat.isNotBlank()) {
+                                                "${facility.nama}, ${facility.alamat}"
+                                            } else {
+                                                facility.nama
+                                            }
+                                            val encodedQuery = Uri.encode(searchQuery)
+                                            val uri = Uri.parse("geo:0,0?q=$encodedQuery")
+                                            val intent = Intent(Intent.ACTION_VIEW, uri)
+                                            intent.setPackage("com.google.android.apps.maps")
+                                            if (intent.resolveActivity(context.packageManager) != null) {
+                                                context.startActivity(intent)
+                                            } else {
+                                                // Fallback to browser if Maps app is not installed
+                                                val webUri = Uri.parse("https://www.google.com/maps/search/?api=1&query=$encodedQuery")
+                                                context.startActivity(Intent(Intent.ACTION_VIEW, webUri))
                                             }
                                         },
                                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)

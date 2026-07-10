@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
         NutritionLog::class, FacilityEntity::class, ReviewEntity::class,
         NotificationEntity::class
     ],
-    version = 24,
+    version = 25,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

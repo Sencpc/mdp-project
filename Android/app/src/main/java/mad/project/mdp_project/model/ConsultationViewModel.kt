@@ -16,7 +16,6 @@ import mad.project.mdp_project.data.AppDatabase
 import mad.project.mdp_project.data.ConsultationEntity
 import mad.project.mdp_project.data.FacilityEntity
 import mad.project.mdp_project.data.SessionManager
-import mad.project.mdp_project.data.remote.RetrofitClient
 import mad.project.mdp_project.data.repository.BookingValidationResult
 import mad.project.mdp_project.data.repository.ConsultationRepository
 import mad.project.mdp_project.data.repository.FacilityRepository
@@ -55,7 +54,7 @@ class ConsultationViewModel(application: Application) : AndroidViewModel(applica
     private val db = AppDatabase.getDatabase(application)
     private val consultationDao = db.consultationDao()
     private val consultationRepository = ConsultationRepository(consultationDao, db.reviewDao())
-    private val facilityRepository = FacilityRepository(db.facilityDao(), db.doctorDao(), RetrofitClient.apiService)
+    private val facilityRepository = FacilityRepository(db.facilityDao(), db.doctorDao())
     private val sessionManager = SessionManager(application)
 
     private val _bookingState = MutableStateFlow<BookingUiState>(BookingUiState.Idle)
@@ -87,7 +86,11 @@ class ConsultationViewModel(application: Application) : AndroidViewModel(applica
         val now = LocalDateTime.now()
         val slots = mutableListOf<TimeSlot>()
         val userId = sessionManager.getUserId()
-        
+
+        // Get doctor's earliest available time
+        val doctor = db.doctorDao().getDoctorById(doctorId)
+        val doctorAvailableTime = doctor?.availableTime
+
         for (hour in 8 until 20) {
             for (minute in listOf(0, 30)) {
                 val slotTime = LocalDateTime.of(selectedDate, LocalTime.of(hour, minute))
@@ -97,6 +100,7 @@ class ConsultationViewModel(application: Application) : AndroidViewModel(applica
                 val state = when {
                     hour == 12 -> TimeSlotState.BREAK
                     slotTime.isBefore(now.plusHours(2)) -> TimeSlotState.TOO_SOON
+                    doctorAvailableTime != null && slotTime.isBefore(doctorAvailableTime) -> TimeSlotState.TOO_SOON
                     else -> {
                         val userConflicts = consultationDao.countUserConflicts(userId, formattedTime)
                         val doctorConflicts = consultationDao.countDoctorConflicts(doctorId, formattedTime)

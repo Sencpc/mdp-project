@@ -1,27 +1,27 @@
 package mad.project.mdp_project.data.repository
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 import mad.project.mdp_project.data.DoctorDao
 import mad.project.mdp_project.data.FacilityDao
 import mad.project.mdp_project.data.FacilityEntity
-import mad.project.mdp_project.data.remote.ApiService
+import mad.project.mdp_project.data.remote.SatuSehatClient
 
 /**
  * Repository for healthcare facility data.
  *
- * Single responsibility: Manages facility data with offline-first caching.
- * Fetches data from the backend GET /api/facilities endpoint (which internally
- * handles SATUSEHAT OAuth2 and MSI API).
+ * Fetches facility data directly from SATUSEHAT MSI API on the device,
+ * bypassing the backend proxy (which is blocked on Railway's datacenter IPs).
  *
  * Strategy: Stale-while-revalidate
  * - Always read from Room (instant, offline-capable)
- * - Sync from API in background when cache is older than CACHE_DURATION_MS
+ * - Sync from SATUSEHAT in background when cache is older than CACHE_DURATION_MS
  * - On network failure: silently use stale cached data
  */
 class FacilityRepository(
     private val facilityDao: FacilityDao,
-    private val doctorDao: DoctorDao,
-    private val apiService: ApiService
+    private val doctorDao: DoctorDao
 ) {
     companion object {
         private const val CACHE_DURATION_MS = 24 * 60 * 60 * 1000L // 24 hours
@@ -40,7 +40,7 @@ class FacilityRepository(
         facilityDao.getFacilitiesByIds(ids)
 
     /**
-     * Syncs facility data from Backend API into Room cache.
+     * Syncs facility data directly from SATUSEHAT MSI API into Room cache.
      *
      * Only syncs if the cache is older than CACHE_DURATION_MS.
      *
@@ -53,15 +53,14 @@ class FacilityRepository(
         }
 
         try {
-            val response = apiService.getFacilities()
-            if (response.isSuccessful) {
-                val facilities = response.body()?.data ?: emptyList()
-                val entities = facilities.map { it.toEntity() }
-                if (entities.isNotEmpty()) {
-                    facilityDao.insertAll(entities)
-                    // Automatically assign to doctors once synced
-                    assignFacilitiesToDoctors()
-                }
+            val facilities = withContext(Dispatchers.IO) {
+                SatuSehatClient.fetchSurabayaFacilities()
+            }
+            val entities = facilities.map { it.toEntity() }
+            if (entities.isNotEmpty()) {
+                facilityDao.insertAll(entities)
+                // Automatically assign to doctors once synced
+                assignFacilitiesToDoctors()
             }
         } catch (_: Exception) {
             // Network failure: silently use stale cached data.
@@ -84,7 +83,8 @@ class FacilityRepository(
 
         val allDoctors = doctorDao.getAllDoctorsOnce()
         for (doctor in allDoctors) {
-            if (doctor.supportedFacilityIds.isNotEmpty()) continue // Already mapped
+            // Skip if already assigned 2+ facilities (never re-assign)
+            if (doctor.supportedFacilityIds.size >= 2) continue
 
             val facilityCount = allFacilities.size
             if (facilityCount == 0) continue
@@ -93,9 +93,11 @@ class FacilityRepository(
             val secondaryIdx = (doctor.id) % facilityCount
             val tertiaryIdx = (doctor.id + 1) % facilityCount
 
+            val targetCount = if (doctor.id % 3 == 0) 3 else 2 // 2-3 hospitals per doctor
+
             val assignedIds = listOf(primaryIdx, secondaryIdx, tertiaryIdx)
                 .distinct()
-                .take(if (doctor.id % 3 == 0) 3 else 2) // Some doctors get 2, some get 3
+                .take(targetCount)
                 .map { allFacilities[it].kodeSatusehat }
 
             doctorDao.updateSupportedFacilities(doctor.id, assignedIds)
