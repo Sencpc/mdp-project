@@ -5,7 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FAFAFA"
-    tools:context="mad.project.mdp_project.ui.HabitsFragment">
+    tools:context="mad.project.mdp_project.ui.HabitsFragment"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:descendantFocusability="beforeDescendants">
 
     <ImageView
         android:id="@+id/iv_notification"

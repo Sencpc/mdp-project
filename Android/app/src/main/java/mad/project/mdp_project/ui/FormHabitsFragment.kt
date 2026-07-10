@@ -148,6 +148,11 @@ class FormHabitsFragment : Fragment() {
         viewModel.habitCategory.observe(viewLifecycleOwner) { category ->
             updateCategoryUI(category)
         }
+
+        viewModel.isLoading.observe(viewLifecycleOwner) { loading ->
+            binding.btnSaveHabit.isEnabled = !loading
+            binding.btnSaveHabit.alpha = if (loading) 0.5f else 1.0f
+        }
         
         viewModel.reminders.observe(viewLifecycleOwner) { times ->
             binding.llRemindersContainer.removeAllViews()

@@ -28,12 +28,24 @@ class UserRepository(
 
             if (response.isSuccessful && response.body() != null) {
                 val apiUser = response.body()!!
+                // Check if user already exists
+                val existing = userDao.getUserByIdOnce(apiUser.id) ?: userDao.getUserByUsername(username)
+                
                 // 2. Simpan ke Room lokal
                 val localUser = User(
                     id = apiUser.id,
                     username = apiUser.username,
                     password = password,
-                    fullName = apiUser.fullName ?: ""
+                    fullName = apiUser.fullName ?: "",
+                    height = existing?.height ?: 0f,
+                    weight = existing?.weight ?: 0f,
+                    birthDate = existing?.birthDate ?: System.currentTimeMillis(),
+                    bloodType = existing?.bloodType ?: "",
+                    conditions = existing?.conditions ?: "",
+                    emergencyContactName = existing?.emergencyContactName ?: "",
+                    emergencyContactPhone = existing?.emergencyContactPhone ?: "",
+                    chatSummary = existing?.chatSummary,
+                    profilePicturePath = existing?.profilePicturePath
                 )
                 userDao.insertUser(localUser)
                 Log.d(TAG, "Register berhasil: id=${localUser.id}")
@@ -73,12 +85,25 @@ class UserRepository(
 
             if (response.isSuccessful && response.body() != null) {
                 val apiUser = response.body()!!
+                // Check if user already exists to preserve their local-only fields
+                val existing = userDao.getUserByIdOnce(apiUser.id) ?: userDao.getUserByUsername(username)
+                
                 // 2. Simpan/update di Room lokal
                 val localUser = User(
                     id = apiUser.id,
                     username = apiUser.username,
                     password = password,
-                    fullName = apiUser.fullName ?: ""
+                    fullName = apiUser.fullName ?: "",
+                    // Preserve existing fields until syncFromServer overwrites them properly
+                    height = existing?.height ?: 0f,
+                    weight = existing?.weight ?: 0f,
+                    birthDate = existing?.birthDate ?: System.currentTimeMillis(),
+                    bloodType = existing?.bloodType ?: "",
+                    conditions = existing?.conditions ?: "",
+                    emergencyContactName = existing?.emergencyContactName ?: "",
+                    emergencyContactPhone = existing?.emergencyContactPhone ?: "",
+                    chatSummary = existing?.chatSummary,
+                    profilePicturePath = existing?.profilePicturePath
                 )
                 userDao.insertUser(localUser)
                 Log.d(TAG, "Login via API berhasil: id=${localUser.id}")
