@@ -295,8 +295,14 @@ app.put("/api/nutrition/:id", async (req, res) => {
     if (!log) return res.status(404).json({ error: "Nutrition log not found" });
 
     const { meal_type } = req.body;
-    if (!meal_type || !["breakfast", "lunch", "dinner", "additional"].includes(meal_type)) {
-      return res.status(400).json({ error: "Invalid meal_type. Must be: breakfast, lunch, dinner, or additional" });
+    if (
+      !meal_type ||
+      !["breakfast", "lunch", "dinner", "additional"].includes(meal_type)
+    ) {
+      return res.status(400).json({
+        error:
+          "Invalid meal_type. Must be: breakfast, lunch, dinner, or additional",
+      });
     }
 
     await log.update({ meal_type });
@@ -401,7 +407,7 @@ app.post("/api/chat", async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayMs = today.getTime();
-    const sevenDaysAgoMs = todayMs - 7 * 24 * 60 * 60 * 1000;
+    const thirtyDaysAgoMs = todayMs - 30 * 24 * 60 * 60 * 1000;
     const threeMonthsAgo = now - 90 * 24 * 60 * 60 * 1000;
 
     const timeOpts = { hour: "2-digit", minute: "2-digit" };
@@ -415,13 +421,12 @@ app.post("/api/chat", async (req, res) => {
 
     const [allNutrition, sleepLogs, habits, recentChats] = await Promise.all([
       NutritionLog.findAll({
-        where: { userId },
+        where: { userId, consumed_at: { [Op.gte]: thirtyDaysAgoMs } },
         order: [["consumed_at", "DESC"]],
       }),
       SleepLog.findAll({
-        where: { userId, date: { [Op.gte]: sevenDaysAgoMs } },
+        where: { userId, date: { [Op.gte]: thirtyDaysAgoMs } },
         order: [["date", "DESC"]],
-        limit: 7,
       }),
       Habit.findAll({
         where: { userId, deletedAt: null },
@@ -437,32 +442,20 @@ app.post("/api/chat", async (req, res) => {
       }),
     ]);
 
-    // --- Build NUTRITION context (token-optimized) ---
-    const todayMeals = allNutrition.filter((l) => l.consumed_at >= todayMs);
-    const caloriesToday = todayMeals.reduce((s, l) => s + l.calories, 0);
-
-    let nutritionContext = `Today's Total: ${caloriesToday} kcal`;
-    if (todayMeals.length > 0) {
-      nutritionContext += `\nToday's Meals: ${todayMeals.map((m) => `${m.food_name}(${m.calories}kcal)`).join(", ")}`;
+    // --- Build NUTRITION context (full 30 days) ---
+    let nutritionContext = "No nutrition data.";
+    if (allNutrition.length > 0) {
+      nutritionContext =
+        "Past 30 Days Meals:\n" +
+        allNutrition
+          .map(
+            (m) =>
+              `${fmtDate(m.consumed_at)} [${m.meal_type.toUpperCase()}]: ${m.food_name} (${m.calories}kcal)`,
+          )
+          .join("\n");
     }
 
-    // 7-day daily calorie summary (excluding today)
-    const past7 = allNutrition.filter(
-      (l) => l.consumed_at >= sevenDaysAgoMs && l.consumed_at < todayMs,
-    );
-    if (past7.length > 0) {
-      const byDay = {};
-      past7.forEach((l) => {
-        const key = fmtDate(l.consumed_at);
-        byDay[key] = (byDay[key] || 0) + l.calories;
-      });
-      const trend = Object.entries(byDay)
-        .map(([d, cal]) => `${d}:${cal}`)
-        .join(", ");
-      nutritionContext += `\n7-Day Trend (kcal/day): ${trend}`;
-    }
-
-    // --- Build SLEEP context (token-optimized) ---
+    // --- Build SLEEP context (full 30 days) ---
     let sleepContext = "No sleep data.";
     if (sleepLogs.length > 0) {
       const rows = sleepLogs.map((s) => {
@@ -470,13 +463,7 @@ app.post("/api/chat", async (req, res) => {
         const q = s.quality ? `Q${s.quality}/5` : "N/A";
         return `${fmtDate(s.date)}: ${hrs}h ${fmtTime(s.startTime)}-${fmtTime(s.endTime)} ${q}`;
       });
-      const avgHrs = (
-        sleepLogs.reduce(
-          (s, l) => s + (l.endTime - l.startTime) / (1000 * 60 * 60),
-          0,
-        ) / sleepLogs.length
-      ).toFixed(1);
-      sleepContext = `7-Day Avg: ${avgHrs}h\n${rows.join("\n")}`;
+      sleepContext = `Past 30 Days Sleep Logs:\n${rows.join("\n")}`;
     }
 
     // --- Build HABITS context (token-optimized) ---
@@ -513,8 +500,8 @@ app.post("/api/chat", async (req, res) => {
 
     // 3. Construct the Agentic System Prompt
     const currentTimeStr = timezone
-      ? new Date().toLocaleString("en-US", { timeZone: timezone })
-      : new Date().toLocaleString("en-US");
+      ? new Date().toLocaleString("id-ID", { timeZone: timezone })
+      : new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
 
     const systemPrompt = `You are a Digital Wellness Assistant. Your SOLE purpose is to help users maintain their health.
     STRICT RULES:
@@ -524,6 +511,7 @@ app.post("/api/chat", async (req, res) => {
     4. You MUST format your responses using Markdown. Do NOT use any HTML tags.
     5. Be highly natural and varied in your responses. Do NOT use repetitive, templated greetings or robotic transitions (e.g., avoid saying "It's great that you asked about sleep!" every time). Act like a real, casual human friend but polite enough.
     6. You have access to the user's full health data below. Use it silently for reasoning. Do NOT awkwardly announce their stats (e.g. NEVER say "Since you are 162cm and 24 years old..."). Only mention specific data if directly asked or if it's clinically relevant to give advice.
+    7. CRITICAL: NEVER generate code, write scripts, or provide programming assistance. NEVER perform, explain, or assist with any mathematical calculations (no arithmetic, algebra, calculus, etc.). If asked for code or math, firmly but politely refuse and remind the user of your wellness-only purpose.
 
     USER PROFILE:
     Age:${ageStr} | Height:${heightStr} | Weight:${weightStr} | Blood:${bloodTypeStr}
