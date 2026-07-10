@@ -16,6 +16,12 @@ interface HabitDao {
     @Query("SELECT * FROM habits WHERE id = :habitId LIMIT 1")
     suspend fun getHabitById(habitId: Int): Habit?
 
+    @Query("SELECT * FROM habits WHERE userId = :userId AND name = :name AND deletedAt IS NULL LIMIT 1")
+    suspend fun getHabitByName(userId: Int, name: String): Habit?
+
+    @Query("SELECT * FROM habits WHERE userId = :userId AND deletedAt IS NULL")
+    suspend fun getHabitsForUserOnce(userId: Int): List<Habit>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHabit(habit: Habit): Long
 

@@ -257,7 +257,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
 
                 // 2. Food
                 val todayNutritionLogs = weeklyNutritionLogs.value.filter { log ->
-                    val cal = Calendar.getInstance().apply { timeInMillis = log.date }
+                    val cal = Calendar.getInstance().apply { timeInMillis = log.consumedAt }
                     cal.get(Calendar.YEAR) == todayYear && cal.get(Calendar.DAY_OF_YEAR) == todayDay
                 }
                 val todayCalories = todayNutritionLogs.sumOf { it.calories }

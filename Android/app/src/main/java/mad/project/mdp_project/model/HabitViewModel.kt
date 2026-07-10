@@ -16,15 +16,20 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
     private val habitRepository: HabitRepository
 
     val habits: Flow<List<Habit>>
+    val isLoading = androidx.lifecycle.MutableLiveData<Boolean>(false)
 
     init {
         val db = AppDatabase.getDatabase(application)
         habitRepository = HabitRepository(db.habitDao(), RetrofitClient.apiService)
-        habits = habitRepository.getHabitsForUser(sessionManager.getUserId())
+        val userId = sessionManager.getUserId()
+        habits = habitRepository.getHabitsForUser(userId)
 
-        // Sync dari server
+        // Seed standard habits & Sync dari server
         viewModelScope.launch {
-            habitRepository.syncFromServer(sessionManager.getUserId())
+            if (userId != -1) {
+                habitRepository.seedStandardHabits(userId)
+            }
+            habitRepository.syncFromServer(userId)
         }
 
         // Evaluate streaks & schedule reminders
@@ -83,7 +88,8 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
 
     fun addHabit(name: String, subtitle: String, category: String, reminders: List<Long> = emptyList()) {
         val userId = sessionManager.getUserId()
-        if (userId != -1) {
+        if (userId != -1 && isLoading.value == false) {
+            isLoading.value = true
             viewModelScope.launch {
                 val newHabit = Habit(
                     userId = userId,
@@ -95,11 +101,14 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
                     reminders = reminders
                 )
                 habitRepository.addHabit(newHabit)
+                isLoading.value = false
             }
         }
     }
 
     fun updateHabit(id: Int, name: String, subtitle: String, category: String, reminders: List<Long> = emptyList()) {
+        if (isLoading.value == true) return
+        isLoading.value = true
         viewModelScope.launch {
             val existingHabit = habitRepository.getHabitById(id)
             if (existingHabit != null) {
@@ -113,6 +122,7 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
                 )
                 habitRepository.updateHabit(updatedHabit)
             }
+            isLoading.value = false
         }
     }
 

@@ -58,6 +58,9 @@ class HabitsFragment : Fragment() {
         binding.rvHabits.apply {
             adapter = habitAdapter
             layoutManager = LinearLayoutManager(requireContext())
+            // Prevent auto-scrolling to bottom on focus
+            isFocusable = false
+            isFocusableInTouchMode = false
         }
     }
 

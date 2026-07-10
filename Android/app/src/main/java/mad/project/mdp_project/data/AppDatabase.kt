@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
         ChatMessage::class, DoctorEntity::class, ConsultationEntity::class,
         NutritionLog::class, FacilityEntity::class, ReviewEntity::class
     ],
-    version = 15,
+    version = 19,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
