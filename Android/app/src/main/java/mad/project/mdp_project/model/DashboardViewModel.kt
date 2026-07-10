@@ -88,6 +88,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     init {
         // Sync data dari server saat dashboard dibuka
         viewModelScope.launch {
+            userRepository.syncFromServer(userId)
             habitRepository.syncFromServer(userId)
             sleepRepository.syncFromServer(userId)
             nutritionRepository.syncFromServer(userId)

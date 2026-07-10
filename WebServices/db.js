@@ -63,10 +63,6 @@ User.init(
       type: DataTypes.STRING(30),
       allowNull: true,
     },
-    profilePicturePath: {
-      type: DataTypes.STRING(500),
-      allowNull: true,
-    },
     chatSummary: {
       type: DataTypes.TEXT,
       defaultValue: "",

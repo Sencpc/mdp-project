@@ -30,7 +30,6 @@ data class UserResponse(
     val conditions: String? = null,
     val emergencyContactName: String? = null,
     val emergencyContactPhone: String? = null,
-    val profilePicturePath: String? = null,
     val error: String? = null
 )
 
@@ -43,8 +42,7 @@ data class UpdateUserRequest(
     val bloodType: String? = null,
     val conditions: String? = null,
     val emergencyContactName: String? = null,
-    val emergencyContactPhone: String? = null,
-    val profilePicturePath: String? = null
+    val emergencyContactPhone: String? = null
 )
 
 // ========== HABITS ==========

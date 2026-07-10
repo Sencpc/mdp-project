@@ -200,7 +200,6 @@ app.put("/api/users/:id", async (req, res) => {
       conditions,
       emergencyContactName,
       emergencyContactPhone,
-      profilePicturePath,
     } = req.body;
 
     await user.update({
@@ -212,7 +211,6 @@ app.put("/api/users/:id", async (req, res) => {
       conditions,
       emergencyContactName,
       emergencyContactPhone,
-      profilePicturePath,
     });
 
     return res.status(200).json(user);

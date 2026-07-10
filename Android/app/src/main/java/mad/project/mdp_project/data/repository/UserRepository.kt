@@ -137,8 +137,7 @@ class UserRepository(
                     bloodType = user.bloodType,
                     conditions = user.conditions,
                     emergencyContactName = user.emergencyContactName,
-                    emergencyContactPhone = user.emergencyContactPhone,
-                    profilePicturePath = user.profilePicturePath
+                    emergencyContactPhone = user.emergencyContactPhone
                 ))
                 Log.d(TAG, "User synced ke server")
             } catch (e: Exception) {
@@ -148,6 +147,43 @@ class UserRepository(
             Result.success(user)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    /**
+     * Sync user data from server to local Room database.
+     */
+    suspend fun syncFromServer(userId: Int) {
+        try {
+            val response = apiService.getUserById(userId)
+            if (response.isSuccessful && response.body() != null) {
+                val apiUser = response.body()!!
+                
+                val localUser = User(
+                    id = apiUser.id,
+                    username = apiUser.username,
+                    password = "", // We don't fetch password, we will just update existing
+                    fullName = apiUser.fullName ?: "",
+                    height = apiUser.height,
+                    weight = apiUser.weight,
+                    birthDate = apiUser.birthDate,
+                    bloodType = apiUser.bloodType,
+                    conditions = apiUser.conditions ?: "",
+                    emergencyContactName = apiUser.emergencyContactName,
+                    emergencyContactPhone = apiUser.emergencyContactPhone,
+                    // Keep existing local profile picture if there is one
+                    profilePicturePath = userDao.getUserByIdOnce(userId)?.profilePicturePath
+                )
+                
+                // Keep the original password from local DB
+                val existing = userDao.getUserByIdOnce(userId)
+                val userToSave = existing?.let { localUser.copy(password = it.password) } ?: localUser
+                
+                userDao.updateUser(userToSave)
+                Log.d(TAG, "User data synced dari server")
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Gagal sync user dari server: ${e.message}")
         }
     }
 }
