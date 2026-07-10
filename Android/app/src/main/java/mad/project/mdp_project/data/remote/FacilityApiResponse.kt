@@ -27,8 +27,8 @@ data class FacilityApiData(
     val alamat: String? = null,
     val telp: String? = null,
     val email: String? = null,
-    val longitude: String? = null,
-    val latitude: String? = null,
+    val longitude: Double? = null,
+    val latitude: Double? = null,
     val operasional: Boolean = false,
     @Json(name = "jenis_sarana") val jenisSarana: FacilityJenisSarana? = null,
     val provinsi: FacilityProvinsi? = null,
@@ -46,8 +46,8 @@ data class FacilityApiData(
         jenisSaranaNama = jenisSarana?.nama ?: "",
         provinsiNama = provinsi?.nama ?: "",
         kabkotaNama = kabkota?.nama ?: "",
-        latitude = latitude ?: "",
-        longitude = longitude ?: "",
+        latitude = latitude?.toString() ?: "",
+        longitude = longitude?.toString() ?: "",
         operasional = operasional,
         statusAktif = statusAktif,
         lastSyncedAt = System.currentTimeMillis()
@@ -62,12 +62,12 @@ data class FacilityJenisSarana(
 
 @JsonClass(generateAdapter = true)
 data class FacilityProvinsi(
-    val kode: Int? = null,
+    val kode: String? = null,
     val nama: String? = null
 )
 
 @JsonClass(generateAdapter = true)
 data class FacilityKabkota(
-    val kode: Int? = null,
+    val kode: String? = null,
     val nama: String? = null
 )
