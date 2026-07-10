@@ -52,7 +52,24 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val habitsWithReminder: StateFlow<List<Habit>> = habitRepository.getHabitsForUser(userId)
-        .map { list -> list.filter { it.reminders.isNotEmpty() } }
+        .map { list -> 
+            val now = System.currentTimeMillis()
+            // Extract current time of day for comparison
+            val currentCal = Calendar.getInstance().apply { timeInMillis = now }
+            val currentHour = currentCal.get(Calendar.HOUR_OF_DAY)
+            val currentMinute = currentCal.get(Calendar.MINUTE)
+
+            list.filter { habit -> 
+                habit.reminders.any { reminderTime ->
+                    val remCal = Calendar.getInstance().apply { timeInMillis = reminderTime }
+                    val remHour = remCal.get(Calendar.HOUR_OF_DAY)
+                    val remMinute = remCal.get(Calendar.MINUTE)
+                    
+                    // Keep only future reminders for today
+                    (remHour > currentHour) || (remHour == currentHour && remMinute > currentMinute)
+                }
+            } 
+        }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val sleepLogs: StateFlow<List<SleepLog>> = sleepRepository.getSleepLogsForUser(userId)

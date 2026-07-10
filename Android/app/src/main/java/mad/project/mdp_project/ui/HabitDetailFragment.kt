@@ -55,11 +55,21 @@ class HabitDetailFragment : Fragment() {
 
                             b.tvStreak.text = "Current Streak: ${h.streak} days"
                             
+                            b.switchReminder.setOnCheckedChangeListener(null)
+                            b.switchReminder.isChecked = h.enableNotification
+                            
                             // Tampilkan info reminder jika ada
                             if (h.reminders.isNotEmpty()) {
                                 val sdf = SimpleDateFormat("h:mm a", Locale.getDefault())
-                                val reminderStrings = h.reminders.map { sdf.format(Date(it)) }
-                                b.tvStreak.append("\nReminders: ${reminderStrings.joinToString(", ")}")
+                                val reminderStrings = h.reminders.map { "• ${sdf.format(Date(it))}" }
+                                b.tvReminderList.text = reminderStrings.joinToString("\n")
+                            } else {
+                                b.tvReminderList.text = "No reminders set"
+                            }
+
+                            b.switchReminder.setOnCheckedChangeListener { _, isChecked ->
+                                viewModel.toggleReminder(h, isChecked)
+                                Toast.makeText(context, if(isChecked) "Reminders enabled" else "Reminders disabled", Toast.LENGTH_SHORT).show()
                             }
                             
                             b.ivEdit.setOnClickListener {

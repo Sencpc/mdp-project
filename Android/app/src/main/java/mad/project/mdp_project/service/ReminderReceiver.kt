@@ -24,10 +24,20 @@ class ReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val habitId = intent.getIntExtra(EXTRA_HABIT_ID, -1)
         val habitName = intent.getStringExtra(EXTRA_HABIT_NAME) ?: "Habit Reminder"
-        val useRingtone = intent.getBooleanExtra(EXTRA_USE_RINGTONE, true)
-        val useVibration = intent.getBooleanExtra(EXTRA_USE_VIBRATION, true)
+        
+        // Always fetch latest global setting from SessionManager to be sure
+        val sessionManager = mad.project.mdp_project.data.SessionManager(context)
+        val globalType = sessionManager.getNotificationType()
+        
+        val (useRingtone, useVibration) = when (globalType) {
+            "Silent" -> Pair(false, false)
+            "Vibrate Only" -> Pair(false, true)
+            "Ringtone Only" -> Pair(true, false)
+            "Vibrate & Ringtone" -> Pair(true, true)
+            else -> Pair(true, true)
+        }
 
-        createNotificationChannel(context)
+        createNotificationChannel(context, useRingtone, useVibration)
 
         // Intent to open app when notification is tapped
         val tapIntent = Intent(context, MainActivity::class.java).apply {
@@ -60,19 +70,33 @@ class ReminderReceiver : BroadcastReceiver() {
         notificationManager.notify(habitId, notification)
     }
 
-    private fun createNotificationChannel(context: Context) {
+    private fun createNotificationChannel(context: Context, useRingtone: Boolean, useVibration: Boolean) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val notificationManager =
+                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+            // Delete old channel to force importance/sound/vibe update
+            // (Android channels are immutable once created)
+            notificationManager.deleteNotificationChannel(CHANNEL_ID)
+
+            val importance = if (useRingtone || useVibration) {
+                NotificationManager.IMPORTANCE_HIGH
+            } else {
+                NotificationManager.IMPORTANCE_LOW // Low = No sound/popup
+            }
+
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 "Habit Reminders",
-                NotificationManager.IMPORTANCE_HIGH
+                importance
             ).apply {
                 description = "Notifications for habit reminders"
-                enableVibration(true)
+                enableVibration(useVibration)
+                if (!useRingtone) {
+                    setSound(null, null)
+                }
             }
-            val manager =
-                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            manager.createNotificationChannel(channel)
+            notificationManager.createNotificationChannel(channel)
         }
     }
 }

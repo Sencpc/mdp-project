@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -284,7 +285,18 @@ class DashboardFragment : Fragment() {
         allReminders.sortBy { it.second }
         
         // Take at most 3 upcoming reminders
-        allReminders.take(3).forEach { pair ->
+        allReminders.filter { pair ->
+            val reminderCal = java.util.Calendar.getInstance().apply { timeInMillis = pair.second }
+            val nowCal = java.util.Calendar.getInstance()
+            
+            val currentHour = nowCal.get(java.util.Calendar.HOUR_OF_DAY)
+            val currentMinute = nowCal.get(java.util.Calendar.MINUTE)
+            val reminderHour = reminderCal.get(java.util.Calendar.HOUR_OF_DAY)
+            val reminderMinute = reminderCal.get(java.util.Calendar.MINUTE)
+            
+            // Only show future reminders
+            (reminderHour > currentHour) || (reminderHour == currentHour && reminderMinute > currentMinute)
+        }.take(3).forEach { pair ->
             val habit = pair.first
             val time = pair.second
             
@@ -299,19 +311,8 @@ class DashboardFragment : Fragment() {
             val reminderCal = java.util.Calendar.getInstance().apply { timeInMillis = time }
             tvTime.text = timeFormat.format(reminderCal.time)
             
-            val nowCal = java.util.Calendar.getInstance()
-            val currentHour = nowCal.get(java.util.Calendar.HOUR_OF_DAY)
-            val currentMinute = nowCal.get(java.util.Calendar.MINUTE)
-            val reminderHour = reminderCal.get(java.util.Calendar.HOUR_OF_DAY)
-            val reminderMinute = reminderCal.get(java.util.Calendar.MINUTE)
-            
-            val isPast = (currentHour > reminderHour) || (currentHour == reminderHour && currentMinute >= reminderMinute)
-            
-            if (isPast) {
-                indicator.setBackgroundResource(R.drawable.bg_circle_gray)
-            } else {
-                indicator.setBackgroundResource(R.drawable.bg_circle_green)
-            }
+            // It will always be green now since we filtered for future only
+            indicator.setBackgroundResource(R.drawable.bg_circle_green)
             
             container.addView(reminderView)
         }

@@ -92,6 +92,7 @@ class FormHabitsFragment : Fragment() {
             }
         }
 
+<<<<<<< Updated upstream
         // Notification settings mapping
         val notificationModes = arrayOf("Off", "Ringtone + Vibrate", "Ringtone Only", "Vibrate Only", "Silent")
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, notificationModes)
@@ -162,6 +163,8 @@ class FormHabitsFragment : Fragment() {
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
+=======
+>>>>>>> Stashed changes
         viewModel.habitCategory.observe(viewLifecycleOwner) { category ->
             updateCategoryUI(category)
         }

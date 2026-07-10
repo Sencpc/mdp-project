@@ -68,11 +68,22 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
                     )
                     
                     if (habit.enableNotification) {
+                        val sessionManager = mad.project.mdp_project.data.SessionManager(application)
+                        val globalType = sessionManager.getNotificationType()
+                        
+                        val (useRingtone, useVibration) = when (globalType) {
+                            "Silent" -> Pair(false, false)
+                            "Vibrate Only" -> Pair(false, true)
+                            "Ringtone Only" -> Pair(true, false)
+                            "Vibrate & Ringtone" -> Pair(true, true)
+                            else -> Pair(true, true)
+                        }
+
                         habit.reminders.forEachIndexed { index, time ->
                             val requestCode = habit.id * 100 + index
                             mad.project.mdp_project.service.ReminderScheduler.scheduleReminder(
                                 application, requestCode, habit.id, habit.name, time,
-                                habit.useRingtone, habit.useVibration
+                                useRingtone, useVibration
                             )
                         }
                     }
@@ -133,6 +144,13 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
     fun toggleHabitCompletion(habit: Habit, isCompleted: Boolean) {
         viewModelScope.launch {
             habitRepository.toggleHabitCompletion(habit.id, isCompleted)
+        }
+    }
+
+    fun toggleReminder(habit: Habit, isEnabled: Boolean) {
+        viewModelScope.launch {
+            val updated = habit.copy(enableNotification = isEnabled)
+            habitRepository.updateHabit(updated)
         }
     }
 

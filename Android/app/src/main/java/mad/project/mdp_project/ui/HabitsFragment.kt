@@ -37,14 +37,47 @@ class HabitsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
-        setupClickListeners()
+        setupNotificationSettings()
         observeViewModel()
     }
 
-    private fun setupClickListeners() {
-        binding.ivNotification.setOnClickListener {
-            findNavController().navigate(R.id.action_nav_home_to_nav_settings)
+    private fun setupNotificationSettings() {
+        val sessionManager = mad.project.mdp_project.data.SessionManager(requireContext())
+        
+        // Initial icon update
+        updateNotificationIcon(sessionManager.getNotificationType())
+
+        binding.ivNotification.setOnClickListener { view ->
+            val popup = androidx.appcompat.widget.PopupMenu(requireContext(), view)
+            val types = listOf("Silent", "Vibrate Only", "Ringtone Only", "Vibrate & Ringtone")
+            
+            types.forEachIndexed { index, type ->
+                popup.menu.add(0, index, index, type)
+            }
+            
+            popup.setOnMenuItemClickListener { item ->
+                val selectedType = types[item.itemId]
+                sessionManager.saveNotificationType(selectedType)
+                updateNotificationIcon(selectedType)
+                android.widget.Toast.makeText(requireContext(), "Notifications: $selectedType", android.widget.Toast.LENGTH_SHORT).show()
+                true
+            }
+            popup.show()
         }
+    }
+
+    private fun updateNotificationIcon(type: String) {
+        val iconRes = when (type) {
+            "Silent" -> R.drawable.ic_bell_off
+            "Vibrate Only" -> R.drawable.ic_vibrate
+            "Ringtone Only" -> R.drawable.ic_bell
+            "Vibrate & Ringtone" -> R.drawable.ic_bell
+            else -> R.drawable.ic_bell
+        }
+        
+        // Use alpha only for Silent to make it look "deactivated"
+        binding.ivNotification.alpha = if (type == "Silent") 0.5f else 1.0f
+        binding.ivNotification.setImageResource(iconRes)
     }
 
     private fun setupRecyclerView() {
