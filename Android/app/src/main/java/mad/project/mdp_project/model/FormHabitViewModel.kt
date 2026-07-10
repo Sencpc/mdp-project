@@ -21,6 +21,7 @@ class FormHabitViewModel(application: Application) : AndroidViewModel(applicatio
     val reminders = MutableLiveData<List<Long>>(emptyList())
     val useRingtone = MutableLiveData<Boolean>(true)
     val useVibration = MutableLiveData<Boolean>(true)
+    val enableNotification = MutableLiveData<Boolean>(true)
     
     val isEditMode = MutableLiveData<Boolean>(false)
     private var currentHabitId: Int = -1
@@ -46,6 +47,7 @@ class FormHabitViewModel(application: Application) : AndroidViewModel(applicatio
                 reminders.value = it.reminders
                 useRingtone.value = it.useRingtone
                 useVibration.value = it.useVibration
+                enableNotification.value = it.enableNotification
             }
         }
     }
@@ -64,7 +66,8 @@ class FormHabitViewModel(application: Application) : AndroidViewModel(applicatio
                         category = habitCategory.value ?: "Mental",
                         reminders = reminders.value ?: emptyList(),
                         useRingtone = useRingtone.value ?: true,
-                        useVibration = useVibration.value ?: true
+                        useVibration = useVibration.value ?: true,
+                        enableNotification = enableNotification.value ?: true
                     )
                     repository.updateHabit(updated)
                 }
@@ -78,7 +81,8 @@ class FormHabitViewModel(application: Application) : AndroidViewModel(applicatio
                     endTime = System.currentTimeMillis() + (24 * 60 * 60 * 1000L), // Default 24h
                     reminders = reminders.value ?: emptyList(),
                     useRingtone = useRingtone.value ?: true,
-                    useVibration = useVibration.value ?: true
+                    useVibration = useVibration.value ?: true,
+                    enableNotification = enableNotification.value ?: true
                 )
                 repository.addHabit(newHabit)
             }

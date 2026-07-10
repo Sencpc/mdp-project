@@ -261,7 +261,7 @@ app.put("/api/users/:id", async (req, res) => {
 // ==========================================
 app.post("/api/habits", async (req, res) => {
   try {
-    const { userId, name, category, subtitle, startTime, endTime, reminders, useRingtone, useVibration } =
+    const { userId, name, category, subtitle, startTime, endTime, reminders, useRingtone, useVibration, enableNotification } =
       req.body;
     const habit = await Habit.create({
       userId,
@@ -273,6 +273,7 @@ app.post("/api/habits", async (req, res) => {
       reminders: reminders || [],
       useRingtone: useRingtone !== false, // default true
       useVibration: useVibration !== false, // default true
+      enableNotification: enableNotification !== false, // default true
       createdAt: Date.now(),
     });
     return res.status(201).json(habit);
@@ -308,7 +309,8 @@ app.put("/api/habits/:id", async (req, res) => {
       endTime,
       reminders,
       useRingtone,
-      useVibration
+      useVibration,
+      enableNotification
     } = req.body;
     await habit.update({
       name,
@@ -321,6 +323,7 @@ app.put("/api/habits/:id", async (req, res) => {
       reminders: reminders || habit.reminders,
       useRingtone: useRingtone !== undefined ? useRingtone : habit.useRingtone,
       useVibration: useVibration !== undefined ? useVibration : habit.useVibration,
+      enableNotification: enableNotification !== undefined ? enableNotification : habit.enableNotification,
     });
     return res.status(200).json(habit);
   } catch (err) {

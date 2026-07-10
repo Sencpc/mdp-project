@@ -59,7 +59,8 @@ data class HabitRequest(
     val endTime: Long,
     val reminders: List<Long> = emptyList(),
     val useRingtone: Boolean? = true,
-    val useVibration: Boolean? = true
+    val useVibration: Boolean? = true,
+    val enableNotification: Boolean? = true
 )
 
 @JsonClass(generateAdapter = true)
@@ -76,6 +77,7 @@ data class HabitResponse(
     val reminders: List<Long>? = emptyList(),
     val useRingtone: Boolean? = true,
     val useVibration: Boolean? = true,
+    val enableNotification: Boolean? = true,
     val createdAt: Long? = null,
     val deletedAt: Long? = null
 )

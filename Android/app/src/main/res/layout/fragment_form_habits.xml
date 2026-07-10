@@ -255,24 +255,22 @@
                             android:layout_marginBottom="12dp"
                             android:background="#EEEEEE" />
 
-                        <com.google.android.material.materialswitch.MaterialSwitch
-                            android:id="@+id/switchRingtone"
-                            android:layout_width="match_parent"
+                        <TextView
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Play Ringtone"
+                            android:text="Notification Mode"
                             android:textColor="#333333"
-                            android:textSize="16sp"
-                            android:checked="true"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
                             android:layout_marginBottom="8dp" />
 
-                        <com.google.android.material.materialswitch.MaterialSwitch
-                            android:id="@+id/switchVibration"
+                        <Spinner
+                            android:id="@+id/spinnerNotificationMode"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Vibrate"
-                            android:textColor="#333333"
-                            android:textSize="16sp"
-                            android:checked="true" />
+                            android:layout_height="50dp"
+                            android:background="@drawable/bg_edit_text"
+                            android:paddingHorizontal="12dp"
+                            android:spinnerMode="dropdown" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
             </LinearLayout>

@@ -130,6 +130,10 @@ Habit.init(
       type: DataTypes.BOOLEAN,
       defaultValue: true,
     },
+    enableNotification: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
     createdAt: {
       type: DataTypes.BIGINT,
       defaultValue: () => Date.now(),

@@ -61,12 +61,15 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
                     mad.project.mdp_project.service.ReminderScheduler.cancelAllReminders(
                         application, habit.id
                     )
-                    habit.reminders.forEachIndexed { index, time ->
-                        val requestCode = habit.id * 100 + index
-                        mad.project.mdp_project.service.ReminderScheduler.scheduleReminder(
-                            application, requestCode, habit.id, habit.name, time,
-                            habit.useRingtone, habit.useVibration
-                        )
+                    
+                    if (habit.enableNotification) {
+                        habit.reminders.forEachIndexed { index, time ->
+                            val requestCode = habit.id * 100 + index
+                            mad.project.mdp_project.service.ReminderScheduler.scheduleReminder(
+                                application, requestCode, habit.id, habit.name, time,
+                                habit.useRingtone, habit.useVibration
+                            )
+                        }
                     }
                 }
             }

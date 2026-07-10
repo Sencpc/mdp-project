@@ -180,7 +180,7 @@ class UserRepository(
                 val existing = userDao.getUserByIdOnce(userId)
                 val userToSave = existing?.let { localUser.copy(password = it.password) } ?: localUser
                 
-                userDao.updateUser(userToSave)
+                userDao.insertUser(userToSave)
                 Log.d(TAG, "User data synced dari server")
             }
         } catch (e: Exception) {
