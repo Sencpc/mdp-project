@@ -35,12 +35,12 @@ class ReminderReceiver : BroadcastReceiver() {
         )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("Habit Reminder 🔔")
-            .setContentText("Waktunya untuk: $habitName")
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setAutoCancel(true)
+            .setSmallIcon(R.drawable.ic_notification_logo)
+            .setContentTitle("Habit Reminder")
+            .setContentText("It's time for: $habitName")
             .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .build()
 
