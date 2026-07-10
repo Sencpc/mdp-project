@@ -98,7 +98,8 @@ class FormHabitsFragment : Fragment() {
         binding.spinnerNotificationMode.adapter = adapter
         
         // Update spinner based on ViewModel state when loading
-        viewModel.enableNotification.observe(viewLifecycleOwner) { enabled ->
+        val updateSpinnerState = {
+            val enabled = viewModel.enableNotification.value ?: true
             val ringtone = viewModel.useRingtone.value ?: true
             val vibe = viewModel.useVibration.value ?: true
             
@@ -109,13 +110,29 @@ class FormHabitsFragment : Fragment() {
             else 4 // Silent
             
             if (binding.spinnerNotificationMode.selectedItemPosition != selectedIndex) {
-                binding.spinnerNotificationMode.setSelection(selectedIndex)
+                binding.spinnerNotificationMode.setSelection(selectedIndex, false)
             }
         }
+        
+        viewModel.enableNotification.observe(viewLifecycleOwner) { updateSpinnerState() }
+        viewModel.useRingtone.observe(viewLifecycleOwner) { updateSpinnerState() }
+        viewModel.useVibration.observe(viewLifecycleOwner) { updateSpinnerState() }
         
         // Listen to Spinner changes
         binding.spinnerNotificationMode.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val enabled = viewModel.enableNotification.value ?: true
+                val ringtone = viewModel.useRingtone.value ?: true
+                val vibe = viewModel.useVibration.value ?: true
+                
+                val currentIndex = if (!enabled) 0
+                else if (ringtone && vibe) 1
+                else if (ringtone && !vibe) 2
+                else if (!ringtone && vibe) 3
+                else 4
+                
+                if (position == currentIndex) return // Break the infinite loop!
+
                 when (position) {
                     0 -> { // Off
                         viewModel.enableNotification.value = false

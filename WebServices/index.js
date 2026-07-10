@@ -32,12 +32,8 @@ const upload = multer({ storage: multer.memoryStorage() });
 // ==========================================
 // SATUSEHAT LIVE INTEGRATION CACHE
 // ==========================================
-const SATUSEHAT_CLIENT_ID =
-  process.env.SATUSEHAT_CLIENT_ID ||
-  "CXaAyZAAaGAx8szZib7PGmV0BJVqvfKhcFZCBPQcp83KjOw3";
-const SATUSEHAT_CLIENT_SECRET =
-  process.env.SATUSEHAT_CLIENT_SECRET ||
-  "cZKYNGrXMj4bwBfsQXKjXjlYUE8UOOMfGiJkOhnRpGT9DytkxQlF4hWHQfyyqZJn";
+const SATUSEHAT_CLIENT_ID = process.env.SATUSEHAT_CLIENT_ID;
+const SATUSEHAT_CLIENT_SECRET = process.env.SATUSEHAT_CLIENT_SECRET;
 
 let cachedHospitals = null;
 let cachedHospitalsTimestamp = 0;
@@ -261,8 +257,18 @@ app.put("/api/users/:id", async (req, res) => {
 // ==========================================
 app.post("/api/habits", async (req, res) => {
   try {
-    const { userId, name, category, subtitle, startTime, endTime, reminders, useRingtone, useVibration, enableNotification } =
-      req.body;
+    const {
+      userId,
+      name,
+      category,
+      subtitle,
+      startTime,
+      endTime,
+      reminders,
+      useRingtone,
+      useVibration,
+      enableNotification,
+    } = req.body;
     const habit = await Habit.create({
       userId,
       name,
@@ -310,7 +316,7 @@ app.put("/api/habits/:id", async (req, res) => {
       reminders,
       useRingtone,
       useVibration,
-      enableNotification
+      enableNotification,
     } = req.body;
     await habit.update({
       name,
@@ -322,8 +328,12 @@ app.put("/api/habits/:id", async (req, res) => {
       endTime,
       reminders: reminders || habit.reminders,
       useRingtone: useRingtone !== undefined ? useRingtone : habit.useRingtone,
-      useVibration: useVibration !== undefined ? useVibration : habit.useVibration,
-      enableNotification: enableNotification !== undefined ? enableNotification : habit.enableNotification,
+      useVibration:
+        useVibration !== undefined ? useVibration : habit.useVibration,
+      enableNotification:
+        enableNotification !== undefined
+          ? enableNotification
+          : habit.enableNotification,
     });
     return res.status(200).json(habit);
   } catch (err) {
