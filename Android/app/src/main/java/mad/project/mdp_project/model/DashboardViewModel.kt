@@ -63,10 +63,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
 
     val weeklyNutritionLogs: StateFlow<List<NutritionLog>> = run {
         val cal = Calendar.getInstance()
-        // Go back to Monday of this week
-        var dow = cal.get(Calendar.DAY_OF_WEEK)
-        if (dow == Calendar.SUNDAY) dow = 8
-        cal.add(Calendar.DAY_OF_YEAR, -(dow - Calendar.MONDAY))
+        cal.add(Calendar.DAY_OF_YEAR, -14)
         cal.set(Calendar.HOUR_OF_DAY, 0)
         cal.set(Calendar.MINUTE, 0)
         cal.set(Calendar.SECOND, 0)

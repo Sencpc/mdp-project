@@ -172,7 +172,8 @@ class DashboardFragment : Fragment() {
                         }
 
                         val now = System.currentTimeMillis()
-                        val recentLogs = logs.filter { it.consumedAt <= now }
+                        val weekAgo = now - (7 * 24 * 60 * 60 * 1000L)
+                        val recentLogs = logs.filter { it.consumedAt in weekAgo..now }
 
                         // Group logs by day-of-week
                         val dailyCalories = mutableMapOf<Int, Int>()
