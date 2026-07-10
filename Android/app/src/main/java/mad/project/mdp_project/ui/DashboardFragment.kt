@@ -213,7 +213,7 @@ class DashboardFragment : Fragment() {
                             binding.tvSleepStatus.text = String.format(java.util.Locale.getDefault(), "Quality: %.1f/5", avgQuality)
                             // Draw chart for the current week (Monday to Sunday)
                             val dailySleep = mutableMapOf<Int, Double>()
-                            logs.forEach { log ->
+                            recentLogs.forEach { log ->
                                 val logCal = java.util.Calendar.getInstance()
                                 logCal.timeInMillis = log.date
                                 val dow = logCal.get(java.util.Calendar.DAY_OF_WEEK)
