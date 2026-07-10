@@ -48,4 +48,12 @@ interface DoctorDao {
 
     @Query("SELECT * FROM doctors WHERE id = :doctorId")
     suspend fun getDoctorById(doctorId: Int): DoctorEntity?
+
+    /** Used by post-sync facility mapping (suspend, not Flow) */
+    @Query("SELECT * FROM doctors")
+    suspend fun getAllDoctorsOnce(): List<DoctorEntity>
+
+    /** Update supported facility IDs for a doctor after facility sync */
+    @Query("UPDATE doctors SET supportedFacilityIds = :facilityIds WHERE id = :doctorId")
+    suspend fun updateSupportedFacilities(doctorId: Int, facilityIds: List<String>)
 }

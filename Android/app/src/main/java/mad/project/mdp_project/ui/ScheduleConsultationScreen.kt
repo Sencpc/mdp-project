@@ -1,23 +1,11 @@
 package mad.project.mdp_project.ui
 
-import android.app.DatePickerDialog
-import android.app.TimePickerDialog
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -25,36 +13,26 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.LocalHospital
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mad.project.mdp_project.data.FacilityEntity
+import mad.project.mdp_project.model.BookingUiState
 import mad.project.mdp_project.model.ConsultationViewModel
+import mad.project.mdp_project.model.TimeSlot
+import mad.project.mdp_project.model.TimeSlotState
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -69,6 +47,7 @@ private val StarColor = Color(0xFFFFB300)
 private val DividerColor = Color(0xFFEEEEEE)
 private val CardBorder = Color(0xFFE8E8E8)
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ScheduleConsultationScreen(
     doctorId: Int,
@@ -82,20 +61,34 @@ fun ScheduleConsultationScreen(
     onConfirmed: () -> Unit
 ) {
     val context = LocalContext.current
-    val consultationSaved by viewModel.consultationSaved.collectAsState()
+    val bookingState by viewModel.bookingState.collectAsState()
+    val facilities by viewModel.facilities.collectAsState()
 
-    val now = LocalDateTime.now()
-    var selectedYear by remember { mutableIntStateOf(now.year) }
-    var selectedMonth by remember { mutableIntStateOf(now.monthValue) }
-    var selectedDay by remember { mutableIntStateOf(now.dayOfMonth) }
-    var selectedHour by remember { mutableIntStateOf(now.hour + 2) }
-    var selectedMinute by remember { mutableIntStateOf(0) }
+    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var selectedTimeSlot by remember { mutableStateOf<TimeSlot?>(null) }
+    var selectedFacility by remember { mutableStateOf<FacilityEntity?>(null) }
+    
+    var timeSlots by remember { mutableStateOf<List<TimeSlot>>(emptyList()) }
 
-    // Navigate back on save
-    LaunchedEffect(consultationSaved) {
-        if (consultationSaved) {
-            viewModel.resetSavedState()
+    // Navigate back on success
+    LaunchedEffect(bookingState) {
+        if (bookingState is BookingUiState.Success) {
+            viewModel.resetState()
             onConfirmed()
+        }
+    }
+
+    // Load facilities and generate initial time slots
+    LaunchedEffect(doctorId, selectedDate) {
+        viewModel.loadFacilitiesForDoctor(doctorId)
+        timeSlots = viewModel.generateTimeSlots(selectedDate, doctorId)
+        
+        // Reset selected time if it's no longer available on this new date
+        if (selectedTimeSlot != null) {
+            val stillAvailable = timeSlots.any { it.hour == selectedTimeSlot!!.hour && it.minute == selectedTimeSlot!!.minute && it.state == TimeSlotState.AVAILABLE }
+            if (!stillAvailable) {
+                selectedTimeSlot = null
+            }
         }
     }
 
@@ -141,23 +134,15 @@ fun ScheduleConsultationScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = CardDefaults.outlinedCardBorder().copy(
-                    brush = androidx.compose.ui.graphics.SolidColor(CardBorder)
-                ),
+                border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(CardBorder)),
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Doctor Icon
                     Box(
-                        modifier = Modifier
-                            .size(72.dp)
-                            .clip(CircleShape)
-                            .background(BrandPrimary),
+                        modifier = Modifier.size(72.dp).clip(CircleShape).background(BrandPrimary),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -167,261 +152,160 @@ fun ScheduleConsultationScreen(
                             modifier = Modifier.size(36.dp)
                         )
                     }
-
                     Spacer(modifier = Modifier.height(16.dp))
-
-                    // Doctor Name
-                    Text(
-                        text = doctorName,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
-
+                    Text(text = doctorName, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                     Spacer(modifier = Modifier.height(4.dp))
-
-                    // Category
-                    Text(
-                        text = getCategoryDisplayName(category),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = BrandPrimary
-                    )
-
+                    Text(text = getCategoryDisplayName(category), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = BrandPrimary)
                     Spacer(modifier = Modifier.height(8.dp))
-
-                    // Rating
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = "Rating",
-                            tint = StarColor,
-                            modifier = Modifier.size(18.dp)
-                        )
+                        Icon(imageVector = Icons.Default.Star, contentDescription = "Rating", tint = StarColor, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = String.format("%.1f", rating),
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = TextPrimary
-                        )
+                        Text(text = String.format("%.1f", rating), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
                     }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    HorizontalDivider(color = DividerColor)
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Description
-                    Text(
-                        text = description,
-                        fontSize = 13.sp,
-                        color = TextSecondary,
-                        lineHeight = 20.sp
-                    )
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // ─── Date Selection ───
-            Text(
-                text = "Consultation Date",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextPrimary
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        DatePickerDialog(
-                            context,
-                            { _, year, month, day ->
-                                selectedYear = year
-                                selectedMonth = month + 1
-                                selectedDay = day
-                            },
-                            selectedYear,
-                            selectedMonth - 1,
-                            selectedDay
-                        ).show()
-                    },
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = CardDefaults.outlinedCardBorder().copy(
-                    brush = androidx.compose.ui.graphics.SolidColor(CardBorder)
-                )
+            // ─── Date Selection Strip ───
+            Text(text = "Select Date", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(horizontal = 4.dp)
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CalendarMonth,
-                        contentDescription = "Select date",
-                        tint = BrandPrimary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    val selectedDate = LocalDate.of(selectedYear, selectedMonth, selectedDay)
-                    Text(
-                        text = selectedDate.format(DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy")),
-                        fontSize = 15.sp,
-                        color = TextPrimary,
-                        fontWeight = FontWeight.Medium
-                    )
+                items(30) { offset ->
+                    val date = LocalDate.now().plusDays(offset.toLong())
+                    val isSunday = date.dayOfWeek == java.time.DayOfWeek.SUNDAY
+                    val isSelected = date == selectedDate
+                    
+                    Card(
+                        modifier = Modifier
+                            .width(64.dp)
+                            .height(80.dp)
+                            .clickable(enabled = !isSunday) { 
+                                selectedDate = date 
+                                viewModel.resetState()
+                            },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isSelected) BrandPrimary else if (isSunday) Color(0xFFF0F0F0) else Color.White
+                        ),
+                        border = CardDefaults.outlinedCardBorder().copy(
+                            brush = androidx.compose.ui.graphics.SolidColor(if (isSelected) BrandPrimary else CardBorder)
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = date.format(DateTimeFormatter.ofPattern("EEE")),
+                                fontSize = 12.sp,
+                                color = if (isSelected) Color.White else if (isSunday) TextSecondary else TextPrimary
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = date.dayOfMonth.toString(),
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isSelected) Color.White else if (isSunday) TextSecondary else TextPrimary
+                            )
+                            if (isSunday) {
+                                Text(text = "Closed", fontSize = 9.sp, color = TextSecondary, modifier = Modifier.padding(top = 2.dp))
+                            }
+                        }
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // ─── Time Selection ───
-            Text(
-                text = "Consultation Time",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextPrimary
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            // ─── Time Selection Grid ───
+            Text(text = "Select Time", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Spacer(modifier = Modifier.height(12.dp))
 
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        TimePickerDialog(
-                            context,
-                            { _, hour, minute ->
-                                selectedHour = hour
-                                selectedMinute = minute
-                            },
-                            selectedHour,
-                            selectedMinute,
-                            false
-                        ).show()
-                    },
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = CardDefaults.outlinedCardBorder().copy(
-                    brush = androidx.compose.ui.graphics.SolidColor(CardBorder)
+            if (timeSlots.isNotEmpty()) {
+                val morningSlots = timeSlots.filter { it.hour < 12 }
+                val afternoonSlots = timeSlots.filter { it.hour >= 12 }
+                
+                Text(text = "Morning", fontSize = 14.sp, color = TextSecondary, fontWeight = FontWeight.Medium)
+                Spacer(modifier = Modifier.height(8.dp))
+                TimeSlotGrid(
+                    slots = morningSlots, 
+                    selectedSlot = selectedTimeSlot, 
+                    onSlotSelected = { 
+                        selectedTimeSlot = it
+                        viewModel.resetState()
+                    }
                 )
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Schedule,
-                        contentDescription = "Select time",
-                        tint = BrandPrimary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    val selectedTime = LocalTime.of(
-                        selectedHour.coerceIn(0, 23),
-                        selectedMinute.coerceIn(0, 59)
-                    )
-                    Text(
-                        text = selectedTime.format(DateTimeFormatter.ofPattern("h:mm a")),
-                        fontSize = 15.sp,
-                        color = TextPrimary,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text(text = "Afternoon", fontSize = 14.sp, color = TextSecondary, fontWeight = FontWeight.Medium)
+                Spacer(modifier = Modifier.height(8.dp))
+                TimeSlotGrid(
+                    slots = afternoonSlots, 
+                    selectedSlot = selectedTimeSlot, 
+                    onSlotSelected = { 
+                        selectedTimeSlot = it
+                        viewModel.resetState()
+                    }
+                )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // ─── Facility Selection (from SATUSEHAT MSI API) ───
-            Text(
-                text = "Healthcare Facility",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextPrimary
-            )
+            // ─── Facility Selection ───
+            Text(text = "Healthcare Facility", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
             Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Select a hospital or clinic for your consultation",
-                fontSize = 12.sp,
-                color = TextSecondary
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            val facilities by viewModel.facilities.collectAsState()
-            var selectedFacility by remember { mutableStateOf<FacilityEntity?>(null) }
+            Text(text = "Available facilities for this doctor", fontSize = 12.sp, color = TextSecondary)
+            Spacer(modifier = Modifier.height(12.dp))
 
             if (facilities.isEmpty()) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = CardDefaults.outlinedCardBorder().copy(
-                        brush = androidx.compose.ui.graphics.SolidColor(CardBorder)
-                    )
+                    border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(CardBorder))
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.LocalHospital,
-                            contentDescription = "No facilities",
-                            tint = TextSecondary,
-                            modifier = Modifier.size(24.dp)
-                        )
+                        Icon(imageVector = Icons.Default.LocalHospital, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(24.dp))
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = "No facilities available (offline or credentials not set)",
-                            fontSize = 13.sp,
-                            color = TextSecondary
-                        )
+                        Text(text = "No facilities available. Please try syncing data.", fontSize = 13.sp, color = TextSecondary)
                     }
                 }
             } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 200.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    items(facilities, key = { it.kodeSatusehat }) { facility ->
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    facilities.forEach { facility ->
                         val isSelected = selectedFacility?.kodeSatusehat == facility.kodeSatusehat
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { selectedFacility = facility },
+                                .clickable { 
+                                    selectedFacility = facility 
+                                    viewModel.resetState()
+                                },
                             shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (isSelected) BrandPrimary.copy(alpha = 0.08f) else Color.White
-                            ),
-                            border = CardDefaults.outlinedCardBorder().copy(
-                                brush = androidx.compose.ui.graphics.SolidColor(
-                                    if (isSelected) BrandPrimary else CardBorder
-                                )
-                            )
+                            colors = CardDefaults.cardColors(containerColor = if (isSelected) BrandPrimary.copy(alpha = 0.05f) else Color.White),
+                            border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(if (isSelected) BrandPrimary else CardBorder))
                         ) {
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(12.dp),
+                                modifier = Modifier.fillMaxWidth().padding(12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.LocalHospital,
-                                    contentDescription = facility.jenisSaranaNama,
+                                    contentDescription = null,
                                     tint = if (isSelected) BrandPrimary else TextSecondary,
                                     modifier = Modifier.size(20.dp)
                                 )
-                                Spacer(modifier = Modifier.width(10.dp))
+                                Spacer(modifier = Modifier.width(12.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = facility.nama,
@@ -432,7 +316,7 @@ fun ScheduleConsultationScreen(
                                     if (facility.alamat.isNotBlank()) {
                                         Text(
                                             text = facility.alamat,
-                                            fontSize = 11.sp,
+                                            fontSize = 12.sp,
                                             color = TextSecondary,
                                             maxLines = 1,
                                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
@@ -447,44 +331,143 @@ fun ScheduleConsultationScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // ─── Confirm Button ───
+            // ─── Booking Summary & Validation ───
+            if (selectedTimeSlot != null && selectedFacility != null) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = BrandPrimary.copy(alpha = 0.05f)),
+                    border = BorderStroke(1.dp, BrandPrimary.copy(alpha = 0.2f))
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(text = "Summary", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = BrandPrimary)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        val formattedTime = String.format("%02d:%02d", selectedTimeSlot!!.hour, selectedTimeSlot!!.minute)
+                        Text(text = "Date: ${selectedDate.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))} at $formattedTime", fontSize = 13.sp, color = TextPrimary)
+                        Text(text = "Location: ${selectedFacility!!.nama}", fontSize = 13.sp, color = TextPrimary)
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // Inline Validation Error Card
+            if (bookingState is BookingUiState.Error) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFDEDED))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(imageVector = Icons.Default.ErrorOutline, contentDescription = null, tint = Color(0xFFD32F2F), modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = (bookingState as BookingUiState.Error).message, color = Color(0xFFD32F2F), fontSize = 13.sp)
+                    }
+                }
+            }
+
+            // Confirm Button
             Button(
                 onClick = {
-                    val consultationTime = LocalDateTime.of(
-                        selectedYear,
-                        selectedMonth,
-                        selectedDay,
-                        selectedHour.coerceIn(0, 23),
-                        selectedMinute.coerceIn(0, 59)
-                    )
-                    viewModel.confirmConsultation(
-                        doctorId = doctorId,
-                        doctorName = doctorName,
-                        category = category,
-                        consultationTime = consultationTime,
-                        facilityKodeSatusehat = selectedFacility?.kodeSatusehat ?: "",
-                        facilityName = selectedFacility?.nama ?: "",
-                        profileIcon = profileIcon
-                    )
+                    if (selectedTimeSlot != null && selectedFacility != null) {
+                        val consultationTime = LocalDateTime.of(selectedDate, LocalTime.of(selectedTimeSlot!!.hour, selectedTimeSlot!!.minute))
+                        viewModel.validateAndBook(
+                            doctorId = doctorId,
+                            doctorName = doctorName,
+                            category = category,
+                            consultationTime = consultationTime,
+                            facilityKodeSatusehat = selectedFacility!!.kodeSatusehat,
+                            facilityName = selectedFacility!!.nama,
+                            profileIcon = profileIcon
+                        )
+                    }
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
+                enabled = selectedTimeSlot != null && selectedFacility != null && bookingState !is BookingUiState.Saving,
+                modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = BrandPrimary,
-                    contentColor = Color.White
-                ),
+                colors = ButtonDefaults.buttonColors(containerColor = BrandPrimary, contentColor = Color.White),
                 contentPadding = PaddingValues(horizontal = 24.dp)
             ) {
                 Text(
-                    text = "Confirm Consultation",
+                    text = if (bookingState is BookingUiState.Saving) "Confirming..." else "Confirm Consultation",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun TimeSlotGrid(
+    slots: List<TimeSlot>,
+    selectedSlot: TimeSlot?,
+    onSlotSelected: (TimeSlot) -> Unit
+) {
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        maxItemsInEachRow = 4
+    ) {
+        slots.forEach { slot ->
+            val isSelected = selectedSlot?.hour == slot.hour && selectedSlot?.minute == slot.minute
+            val timeText = String.format("%02d:%02d", slot.hour, slot.minute)
+            
+            val (bgColor, contentColor, borderColor) = when {
+                isSelected -> Triple(BrandPrimary, Color.White, BrandPrimary)
+                slot.state == TimeSlotState.AVAILABLE -> Triple(Color.White, BrandPrimary, CardBorder)
+                slot.state == TimeSlotState.BREAK -> Triple(Color(0xFFF5F5F5), TextSecondary, Color.Transparent)
+                slot.state == TimeSlotState.TOO_SOON -> Triple(Color(0xFFF5F5F5), TextSecondary, Color.Transparent)
+                slot.state == TimeSlotState.BOOKED -> Triple(Color(0xFFFDEDED), Color(0xFFD32F2F), Color.Transparent)
+                else -> Triple(Color.White, BrandPrimary, CardBorder)
+            }
+
+            Card(
+                modifier = Modifier
+                    .weight(1f)
+                    .defaultMinSize(minWidth = 72.dp)
+                    .clickable(enabled = slot.state == TimeSlotState.AVAILABLE) { 
+                        onSlotSelected(slot) 
+                    },
+                shape = RoundedCornerShape(8.dp),
+                colors = CardDefaults.cardColors(containerColor = bgColor),
+                border = BorderStroke(1.dp, borderColor),
+                elevation = CardDefaults.cardElevation(0.dp)
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = timeText,
+                        fontSize = 14.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        color = contentColor,
+                        textDecoration = if (slot.state == TimeSlotState.BREAK) TextDecoration.LineThrough else null
+                    )
+                    
+                    if (slot.state != TimeSlotState.AVAILABLE && !isSelected) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = when (slot.state) {
+                                TimeSlotState.BREAK -> "☕ Break"
+                                TimeSlotState.TOO_SOON -> "⏰ Soon"
+                                TimeSlotState.BOOKED -> "📋 Booked"
+                                else -> ""
+                            },
+                            fontSize = 9.sp,
+                            color = contentColor,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
         }
     }
 }

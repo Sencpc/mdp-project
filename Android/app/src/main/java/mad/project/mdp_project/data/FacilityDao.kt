@@ -30,6 +30,24 @@ interface FacilityDao {
     """)
     fun searchFacilities(query: String): Flow<List<FacilityEntity>>
 
+    /** Used by ScheduleConsultationScreen to show only mapped facilities */
+    @Query("""
+        SELECT * FROM facilities 
+        WHERE kodeSatusehat IN (:ids) 
+        AND operasional = 1 
+        AND statusAktif = 1 
+        ORDER BY nama ASC
+    """)
+    fun getFacilitiesByIds(ids: List<String>): Flow<List<FacilityEntity>>
+
+    /** Used by post-sync mapping (suspend, not Flow) */
+    @Query("""
+        SELECT * FROM facilities 
+        WHERE operasional = 1 AND statusAktif = 1 
+        ORDER BY nama ASC
+    """)
+    suspend fun getActiveFacilitiesOnce(): List<FacilityEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(facilities: List<FacilityEntity>)
 

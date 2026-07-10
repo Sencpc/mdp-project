@@ -85,6 +85,73 @@ async function getSatuSehatHospitals() {
 }
 
 // ==========================================
+// SATUSEHAT STRUCTURED FACILITY API
+// ==========================================
+let cachedFacilitiesStructured = null;
+let cachedFacilitiesStructuredTimestamp = 0;
+
+async function getSatuSehatFacilitiesStructured() {
+  const CACHE_DURATION_MS = 60 * 60 * 1000; // 1 hour
+  if (
+    cachedFacilitiesStructured &&
+    Date.now() - cachedFacilitiesStructuredTimestamp < CACHE_DURATION_MS
+  ) {
+    return cachedFacilitiesStructured;
+  }
+
+  // 1. Get OAuth Token (server-side only)
+  const authResponse = await fetch(
+    "https://api-satusehat-stg.dto.kemkes.go.id/oauth2/v1/accesstoken",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `client_id=${SATUSEHAT_CLIENT_ID}&client_secret=${SATUSEHAT_CLIENT_SECRET}`,
+    },
+  );
+  const authData = await authResponse.json();
+  if (!authData.access_token)
+    throw new Error("Failed to get SatuSehat token");
+
+  const token = authData.access_token;
+  let allFacilities = [];
+
+  // 2. Fetch Hospitals (jenis_sarana=104)
+  const hospitalRes = await fetch(
+    "https://api-satusehat-stg.dto.kemkes.go.id/masterdata/v1/mastersaranaindex/mastersarana?limit=50&page=1&jenis_sarana=104&status_aktif=true",
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  const hospitalData = await hospitalRes.json();
+  if (hospitalData && hospitalData.data) {
+    allFacilities = allFacilities.concat(hospitalData.data);
+  }
+
+  // 3. Fetch Clinics (jenis_sarana=103)
+  const clinicRes = await fetch(
+    "https://api-satusehat-stg.dto.kemkes.go.id/masterdata/v1/mastersaranaindex/mastersarana?limit=50&page=1&jenis_sarana=103&status_aktif=true",
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  const clinicData = await clinicRes.json();
+  if (clinicData && clinicData.data) {
+    allFacilities = allFacilities.concat(clinicData.data);
+  }
+
+  cachedFacilitiesStructured = allFacilities;
+  cachedFacilitiesStructuredTimestamp = Date.now();
+  return allFacilities;
+}
+
+// GET /api/facilities — Returns structured SATUSEHAT MSI facility data for Android
+app.get("/api/facilities", async (req, res) => {
+  try {
+    const facilities = await getSatuSehatFacilitiesStructured();
+    res.json({ success: true, data: facilities });
+  } catch (error) {
+    console.error("Facilities API Error:", error.message);
+    res.status(500).json({ success: false, message: error.message, data: [] });
+  }
+});
+
+// ==========================================
 // 1. ROUTES UNTUK AUTH (REGISTER & LOGIN)
 // ==========================================
 app.post("/api/users/register", async (req, res) => {
