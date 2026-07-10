@@ -153,3 +153,18 @@ data class ChatResponse(
     val reply: String? = null,
     val error: String? = null
 )
+
+@JsonClass(generateAdapter = true)
+data class DailySummaryRequest(
+    val sleepHours: Double,
+    val calories: Int,
+    val screenTimeMinutes: Int,
+    val habitsCompleted: Int,
+    val habitsTotal: Int
+)
+
+@JsonClass(generateAdapter = true)
+data class DailySummaryResponse(
+    val summary: String,
+    val error: String? = null
+)
