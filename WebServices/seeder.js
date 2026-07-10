@@ -121,7 +121,8 @@ async function seedDatabase() {
       const mealsToday = Math.floor(Math.random() * 4) + 2;
       
       for(let j = 0; j < mealsToday; j++) {
-        const type = mealTypes[j];
+        // If j >= 4, just make it an extra snack
+        const type = j < mealTypes.length ? mealTypes[j] : "snack";
         const foodOptions = foods[type];
         const selectedFood = foodOptions[Math.floor(Math.random() * foodOptions.length)];
         
