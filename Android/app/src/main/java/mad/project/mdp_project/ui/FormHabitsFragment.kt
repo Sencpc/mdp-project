@@ -31,8 +31,6 @@ class FormHabitsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentFormHabitsBinding.inflate(inflater, container, false)
-        binding.lifecycleOwner = viewLifecycleOwner
-        binding.vm = viewModel
         return binding.root
     }
 
@@ -48,6 +46,9 @@ class FormHabitsFragment : Fragment() {
     private fun setupUI() {
         binding.ivBack.setOnClickListener { findNavController().navigateUp() }
         binding.btnSaveHabit.setOnClickListener {
+            viewModel.habitName.value = binding.etHabitName.text.toString()
+            viewModel.habitSubtitle.value = binding.etSubtitle.text.toString()
+            
             viewModel.saveHabit {
                 Toast.makeText(requireContext(), "Habit saved!", Toast.LENGTH_SHORT).show()
                 findNavController().navigateUp()
@@ -72,6 +73,11 @@ class FormHabitsFragment : Fragment() {
     }
 
     private fun observeViewModel() {
+        viewModel.isEditMode.observe(viewLifecycleOwner) { isEdit ->
+            binding.tvToolbarTitle.text = if (isEdit) "Edit Habit" else "New Habit"
+            binding.btnSaveHabit.text = if (isEdit) "Update Habit" else "Save Habit"
+        }
+
         viewModel.habitName.observe(viewLifecycleOwner) { name ->
             if (binding.etHabitName.text.toString() != name) {
                 binding.etHabitName.setText(name)

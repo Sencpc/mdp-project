@@ -359,19 +359,19 @@ class DashboardFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.profileCircle.setOnClickListener {
-            findNavController().navigate(R.id.action_nav_dashboard_to_nav_profile)
+            findNavController().navigate(R.id.action_nav_home_to_nav_profile)
         }
         binding.btnConsult.setOnClickListener {
-            findNavController().navigate(R.id.action_nav_dashboard_to_nav_personal_doctor)
+            findNavController().navigate(R.id.action_nav_home_to_nav_personal_doctor)
         }
         binding.btnChatbot.setOnClickListener {
-            findNavController().navigate(R.id.action_nav_dashboard_to_nav_chatbot)
+            findNavController().navigate(R.id.action_nav_home_to_nav_chatbot)
         }
         binding.btnFotoCalori.setOnClickListener {
-            findNavController().navigate(R.id.action_nav_dashboard_to_nav_scanner)
+            findNavController().navigate(R.id.action_nav_home_to_nav_scanner)
         }
         binding.cardCalories.setOnClickListener {
-            findNavController().navigate(R.id.action_nav_dashboard_to_nav_nutrition_log)
+            findNavController().navigate(R.id.action_nav_home_to_nav_nutrition_log)
         }
     }
 

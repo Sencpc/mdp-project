@@ -44,7 +44,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "mdp_project_db"
                 )
-                    .fallbackToDestructiveMigration() // Memperbaiki crash akibat perubahan skema (User fields)
+                    .fallbackToDestructiveMigration(dropAllTables = true) // Memperbaiki crash akibat perubahan skema (User fields)
                     .addCallback(DatabaseCallback())
                     .build()
                 INSTANCE = instance

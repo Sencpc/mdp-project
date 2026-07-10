@@ -44,11 +44,11 @@ class HabitsFragment : Fragment() {
         habitAdapter = HabitAdapter(
             onHabitClick = { habit ->
                 // Navigasi ke HabitDetailFragment
-                val action = HabitsFragmentDirections.actionNavHabitsToNavHabitDetail(habit.id)
+                val action = HomeFragmentDirections.actionNavHomeToNavHabitDetail(habit.id)
                 findNavController().navigate(action)
             },
             onAddClick = {
-                findNavController().navigate(R.id.action_nav_habits_to_nav_form_habits)
+                findNavController().navigate(R.id.action_nav_home_to_nav_form_habits)
             },
             onCompleteClick = { habit, isCompleted ->
                 viewModel.toggleHabitCompletion(habit, isCompleted)

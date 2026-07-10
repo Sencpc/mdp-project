@@ -3,32 +3,48 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/nav_dashboard">
+    app:startDestination="@id/nav_home">
+
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="mad.project.mdp_project.ui.HomeFragment"
+        android:label="Home"
+        tools:layout="@layout/fragment_home">
+        
+        <!-- Actions from Dashboard -->
+        <action
+            android:id="@+id/action_nav_home_to_nav_sleep"
+            app:destination="@id/nav_sleep" />
+        <action
+            android:id="@+id/action_nav_home_to_nav_profile"
+            app:destination="@id/nav_profile" />
+        <action
+            android:id="@+id/action_nav_home_to_nav_chatbot"
+            app:destination="@id/nav_chatbot" />
+        <action
+            android:id="@+id/action_nav_home_to_nav_personal_doctor"
+            app:destination="@id/nav_personal_doctor" />
+        <action
+            android:id="@+id/action_nav_home_to_nav_scanner"
+            app:destination="@id/nav_scanner" />
+        <action
+            android:id="@+id/action_nav_home_to_nav_nutrition_log"
+            app:destination="@id/nav_nutrition_log" />
+            
+        <!-- Actions from Habits -->
+        <action
+            android:id="@+id/action_nav_home_to_nav_form_habits"
+            app:destination="@id/nav_form_habits" />
+        <action
+            android:id="@+id/action_nav_home_to_nav_habit_detail"
+            app:destination="@id/nav_habit_detail" />
+    </fragment>
 
     <fragment
         android:id="@+id/nav_dashboard"
         android:name="mad.project.mdp_project.ui.DashboardFragment"
         android:label="Dashboard"
-        tools:layout="@layout/fragment_dashboard">
-        <action
-            android:id="@+id/action_nav_dashboard_to_nav_sleep"
-            app:destination="@id/nav_sleep" />
-        <action
-            android:id="@+id/action_nav_dashboard_to_nav_profile"
-            app:destination="@id/nav_profile" />
-        <action
-            android:id="@+id/action_nav_dashboard_to_nav_chatbot"
-            app:destination="@id/nav_chatbot" />
-        <action
-            android:id="@+id/action_nav_dashboard_to_nav_personal_doctor"
-            app:destination="@id/nav_personal_doctor" />
-        <action
-            android:id="@+id/action_nav_dashboard_to_nav_scanner"
-            app:destination="@id/nav_scanner" />
-        <action
-            android:id="@+id/action_nav_dashboard_to_nav_nutrition_log"
-            app:destination="@id/nav_nutrition_log" />
-    </fragment>
+        tools:layout="@layout/fragment_dashboard" />
 
     <fragment
         android:id="@+id/nav_chatbot"
@@ -82,14 +98,7 @@
         android:id="@+id/nav_habits"
         android:name="mad.project.mdp_project.ui.HabitsFragment"
         android:label="Habits"
-        tools:layout="@layout/fragment_habits">
-        <action
-            android:id="@+id/action_nav_habits_to_nav_form_habits"
-            app:destination="@id/nav_form_habits" />
-        <action
-            android:id="@+id/action_nav_habits_to_nav_habit_detail"
-            app:destination="@id/nav_habit_detail" />
-    </fragment>
+        tools:layout="@layout/fragment_habits" />
 
     <fragment
         android:id="@+id/nav_habit_detail"
