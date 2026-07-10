@@ -16,22 +16,12 @@ android {
     namespace = "mad.project.mdp_project"
     compileSdk = 36
 
-    val localProperties = java.util.Properties()
-    val localPropertiesFile = rootProject.file("local.properties")
-    if (localPropertiesFile.exists()) {
-        localProperties.load(java.io.FileInputStream(localPropertiesFile))
-    }
-
     defaultConfig {
         applicationId = "mad.project.mdp_project"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-
-        buildConfigField("String", "SATUSEHAT_CLIENT_ID", "\"${localProperties.getProperty("SATUSEHAT_CLIENT_ID", "")}\"")
-        buildConfigField("String", "SATUSEHAT_CLIENT_SECRET", "\"${localProperties.getProperty("SATUSEHAT_CLIENT_SECRET", "")}\"")
-        buildConfigField("String", "SATUSEHAT_ORGANIZATION_ID", "\"${localProperties.getProperty("SATUSEHAT_ORGANIZATION_ID", "")}\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -57,7 +47,6 @@ android {
         viewBinding = true
         dataBinding = true
         compose = true
-        buildConfig = true
     }
 
     composeOptions {
