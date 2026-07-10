@@ -37,6 +37,12 @@ class PersonalDoctorFragment : Fragment() {
                                 profileIcon = doctor.profileIcon
                             )
                         findNavController().navigate(action)
+                    },
+                    onHistoryClick = {
+                        findNavController().navigate(
+                            PersonalDoctorFragmentDirections
+                                .actionNavPersonalDoctorToNavConsultationHistory()
+                        )
                     }
                 )
             }

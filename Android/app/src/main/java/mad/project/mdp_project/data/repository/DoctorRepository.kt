@@ -1,16 +1,19 @@
 package mad.project.mdp_project.data.repository
 
 import kotlinx.coroutines.flow.Flow
-import mad.project.mdp_project.data.ConsultationDao
-import mad.project.mdp_project.data.ConsultationEntity
 import mad.project.mdp_project.data.DoctorDao
 import mad.project.mdp_project.data.DoctorEntity
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+/**
+ * Repository for doctor data.
+ *
+ * Single responsibility: Manages local doctor data from Room Database.
+ * Consultation-related operations have been moved to ConsultationRepository.
+ */
 class DoctorRepository(
-    private val doctorDao: DoctorDao,
-    private val consultationDao: ConsultationDao
+    private val doctorDao: DoctorDao
 ) {
     private val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
@@ -44,12 +47,5 @@ class DoctorRepository(
     suspend fun getDoctorById(doctorId: Int): DoctorEntity? {
         return doctorDao.getDoctorById(doctorId)
     }
-
-    fun getUpcomingConsultations(): Flow<List<ConsultationEntity>> {
-        return consultationDao.getUpcomingConsultations()
-    }
-
-    suspend fun insertConsultation(consultation: ConsultationEntity) {
-        consultationDao.insertConsultation(consultation)
-    }
 }
+

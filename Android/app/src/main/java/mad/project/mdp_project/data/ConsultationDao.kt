@@ -17,5 +17,18 @@ interface ConsultationDao {
     fun getUpcomingConsultations(): Flow<List<ConsultationEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertConsultation(consultation: ConsultationEntity)
+    suspend fun insertConsultation(consultation: ConsultationEntity): Long
+
+    @Query("""
+        SELECT * FROM consultations 
+        WHERE status = 'Completed' 
+        ORDER BY consultationTime DESC
+    """)
+    fun getCompletedConsultations(): Flow<List<ConsultationEntity>>
+
+    @Query("SELECT * FROM consultations ORDER BY consultationTime DESC")
+    fun getAllConsultations(): Flow<List<ConsultationEntity>>
+
+    @Query("UPDATE consultations SET status = 'Completed' WHERE status = 'Upcoming' AND consultationTime < :now")
+    suspend fun markPastConsultationsCompleted(now: String)
 }

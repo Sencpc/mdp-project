@@ -20,7 +20,7 @@ import mad.project.mdp_project.data.SessionManager
 import mad.project.mdp_project.data.SleepLog
 import mad.project.mdp_project.data.User
 import mad.project.mdp_project.data.remote.RetrofitClient
-import mad.project.mdp_project.data.repository.DoctorRepository
+import mad.project.mdp_project.data.repository.ConsultationRepository
 import mad.project.mdp_project.data.repository.HabitRepository
 import mad.project.mdp_project.data.repository.SleepRepository
 import mad.project.mdp_project.data.repository.UserRepository
@@ -40,7 +40,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     private val userRepository = UserRepository(db.userDao(), api)
     private val habitRepository = HabitRepository(db.habitDao(), api)
     private val sleepRepository = SleepRepository(db.sleepLogDao(), api)
-    private val doctorRepository = DoctorRepository(db.doctorDao(), db.consultationDao())
+    private val consultationRepository = ConsultationRepository(db.consultationDao(), db.reviewDao())
 
     val user: StateFlow<User?> = userRepository.getUserById(userId)
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
@@ -54,7 +54,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     val sleepLogs: StateFlow<List<SleepLog>> = sleepRepository.getSleepLogsForUser(userId)
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    val upcomingConsultations: StateFlow<List<ConsultationEntity>> = doctorRepository.getUpcomingConsultations()
+    val upcomingConsultations: StateFlow<List<ConsultationEntity>> = consultationRepository.getUpcomingConsultations()
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     // Screen time data for dashboard

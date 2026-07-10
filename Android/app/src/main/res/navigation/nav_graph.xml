@@ -40,7 +40,11 @@
         <action
             android:id="@+id/action_nav_personal_doctor_to_nav_schedule_consultation"
             app:destination="@id/nav_schedule_consultation" />
+        <action
+            android:id="@+id/action_nav_personal_doctor_to_nav_consultation_history"
+            app:destination="@id/nav_consultation_history" />
     </fragment>
+
 
     <fragment
         android:id="@+id/nav_schedule_consultation"
@@ -124,5 +128,10 @@
         android:name="mad.project.mdp_project.ui.ScannerFragment"
         android:label="Calorie Scanner"
         tools:layout="@layout/fragment_scanner" />
+
+    <fragment
+        android:id="@+id/nav_consultation_history"
+        android:name="mad.project.mdp_project.ui.ConsultationHistoryFragment"
+        android:label="Consultation History" />
 
 </navigation>
