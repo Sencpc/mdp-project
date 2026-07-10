@@ -239,47 +239,53 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     fun fetchAiSummary() {
+        val context = getApplication<Application>()
+        val prefs = context.getSharedPreferences("dashboard_prefs", Context.MODE_PRIVATE)
+        val todayStr = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+        val savedSummary = prefs.getString("weekly_summary_$todayStr", null)
+        
+        if (savedSummary != null) {
+            _aiSummary.postValue(savedSummary)
+            // Still calculate pillars for the UI checkmarks
+            calculatePillarsForUI(context)
+            return
+        }
+
         _summaryLoading.value = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val todayCal = Calendar.getInstance()
-                val todayYear = todayCal.get(Calendar.YEAR)
-                val todayDay = todayCal.get(Calendar.DAY_OF_YEAR)
-
-                // 1. Sleep
-                val todaySleepLogs = sleepLogs.value.filter { log ->
-                    val cal = Calendar.getInstance().apply { timeInMillis = log.date }
-                    cal.get(Calendar.YEAR) == todayYear && cal.get(Calendar.DAY_OF_YEAR) == todayDay
-                }
-                val todaySleepMs = todaySleepLogs.sumOf { it.endTime - it.startTime }
-                val sleepHours = todaySleepMs.toDouble() / (1000 * 60 * 60)
+                // 1. Weekly Sleep Average
+                val now = System.currentTimeMillis()
+                val weekAgo = now - (7 * 24 * 60 * 60 * 1000L)
+                val recentSleep = sleepLogs.value.filter { it.date in weekAgo..now }
+                val sleepHours = if (recentSleep.isNotEmpty()) {
+                    recentSleep.map { (it.endTime - it.startTime).toDouble() / (1000 * 60 * 60) }.average()
+                } else 0.0
                 _pillarSleep.postValue(sleepHours >= 7.0)
 
-                // 2. Food
-                val todayNutritionLogs = weeklyNutritionLogs.value.filter { log ->
-                    val cal = Calendar.getInstance().apply { timeInMillis = log.consumedAt }
-                    cal.get(Calendar.YEAR) == todayYear && cal.get(Calendar.DAY_OF_YEAR) == todayDay
-                }
-                val todayCalories = todayNutritionLogs.sumOf { it.calories }
+                // 2. Weekly Calories Average
+                val recentNutrition = weeklyNutritionLogs.value.filter { it.consumedAt <= now }
+                val totalCals = recentNutrition.sumOf { it.calories }
+                val daysWithFood = recentNutrition.map { it.consumedAt / (24 * 60 * 60 * 1000L) }.distinct().size.coerceAtLeast(1)
+                val avgCalories = totalCals / daysWithFood
                 val recommendedCals = calculateRecommendedCalories(user.value)
-                _pillarFood.postValue(todayCalories >= recommendedCals * 0.8)
+                _pillarFood.postValue(avgCalories >= recommendedCals * 0.8)
 
                 // 3. Screen Time
-                val context = getApplication<Application>()
                 val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
                 val todayTotalMs = getTodayScreenTime(usageStatsManager)
                 val screenTimeMinutes = (todayTotalMs / (1000 * 60)).toInt()
                 val limitMs = ScreenTimeService.getDailyLimitMs(context)
                 _pillarScreen.postValue(todayTotalMs <= limitMs)
 
-                // 4. Habits
-                val habitsTotal = getTotalHabitsCount()
-                val habitsCompleted = getCompletedHabitsCount()
-                _pillarHabits.postValue(habitsTotal > 0 && habitsCompleted == habitsTotal)
+                // 4. Habits Weekly Total
+                val habitsTotal = getTotalHabitsCount() * 7
+                val habitsCompleted = habits.value.sumOf { it.streak.coerceAtMost(7) }
+                _pillarHabits.postValue(habitsTotal > 0 && habitsCompleted >= habitsTotal / 2)
 
                 val req = mad.project.mdp_project.data.remote.DailySummaryRequest(
                     sleepHours = sleepHours,
-                    calories = todayCalories,
+                    calories = avgCalories,
                     screenTimeMinutes = screenTimeMinutes,
                     habitsCompleted = habitsCompleted,
                     habitsTotal = habitsTotal
@@ -287,16 +293,44 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
 
                 val res = api.getDailySummary(req)
                 if (res.isSuccessful && res.body() != null) {
-                    _aiSummary.postValue(res.body()!!.summary)
+                    val text = res.body()!!.summary
+                    _aiSummary.postValue(text)
+                    prefs.edit().putString("weekly_summary_$todayStr", text).apply()
                 } else {
-                    _aiSummary.postValue("Could not fetch summary at this time.")
+                    _aiSummary.postValue("Could not fetch insights right now.")
                 }
             } catch (e: Exception) {
-                _aiSummary.postValue("Error fetching summary: ${e.message}")
+                _aiSummary.postValue("Something went wrong.")
             } finally {
                 _summaryLoading.postValue(false)
             }
         }
+    }
+
+    private fun calculatePillarsForUI(context: Context) {
+        val now = System.currentTimeMillis()
+        val weekAgo = now - (7 * 24 * 60 * 60 * 1000L)
+        val recentSleep = sleepLogs.value.filter { it.date in weekAgo..now }
+        val sleepHours = if (recentSleep.isNotEmpty()) {
+            recentSleep.map { (it.endTime - it.startTime).toDouble() / (1000 * 60 * 60) }.average()
+        } else 0.0
+        _pillarSleep.postValue(sleepHours >= 7.0)
+
+        val recentNutrition = weeklyNutritionLogs.value.filter { it.consumedAt <= now }
+        val totalCals = recentNutrition.sumOf { it.calories }
+        val daysWithFood = recentNutrition.map { it.consumedAt / (24 * 60 * 60 * 1000L) }.distinct().size.coerceAtLeast(1)
+        val avgCalories = totalCals / daysWithFood
+        val recommendedCals = calculateRecommendedCalories(user.value)
+        _pillarFood.postValue(avgCalories >= recommendedCals * 0.8)
+
+        val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val todayTotalMs = getTodayScreenTime(usageStatsManager)
+        val limitMs = ScreenTimeService.getDailyLimitMs(context)
+        _pillarScreen.postValue(todayTotalMs <= limitMs)
+
+        val habitsTotal = getTotalHabitsCount() * 7
+        val habitsCompleted = habits.value.sumOf { it.streak.coerceAtMost(7) }
+        _pillarHabits.postValue(habitsTotal > 0 && habitsCompleted >= habitsTotal / 2)
     }
 
     private fun calculateRecommendedCalories(user: User?): Int {

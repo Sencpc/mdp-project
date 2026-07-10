@@ -110,15 +110,29 @@ fun ProfileScreen(
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     // Image Pickers Logic
-    var tempImageUri by remember { mutableStateOf<Uri?>(null) }
+    var tempImageFile by remember { mutableStateOf<java.io.File?>(null) }
 
     val pickMedia = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        uri?.let { selectedUri -> viewModel.updateDraft { it.copy(profilePicturePath = selectedUri.toString()) } }
+        uri?.let { selectedUri ->
+            try {
+                val inputStream = context.contentResolver.openInputStream(selectedUri)
+                val file = java.io.File(context.filesDir, "profile_${System.currentTimeMillis()}.jpg")
+                val outputStream = java.io.FileOutputStream(file)
+                inputStream?.copyTo(outputStream)
+                inputStream?.close()
+                outputStream.close()
+                viewModel.updateDraft { it.copy(profilePicturePath = android.net.Uri.fromFile(file).toString()) }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     val takePicture = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success) {
-            tempImageUri?.let { capturedUri -> viewModel.updateDraft { it.copy(profilePicturePath = capturedUri.toString()) } }
+            tempImageFile?.let { file -> 
+                viewModel.updateDraft { it.copy(profilePicturePath = android.net.Uri.fromFile(file).toString()) } 
+            }
         }
     }
 
@@ -320,9 +334,9 @@ fun ProfileScreen(
                         leadingContent = { Icon(Icons.Default.Camera, null) },
                         modifier = Modifier.clickable {
                             showPhotoOptions = false
-                            val file = File(context.filesDir, "profile_${System.currentTimeMillis()}.jpg")
-                            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-                            tempImageUri = uri
+                            val file = java.io.File(context.filesDir, "profile_${System.currentTimeMillis()}.jpg")
+                            tempImageFile = file
+                            val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
                             takePicture.launch(uri)
                         }
                     )

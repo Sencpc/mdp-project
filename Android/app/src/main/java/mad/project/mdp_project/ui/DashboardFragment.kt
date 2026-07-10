@@ -55,11 +55,11 @@ class DashboardFragment : Fragment() {
         }
         viewModel.summaryLoading.observe(viewLifecycleOwner) { isLoading ->
             if (isLoading) {
-                binding.btnGetSummary.visibility = View.INVISIBLE
+                binding.btnGetSummary.visibility = View.GONE
                 binding.pbSummaryLoading.visibility = View.VISIBLE
                 binding.tvAiInsight.text = "Generating insight..."
             } else {
-                binding.btnGetSummary.visibility = View.VISIBLE
+                binding.btnGetSummary.visibility = View.GONE
                 binding.pbSummaryLoading.visibility = View.GONE
             }
         }
@@ -146,6 +146,10 @@ class DashboardFragment : Fragment() {
                 launch {
                     viewModel.weeklyNutritionLogs.collectLatest { logs ->
                         val user = viewModel.user.value
+                        
+                        if (viewModel.aiSummary.value.isNullOrEmpty() && logs.isNotEmpty()) {
+                            viewModel.fetchAiSummary()
+                        }
 
                         // Calculate daily calorie baseline using Mifflin-St Jeor
                         val baseline = if (user?.height != null && user.weight != null) {
@@ -167,9 +171,12 @@ class DashboardFragment : Fragment() {
                             2000 // Default fallback
                         }
 
+                        val now = System.currentTimeMillis()
+                        val recentLogs = logs.filter { it.consumedAt <= now }
+
                         // Group logs by day-of-week
                         val dailyCalories = mutableMapOf<Int, Int>()
-                        logs.forEach { log ->
+                        recentLogs.forEach { log ->
                             val logCal = java.util.Calendar.getInstance()
                             logCal.timeInMillis = log.consumedAt
                             val dow = logCal.get(java.util.Calendar.DAY_OF_WEEK)
@@ -180,7 +187,7 @@ class DashboardFragment : Fragment() {
                         binding.calorieChartView.setData(dailyCalories, baseline)
 
                         // Update weekly total and avg/day text
-                        val totalWeek = logs.sumOf { it.calories }
+                        val totalWeek = recentLogs.sumOf { it.calories }
                         val daysWithData = dailyCalories.size.coerceAtLeast(1)
                         val avgPerDay = totalWeek / daysWithData
                         binding.tvWeeklyCalories.text = "${String.format(java.util.Locale.getDefault(), "%,d", avgPerDay)} kcal"
@@ -192,8 +199,9 @@ class DashboardFragment : Fragment() {
                 launch {
                     viewModel.sleepLogs.collectLatest { logs ->
                         if (logs.isNotEmpty()) {
-                            val weekAgo = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000L)
-                            val recentLogs = logs.filter { it.date >= weekAgo }
+                            val now = System.currentTimeMillis()
+                            val weekAgo = now - (7 * 24 * 60 * 60 * 1000L)
+                            val recentLogs = logs.filter { it.date in weekAgo..now }
                             
                             val avgSleep = if (recentLogs.isNotEmpty()) {
                                 recentLogs.map { (it.endTime - it.startTime).toDouble() / (1000 * 60 * 60) }.average()

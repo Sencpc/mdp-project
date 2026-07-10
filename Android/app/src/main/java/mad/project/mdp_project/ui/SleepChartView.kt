@@ -21,7 +21,7 @@ class SleepChartView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
-    private val dayLabels = arrayOf("M", "T", "W", "T", "F", "S", "S")
+    // We will generate labels dynamically based on today's date
 
     // Map of dayOfWeek (Calendar.MONDAY=2 .. Calendar.SUNDAY=1) to total sleep hours
     private var dailySleep: Map<Int, Double> = emptyMap()
@@ -101,10 +101,24 @@ class SleepChartView @JvmOverloads constructor(
             1.0
         )
 
-        val calDays = intArrayOf(
-            Calendar.MONDAY, Calendar.TUESDAY, Calendar.WEDNESDAY,
-            Calendar.THURSDAY, Calendar.FRIDAY, Calendar.SATURDAY, Calendar.SUNDAY
-        )
+        val calDays = IntArray(7)
+        val dynamicLabels = Array(7) { "" }
+        for (i in 0 until 7) {
+            val offset = i - 6
+            var d = todayDayOfWeek + offset
+            if (d <= 0) d += 7
+            calDays[i] = d
+            dynamicLabels[i] = when(d) {
+                Calendar.MONDAY -> "M"
+                Calendar.TUESDAY -> "T"
+                Calendar.WEDNESDAY -> "W"
+                Calendar.THURSDAY -> "T"
+                Calendar.FRIDAY -> "F"
+                Calendar.SATURDAY -> "S"
+                Calendar.SUNDAY -> "S"
+                else -> ""
+            }
+        }
 
         for (i in 0 until barCount) {
             val calDay = calDays[i]
@@ -131,7 +145,7 @@ class SleepChartView @JvmOverloads constructor(
             }
 
             canvas.drawText(
-                dayLabels[i],
+                dynamicLabels[i],
                 x + barWidth / 2,
                 h - 4f * density,
                 labelPaint
