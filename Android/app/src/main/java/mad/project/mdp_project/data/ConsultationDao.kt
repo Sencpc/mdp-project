@@ -31,4 +31,35 @@ interface ConsultationDao {
 
     @Query("UPDATE consultations SET status = 'Completed' WHERE status = 'Upcoming' AND consultationTime < :now")
     suspend fun markPastConsultationsCompleted(now: String)
+
+    /**
+     * User Conflict: Prevents the SAME USER from having two consultations
+     * at the exact same date/time.
+     *
+     * Scoped to userId because different users on the same device
+     * should not block each other.
+     */
+    @Query("""
+        SELECT COUNT(*) FROM consultations 
+        WHERE userId = :userId
+        AND consultationTime = :dateTime 
+        AND status = 'Upcoming'
+    """)
+    suspend fun countUserConflicts(userId: Int, dateTime: String): Int
+
+    /**
+     * Doctor Conflict: Prevents booking the SAME DOCTOR at the same time,
+     * regardless of facility.
+     *
+     * Business rule: A doctor cannot be in two places at once.
+     * Therefore the conflict is scoped to doctorId + dateTime only,
+     * NOT doctorId + facility + dateTime.
+     */
+    @Query("""
+        SELECT COUNT(*) FROM consultations 
+        WHERE doctorId = :doctorId 
+        AND consultationTime = :dateTime 
+        AND status = 'Upcoming'
+    """)
+    suspend fun countDoctorConflicts(doctorId: Int, dateTime: String): Int
 }

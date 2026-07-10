@@ -16,7 +16,8 @@ object DoctorSeeder {
                 description = "Experienced general practitioner focusing on holistic health and preventative care for adults and families.",
                 rating = 4.9,
                 availableTime = now.plusHours(2),
-                profileIcon = "medical_services"
+                profileIcon = "medical_services",
+                supportedFacilityIds = emptyList() // Assigned post-sync by FacilityRepository
             ),
             DoctorEntity(
                 id = 2,
@@ -25,7 +26,8 @@ object DoctorSeeder {
                 description = "Board-certified family medicine physician specializing in chronic disease management and elderly care.",
                 rating = 4.7,
                 availableTime = now.plusHours(4),
-                profileIcon = "stethoscope"
+                profileIcon = "stethoscope",
+                supportedFacilityIds = emptyList()
             ),
             DoctorEntity(
                 id = 3,
@@ -34,7 +36,8 @@ object DoctorSeeder {
                 description = "Dedicated to providing comprehensive primary care with a focus on women's health and pediatric medicine.",
                 rating = 4.8,
                 availableTime = now.plusHours(6),
-                profileIcon = "local_hospital"
+                profileIcon = "local_hospital",
+                supportedFacilityIds = emptyList()
             ),
             DoctorEntity(
                 id = 4,
@@ -43,7 +46,8 @@ object DoctorSeeder {
                 description = "Passionate about preventive medicine and health education, offering personalized treatment plans for all ages.",
                 rating = 4.6,
                 availableTime = now.plusHours(8),
-                profileIcon = "medical_services"
+                profileIcon = "medical_services",
+                supportedFacilityIds = emptyList()
             ),
             DoctorEntity(
                 id = 5,
@@ -52,7 +56,8 @@ object DoctorSeeder {
                 description = "Expert in urgent care and routine check-ups, committed to accessible healthcare for underserved communities.",
                 rating = 4.5,
                 availableTime = now.plusHours(24),
-                profileIcon = "stethoscope"
+                profileIcon = "stethoscope",
+                supportedFacilityIds = emptyList()
             ),
 
             // ==================== Therapy ====================
@@ -63,7 +68,8 @@ object DoctorSeeder {
                 description = "Specializing in anxiety, stress management, and cognitive behavioral therapy (CBT) for adults.",
                 rating = 4.8,
                 availableTime = now.plusHours(3),
-                profileIcon = "psychology"
+                profileIcon = "psychology",
+                supportedFacilityIds = emptyList()
             ),
             DoctorEntity(
                 id = 7,
@@ -72,7 +78,8 @@ object DoctorSeeder {
                 description = "Licensed psychologist with expertise in trauma recovery, PTSD, and mindfulness-based stress reduction.",
                 rating = 4.9,
                 availableTime = now.plusHours(5),
-                profileIcon = "self_improvement"
+                profileIcon = "self_improvement",
+                supportedFacilityIds = emptyList()
             ),
             DoctorEntity(
                 id = 8,
@@ -81,7 +88,8 @@ object DoctorSeeder {
                 description = "Experienced therapist helping individuals and couples navigate relationship issues, depression, and life transitions.",
                 rating = 4.7,
                 availableTime = now.plusHours(7),
-                profileIcon = "spa"
+                profileIcon = "spa",
+                supportedFacilityIds = emptyList()
             ),
             DoctorEntity(
                 id = 9,
@@ -90,7 +98,8 @@ object DoctorSeeder {
                 description = "Child and adolescent psychologist focusing on behavioral disorders, ADHD, and emotional development.",
                 rating = 4.6,
                 availableTime = now.plusHours(10),
-                profileIcon = "psychology"
+                profileIcon = "psychology",
+                supportedFacilityIds = emptyList()
             ),
             DoctorEntity(
                 id = 10,
@@ -99,7 +108,8 @@ object DoctorSeeder {
                 description = "Integrative therapist combining evidence-based techniques with holistic approaches for mental wellness.",
                 rating = 5.0,
                 availableTime = now.plusHours(26),
-                profileIcon = "self_improvement"
+                profileIcon = "self_improvement",
+                supportedFacilityIds = emptyList()
             ),
 
             // ==================== Nutrition ====================
@@ -110,7 +120,8 @@ object DoctorSeeder {
                 description = "Providing personalized nutrition plans focused on mindful eating, gut health, and sustained energy.",
                 rating = 4.9,
                 availableTime = now.plusHours(3).plusMinutes(30),
-                profileIcon = "nutrition"
+                profileIcon = "nutrition",
+                supportedFacilityIds = emptyList()
             ),
             DoctorEntity(
                 id = 12,
@@ -119,7 +130,8 @@ object DoctorSeeder {
                 description = "Registered dietitian specializing in sports nutrition, weight management, and metabolic health optimization.",
                 rating = 4.8,
                 availableTime = now.plusHours(5).plusMinutes(30),
-                profileIcon = "restaurant"
+                profileIcon = "restaurant",
+                supportedFacilityIds = emptyList()
             ),
             DoctorEntity(
                 id = 13,
@@ -128,7 +140,8 @@ object DoctorSeeder {
                 description = "Expert in clinical nutrition for chronic conditions including diabetes, heart disease, and food allergies.",
                 rating = 4.7,
                 availableTime = now.plusHours(9),
-                profileIcon = "eco"
+                profileIcon = "eco",
+                supportedFacilityIds = emptyList()
             ),
             DoctorEntity(
                 id = 14,
@@ -137,7 +150,8 @@ object DoctorSeeder {
                 description = "Holistic nutritionist helping clients achieve optimal health through plant-based diets and functional foods.",
                 rating = 4.5,
                 availableTime = now.plusHours(12),
-                profileIcon = "nutrition"
+                profileIcon = "nutrition",
+                supportedFacilityIds = emptyList()
             ),
             DoctorEntity(
                 id = 15,
@@ -146,7 +160,8 @@ object DoctorSeeder {
                 description = "Specializing in pediatric nutrition, prenatal dietary planning, and family wellness programs.",
                 rating = 4.6,
                 availableTime = now.plusHours(28),
-                profileIcon = "restaurant"
+                profileIcon = "restaurant",
+                supportedFacilityIds = emptyList()
             )
         )
     }

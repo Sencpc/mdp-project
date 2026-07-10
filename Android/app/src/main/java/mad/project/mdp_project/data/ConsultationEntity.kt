@@ -10,6 +10,7 @@ import java.time.LocalDateTime
  * Source of truth: Room Database (local only).
  *
  * Relationships:
+ * - userId → from SessionManager (logged-in user)
  * - doctorId → doctors.id
  * - facilityKodeSatusehat → facilities.kodeSatusehat (stable MSI 10-digit code)
  * - facilityName is a denormalized copy of facilities.nama for display (avoids JOIN)
@@ -18,6 +19,7 @@ import java.time.LocalDateTime
 data class ConsultationEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+    val userId: Int = -1,                 // From SessionManager.getUserId()
     val doctorId: Int,
     val doctorName: String,
     val category: String,

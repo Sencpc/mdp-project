@@ -70,4 +70,8 @@ interface ApiService {
 
     @POST("api/dashboard/weekly-summary")
     suspend fun getDailySummary(@Body request: DailySummaryRequest): Response<DailySummaryResponse>
+
+    // ========== FACILITIES (from Backend → SATUSEHAT MSI) ==========
+    @GET("api/facilities")
+    suspend fun getFacilities(): Response<FacilityApiResponse>
 }
