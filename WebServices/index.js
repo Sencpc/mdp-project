@@ -545,7 +545,7 @@ app.post("/api/nutrition/analyze", upload.single("image"), async (req, res) => {
     console.error("AI Analyze Error:", err);
     return res
       .status(500)
-      .json({ error: `Failed to process image through AI: ${err.message}` });
+      .json({ error: "Failed to process image through AI" });
   }
 });
 
@@ -670,11 +670,11 @@ app.post("/api/chat", async (req, res) => {
     if (
       lat &&
       lng &&
-      process.env.GOOGLE_MAPS_API_KEY &&
-      process.env.GOOGLE_MAPS_API_KEY !== "your_google_maps_api_key_here"
+      GOOGLE_MAPS_API_KEY &&
+      GOOGLE_MAPS_API_KEY !== "your_google_maps_api_key_here"
     ) {
       try {
-        const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=5000&type=hospital&key=${process.env.GOOGLE_MAPS_API_KEY}`;
+        const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=5000&type=hospital&key=${GOOGLE_MAPS_API_KEY}`;
         const mapRes = await fetch(url);
         const mapData = await mapRes.json();
         if (
@@ -780,7 +780,7 @@ ${liveHospitals}
     console.error("Chatbot Error:", err);
     return res
       .status(500)
-      .json({ error: `Virtual assistant is currently unavailable: ${err.message}` });
+      .json({ error: "Virtual assistant is currently unavailable." });
   }
 });
 
