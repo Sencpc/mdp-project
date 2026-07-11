@@ -7,6 +7,7 @@ const {
   SleepLog,
   NutritionLog,
   ChatLog,
+  Doctor,
 } = require("./db");
 
 const app = express();
@@ -53,7 +54,9 @@ app.get("/api/facilities", async (req, res) => {
 
     const authData = await authResponse.json();
     if (!authData.access_token) {
-      throw new Error(`Failed to get SATUSEHAT token: ${JSON.stringify(authData)}`);
+      throw new Error(
+        `Failed to get SATUSEHAT token: ${JSON.stringify(authData)}`,
+      );
     }
 
     const token = authData.access_token;
@@ -67,9 +70,9 @@ app.get("/api/facilities", async (req, res) => {
     );
 
     const facilityData = await facilityRes.json();
-    
+
     if (facilityData.status_code !== 200 || !facilityData.data) {
-        throw new Error(`SATUSEHAT API error: ${JSON.stringify(facilityData)}`);
+      throw new Error(`SATUSEHAT API error: ${JSON.stringify(facilityData)}`);
     }
 
     // Map to expected frontend format
@@ -695,11 +698,29 @@ app.post("/api/chat", async (req, res) => {
       }
     }
 
+    let doctorContext = "AVAILABLE MEDICAL PROFESSIONALS (You can recommend these specific doctors if the user needs help):";
+    try {
+      const doctors = await Doctor.findAll();
+      if (doctors.length > 0) {
+        const categorized = doctors.reduce((acc, doc) => {
+          if (!acc[doc.category]) acc[doc.category] = [];
+          acc[doc.category].push(doc.displayName || doc.name);
+          return acc;
+        }, {});
+        
+        Object.entries(categorized).forEach(([category, names]) => {
+          doctorContext += `\n    - ${category}: ${names.join(", ")}`;
+        });
+      } else {
+        doctorContext += "\n    (No specific doctors available in the database at the moment.)";
+      }
+    } catch (e) {
+      console.error("Error fetching doctors for AI context:", e.message);
+      doctorContext += "\n    (Error loading doctors)";
+    }
+
     const medicalRecommendationContext = `
-    AVAILABLE MEDICAL PROFESSIONALS (You can recommend these specific doctors if the user needs help):
-    - General Practice: Dr. Sarah Jenkins, Dr. Kevin Smith, Dr. Amelia Brown, Dr. David Wilson, Dr. Olivia Clark
-    - Therapy & Mental Health: Dr. Michael Chen, Dr. Emily White, Dr. Daniel Moore, Dr. Sophia Taylor, Dr. Ethan Scott
-    - Nutritionists: Dr. Elena Rodriguez, Dr. Chloe Evans, Dr. Lucas Hall, Dr. Grace Young, Dr. Ryan Adams
+${doctorContext}
 
     NEARBY HOSPITALS & CLINICS (Dynamically fetched from Google Maps within 5km):
 ${liveHospitals}

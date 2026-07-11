@@ -36,13 +36,15 @@ class SleepViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun addSleepLog(startTime: Long, endTime: Long) {
-        if (endTime <= startTime) {
-            _addResult.value = Result.failure(Exception("Waktu selesai harus lebih besar dari waktu mulai"))
-            return
+        var adjustedEndTime = endTime
+        // Jika waktu selesai lebih kecil atau sama dengan waktu mulai,
+        // asumsikan pengguna bangun keesokan harinya
+        if (adjustedEndTime <= startTime) {
+            adjustedEndTime += 24 * 60 * 60 * 1000L
         }
 
         viewModelScope.launch {
-            val durationHours = (endTime - startTime).toDouble() / (1000 * 60 * 60)
+            val durationHours = (adjustedEndTime - startTime).toDouble() / (1000 * 60 * 60)
             var calculatedQuality = 1.0f
             if (durationHours < 7.0) {
                 calculatedQuality = (durationHours / 7.0).toFloat()
@@ -60,7 +62,7 @@ class SleepViewModel(application: Application) : AndroidViewModel(application) {
             val sleepLog = SleepLog(
                 userId = userId,
                 startTime = startTime,
-                endTime = endTime,
+                endTime = adjustedEndTime,
                 quality = finalQuality
             )
             val result = sleepRepository.addSleepLog(sleepLog)
