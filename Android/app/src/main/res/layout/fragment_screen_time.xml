@@ -178,6 +178,7 @@
             app:layout_constraintTop_toBottomOf="@id/rvAppUsage" />
 
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardNudges"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
@@ -196,58 +197,70 @@
                 android:orientation="vertical"
                 android:showDividers="middle">
 
-                <!-- Daily Limit Alert -->
+                <!-- Section Header: Screen Time Reminder -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:paddingTop="16dp"
+                    android:paddingBottom="8dp"
+                    android:text="@string/nudge_screen_time_reminder"
+                    android:textColor="#003538"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <!-- Custom Reminder Toggle -->
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:padding="16dp">
 
                     <TextView
-                        android:id="@+id/tvNudge1Title"
+                        android:id="@+id/tvCustomTitle"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Daily Limit Alert"
+                        android:text="@string/nudge_custom"
                         android:textColor="#212121"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        app:layout_constraintEnd_toStartOf="@id/switchNudge1"
+                        app:layout_constraintEnd_toStartOf="@id/switchCustom"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
 
                     <TextView
-                        android:id="@+id/tvNudge1Subtitle"
+                        android:id="@+id/tvCustomSubtitle"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Notify when reaching limit"
+                        android:text="@string/nudge_custom_subtitle"
                         android:textColor="#616161"
                         android:textSize="12sp"
-                        app:layout_constraintEnd_toStartOf="@id/switchNudge1"
+                        app:layout_constraintEnd_toStartOf="@id/switchCustom"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/tvNudge1Title" />
+                        app:layout_constraintTop_toBottomOf="@id/tvCustomTitle" />
 
                     <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/switchNudge1"
+                        android:id="@+id/switchCustom"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:checked="true"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <!-- Set Daily Limit -->
+                <!-- Set Custom Limit (visible only when Custom is enabled) -->
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/layoutSetLimit"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="?attr/selectableItemBackground"
-                    android:padding="16dp">
+                    android:padding="16dp"
+                    android:visibility="gone">
 
                     <TextView
                         android:id="@+id/tvSetLimitTitle"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Set Daily Limit"
+                        android:text="@string/nudge_set_limit"
                         android:textColor="#212121"
                         android:textSize="14sp"
                         android:textStyle="bold"
@@ -258,7 +271,7 @@
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Tap to change the daily limit"
+                        android:text="@string/nudge_set_limit_subtitle"
                         android:textColor="#616161"
                         android:textSize="12sp"
                         app:layout_constraintEnd_toStartOf="@id/tvLimitValue"
@@ -273,6 +286,44 @@
                         android:textColor="#003538"
                         android:textSize="16sp"
                         android:textStyle="bold"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <!-- Periodic Reminder Toggle -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/tvPeriodicTitle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/nudge_periodic"
+                        android:textColor="#212121"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        app:layout_constraintEnd_toStartOf="@id/switchPeriodic"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/tvPeriodicSubtitle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/nudge_periodic_subtitle"
+                        android:textColor="#616161"
+                        android:textSize="12sp"
+                        app:layout_constraintEnd_toStartOf="@id/switchPeriodic"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/tvPeriodicTitle" />
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/switchPeriodic"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />

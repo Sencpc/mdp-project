@@ -13,4 +13,17 @@
     <string name="permission_settings">Permission Settings</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <!-- Screen Time Nudges -->
+    <string name="nudge_screen_time_reminder">Screen Time Reminder</string>
+    <string name="nudge_custom">Custom</string>
+    <string name="nudge_custom_subtitle">Set custom screen time limit</string>
+    <string name="nudge_periodic">Periodic</string>
+    <string name="nudge_periodic_subtitle">Remind every 2h starting from 4h</string>
+    <string name="nudge_set_limit">Set Reminder Limit</string>
+    <string name="nudge_set_limit_subtitle">Tap to change the reminder threshold</string>
+    <string name="nudge_periodic_title">Screen Time Check-In</string>
+    <string name="nudge_periodic_text">You\'ve been on your phone for %1$dh today. Consider taking a break! 🌿</string>
+    <string name="nudge_periodic_big_text">You\'ve been on your phone for %1$dh today — that\'s %2$d hours of screen time. Consider taking a break and doing something offline! 🌿</string>
+    <string name="nudge_goal_periodic">Goal: 4h (periodic)</string>
 </resources>

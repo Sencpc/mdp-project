@@ -30,14 +30,25 @@ class ScreenTimeService : Service() {
         private const val CHECK_INTERVAL_MS = 60_000L // Check every 60 seconds
 
         private const val PREFS_NAME = "screen_time_nudge_prefs"
-        private const val KEY_DAILY_LIMIT_ENABLED = "daily_limit_enabled"
+        private const val KEY_NUDGE_MODE = "nudge_mode"
         private const val KEY_LAST_NUDGE_DATE = "last_nudge_date"
         private const val KEY_LIMIT_HOURS = "limit_hours"
         private const val KEY_LIMIT_MINUTES = "limit_minutes"
+        private const val KEY_LAST_PERIODIC_THRESHOLD = "last_periodic_threshold"
+        private const val KEY_LAST_PERIODIC_DATE = "last_periodic_date"
 
         // Default limit: 4 hours 0 minutes
         private const val DEFAULT_LIMIT_HOURS = 4
         private const val DEFAULT_LIMIT_MINUTES = 0
+
+        // Periodic mode constants
+        private const val PERIODIC_START_HOURS = 4
+        private const val PERIODIC_INTERVAL_HOURS = 2
+
+        // Nudge mode values
+        const val MODE_NONE = "none"
+        const val MODE_CUSTOM = "custom"
+        const val MODE_PERIODIC = "periodic"
 
         fun classifyPackage(pkg: String): String {
             val lowerPkg = pkg.lowercase()
@@ -59,13 +70,33 @@ class ScreenTimeService : Service() {
             }
         }
 
+        // ── Nudge Mode ──────────────────────────────────────────────────
+
+        fun getNudgeMode(context: Context): String {
+            return getPrefs(context).getString(KEY_NUDGE_MODE, MODE_NONE) ?: MODE_NONE
+        }
+
+        fun setNudgeMode(context: Context, mode: String) {
+            getPrefs(context).edit()
+                .putString(KEY_NUDGE_MODE, mode)
+                // Reset tracking state so notifications can re-evaluate
+                .remove(KEY_LAST_NUDGE_DATE)
+                .remove(KEY_LAST_PERIODIC_THRESHOLD)
+                .remove(KEY_LAST_PERIODIC_DATE)
+                .apply()
+        }
+
+        // ── Legacy compat: isDailyLimitEnabled maps to MODE_CUSTOM ──────
+
         fun isDailyLimitEnabled(context: Context): Boolean {
-            return getPrefs(context).getBoolean(KEY_DAILY_LIMIT_ENABLED, true)
+            return getNudgeMode(context) == MODE_CUSTOM
         }
 
         fun setDailyLimitEnabled(context: Context, enabled: Boolean) {
-            getPrefs(context).edit().putBoolean(KEY_DAILY_LIMIT_ENABLED, enabled).apply()
+            setNudgeMode(context, if (enabled) MODE_CUSTOM else MODE_NONE)
         }
+
+        // ── Custom limit getters / setters ──────────────────────────────
 
         /**
          * Returns the daily limit in milliseconds, based on user-configured hours and minutes.
@@ -99,6 +130,38 @@ class ScreenTimeService : Service() {
             val h = getLimitHours(context)
             val m = getLimitMinutes(context)
             return "${h}h ${m}m"
+        }
+
+        // ── Periodic threshold tracking ─────────────────────────────────
+
+        private fun getLastPeriodicThreshold(context: Context): Int {
+            return getPrefs(context).getInt(KEY_LAST_PERIODIC_THRESHOLD, 0)
+        }
+
+        private fun setLastPeriodicThreshold(context: Context, hours: Int) {
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val todayStr = dateFormat.format(Calendar.getInstance().time)
+            getPrefs(context).edit()
+                .putInt(KEY_LAST_PERIODIC_THRESHOLD, hours)
+                .putString(KEY_LAST_PERIODIC_DATE, todayStr)
+                .apply()
+        }
+
+        /**
+         * Resets the periodic threshold if the stored date is not today.
+         */
+        private fun resetPeriodicIfNewDay(context: Context) {
+            val prefs = getPrefs(context)
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val todayStr = dateFormat.format(Calendar.getInstance().time)
+            val lastDate = prefs.getString(KEY_LAST_PERIODIC_DATE, null)
+            if (lastDate != todayStr) {
+                prefs.edit()
+                    .putInt(KEY_LAST_PERIODIC_THRESHOLD, 0)
+                    .putString(KEY_LAST_PERIODIC_DATE, todayStr)
+                    .remove(KEY_LAST_NUDGE_DATE)
+                    .apply()
+            }
         }
 
         private fun getPrefs(context: Context): SharedPreferences {
@@ -147,35 +210,69 @@ class ScreenTimeService : Service() {
 
     /**
      * Checks total screen time for today and sends a notification
-     * if it has reached or exceeded the user-configured daily limit
-     * and the daily limit nudge is enabled.
-     * Only sends one notification per day.
+     * based on the active nudge mode (custom or periodic).
      */
     private fun checkScreenTimeAndNotify() {
         try {
-            // Check if the nudge is enabled
-            if (!isDailyLimitEnabled(this)) return
+            val mode = getNudgeMode(this)
+            if (mode == MODE_NONE) return
 
-            // Check if we already sent a nudge today
-            val prefs = getPrefs(this)
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val todayStr = dateFormat.format(Calendar.getInstance().time)
-            val lastNudgeDate = prefs.getString(KEY_LAST_NUDGE_DATE, null)
-            if (lastNudgeDate == todayStr) return // Already notified today
-
-            val dailyLimitMs = getDailyLimitMs(this)
-            if (dailyLimitMs <= 0) return // No limit set
+            // Reset periodic tracking at day boundary
+            resetPeriodicIfNewDay(this)
 
             val totalMs = getTodayTotalScreenTime()
 
-            if (totalMs >= dailyLimitMs) {
-                sendNudgeNotification(totalMs)
-                // Mark that we've sent the nudge for today
-                prefs.edit().putString(KEY_LAST_NUDGE_DATE, todayStr).apply()
+            when (mode) {
+                MODE_CUSTOM -> handleCustomNudge(totalMs)
+                MODE_PERIODIC -> handlePeriodicNudge(totalMs)
             }
         } catch (e: Exception) {
             // Silently fail — permissions may not be granted yet
             e.printStackTrace()
+        }
+    }
+
+    /**
+     * Custom mode: fires a single notification when the user-configured
+     * limit is reached. Only notifies once per day.
+     */
+    private fun handleCustomNudge(totalMs: Long) {
+        val prefs = getPrefs(this)
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val todayStr = dateFormat.format(Calendar.getInstance().time)
+        val lastNudgeDate = prefs.getString(KEY_LAST_NUDGE_DATE, null)
+        if (lastNudgeDate == todayStr) return // Already notified today
+
+        val dailyLimitMs = getDailyLimitMs(this)
+        if (dailyLimitMs <= 0) return
+
+        if (totalMs >= dailyLimitMs) {
+            sendCustomNudgeNotification(totalMs)
+            prefs.edit().putString(KEY_LAST_NUDGE_DATE, todayStr).apply()
+        }
+    }
+
+    /**
+     * Periodic mode: sends a notification every 2 hours of screen time,
+     * starting from hour 4 (i.e., at 4h, 6h, 8h, 10h, …).
+     * Each threshold fires only once per day.
+     */
+    private fun handlePeriodicNudge(totalMs: Long) {
+        val totalHours = (totalMs / (1000.0 * 60.0 * 60.0)).toInt()
+
+        if (totalHours < PERIODIC_START_HOURS) return
+
+        // Determine the highest threshold crossed:
+        // thresholds are 4, 6, 8, 10, ...
+        // = PERIODIC_START_HOURS + n * PERIODIC_INTERVAL_HOURS  where n >= 0
+        val stepsAboveStart = (totalHours - PERIODIC_START_HOURS) / PERIODIC_INTERVAL_HOURS
+        val currentThreshold = PERIODIC_START_HOURS + (stepsAboveStart * PERIODIC_INTERVAL_HOURS)
+
+        val lastThreshold = getLastPeriodicThreshold(this)
+
+        if (currentThreshold > lastThreshold) {
+            sendPeriodicNudgeNotification(totalMs, currentThreshold)
+            setLastPeriodicThreshold(this, currentThreshold)
         }
     }
 
@@ -225,7 +322,10 @@ class ScreenTimeService : Service() {
         return foregroundTimes.values.sum()
     }
 
-    private fun sendNudgeNotification(totalMs: Long) {
+    /**
+     * Sends the custom limit notification (same as the old Daily Limit Alert).
+     */
+    private fun sendCustomNudgeNotification(totalMs: Long) {
         val totalMinutes = totalMs / (1000 * 60)
         val hours = totalMinutes / 60
         val minutes = totalMinutes % 60
@@ -259,6 +359,43 @@ class ScreenTimeService : Service() {
         notificationManager.notify(NUDGE_NOTIFICATION_ID, notification)
     }
 
+    /**
+     * Sends a periodic nudge notification for the given threshold.
+     * Uses a unique notification ID per threshold so Android doesn't collapse them.
+     */
+    private fun sendPeriodicNudgeNotification(totalMs: Long, thresholdHours: Int) {
+        val totalMinutes = totalMs / (1000 * 60)
+        val hours = totalMinutes / 60
+        val minutes = totalMinutes % 60
+
+        val tapIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        val notificationId = NUDGE_NOTIFICATION_ID + thresholdHours
+        val pendingIntent = PendingIntent.getActivity(
+            this, notificationId, tapIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(this, NUDGE_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_notification_logo)
+            .setContentTitle(getString(R.string.nudge_periodic_title))
+            .setContentText(getString(R.string.nudge_periodic_text, thresholdHours))
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText(getString(R.string.nudge_periodic_big_text, thresholdHours, thresholdHours))
+            )
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .build()
+
+        val notificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(notificationId, notification)
+    }
+
     private fun createNotificationChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -286,3 +423,4 @@ class ScreenTimeService : Service() {
         }
     }
 }
+

@@ -30,6 +30,9 @@ class ScreenTimeFragment : Fragment() {
     private val viewModel: ScreenTimeViewModel by viewModels()
     private lateinit var appUsageAdapter: AppUsageAdapter
 
+    /** Guards against toggle listener feedback loops during programmatic changes. */
+    private var isUpdatingToggles = false
+
     companion object {
         private const val REFRESH_INTERVAL_MS = 10_000L // 10 seconds
     }
@@ -55,8 +58,7 @@ class ScreenTimeFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         // Refresh the limit display and toggle state when returning
-        updateLimitDisplay()
-        binding.switchNudge1.isChecked = ScreenTimeService.isDailyLimitEnabled(requireContext())
+        syncTogglesToCurrentMode()
     }
 
     private fun setupRecyclerView() {
@@ -94,31 +96,88 @@ class ScreenTimeFragment : Fragment() {
         }
     }
 
+    // ── Nudge toggles ────────────────────────────────────────────────
+
     /**
-     * Wires up the Daily Limit Alert nudge toggle switch and the
-     * "Set Daily Limit" row that opens a time picker dialog.
+     * Wires up the Custom and Periodic nudge toggle switches with
+     * mutual-exclusion logic, and the "Set Limit" row that opens a
+     * time picker dialog.
      */
     private fun setupNudgeToggles() {
-        val context = requireContext()
+        // Set initial toggle state from preferences
+        syncTogglesToCurrentMode()
 
-        // Daily Limit Alert toggle — controls whether the notification fires
-        binding.switchNudge1.isChecked = ScreenTimeService.isDailyLimitEnabled(context)
-        binding.switchNudge1.setOnCheckedChangeListener { _, isChecked ->
-            ScreenTimeService.setDailyLimitEnabled(context, isChecked)
+        // Custom toggle
+        binding.switchCustom.setOnCheckedChangeListener { _, isChecked ->
+            if (isUpdatingToggles) return@setOnCheckedChangeListener
+            isUpdatingToggles = true
+
+            if (isChecked) {
+                // Enable custom mode, disable periodic
+                binding.switchPeriodic.isChecked = false
+                ScreenTimeService.setNudgeMode(requireContext(), ScreenTimeService.MODE_CUSTOM)
+            } else {
+                // If periodic isn't on either, go to none
+                if (!binding.switchPeriodic.isChecked) {
+                    ScreenTimeService.setNudgeMode(requireContext(), ScreenTimeService.MODE_NONE)
+                }
+            }
+            updateSetLimitVisibility()
+            updateLimitDisplay()
+            isUpdatingToggles = false
         }
 
-        // Display the current limit value
-        updateLimitDisplay()
+        // Periodic toggle
+        binding.switchPeriodic.setOnCheckedChangeListener { _, isChecked ->
+            if (isUpdatingToggles) return@setOnCheckedChangeListener
+            isUpdatingToggles = true
 
-        // "Set Daily Limit" row — tapping opens a time picker
+            if (isChecked) {
+                // Enable periodic mode, disable custom
+                binding.switchCustom.isChecked = false
+                ScreenTimeService.setNudgeMode(requireContext(), ScreenTimeService.MODE_PERIODIC)
+            } else {
+                // If custom isn't on either, go to none
+                if (!binding.switchCustom.isChecked) {
+                    ScreenTimeService.setNudgeMode(requireContext(), ScreenTimeService.MODE_NONE)
+                }
+            }
+            updateSetLimitVisibility()
+            updateLimitDisplay()
+            isUpdatingToggles = false
+        }
+
+        // "Set Limit" row — tapping opens a time picker (only relevant for custom mode)
         binding.layoutSetLimit.setOnClickListener {
             showLimitTimePicker()
         }
     }
 
     /**
+     * Reads the persisted nudge mode and reflects it on the two switches.
+     * Also updates the Set Limit row visibility and goal label.
+     */
+    private fun syncTogglesToCurrentMode() {
+        val mode = ScreenTimeService.getNudgeMode(requireContext())
+        isUpdatingToggles = true
+        binding.switchCustom.isChecked = (mode == ScreenTimeService.MODE_CUSTOM)
+        binding.switchPeriodic.isChecked = (mode == ScreenTimeService.MODE_PERIODIC)
+        isUpdatingToggles = false
+        updateSetLimitVisibility()
+        updateLimitDisplay()
+    }
+
+    /**
+     * Shows or hides the "Set Limit" row based on whether Custom mode is active.
+     */
+    private fun updateSetLimitVisibility() {
+        binding.layoutSetLimit.visibility =
+            if (binding.switchCustom.isChecked) View.VISIBLE else View.GONE
+    }
+
+    /**
      * Shows a TimePickerDialog configured for selecting a duration (hours + minutes)
-     * for the daily screen time limit.
+     * for the custom screen time limit.
      */
     private fun showLimitTimePicker() {
         val context = requireContext()
@@ -142,18 +201,34 @@ class ScreenTimeFragment : Fragment() {
             currentMinutes,
             true // 24-hour format works well for duration
         )
-        picker.setTitle("Set Daily Limit (hours : minutes)")
+        picker.setTitle("Set Reminder Limit (hours : minutes)")
         picker.show()
     }
 
     /**
-     * Updates the "Set Daily Limit" value label and the goal label on the progress bar.
+     * Updates the "Set Limit" value label and the goal label on the progress bar,
+     * depending on the active nudge mode.
      */
     private fun updateLimitDisplay() {
         val context = requireContext()
-        val limitStr = ScreenTimeService.formatLimit(context)
-        binding.tvLimitValue.text = limitStr
-        binding.tvGoalLabel.text = "Goal: $limitStr"
+        val mode = ScreenTimeService.getNudgeMode(context)
+
+        when (mode) {
+            ScreenTimeService.MODE_CUSTOM -> {
+                val limitStr = ScreenTimeService.formatLimit(context)
+                binding.tvLimitValue.text = limitStr
+                binding.tvGoalLabel.text = "Goal: $limitStr"
+            }
+            ScreenTimeService.MODE_PERIODIC -> {
+                binding.tvGoalLabel.text = "Goal: 4h (periodic)"
+            }
+            else -> {
+                // No mode active — show default limit on the progress bar
+                val limitStr = ScreenTimeService.formatLimit(context)
+                binding.tvLimitValue.text = limitStr
+                binding.tvGoalLabel.text = "Goal: $limitStr"
+            }
+        }
     }
 
     private fun observeViewModel() {
@@ -234,3 +309,4 @@ class ScreenTimeFragment : Fragment() {
         _binding = null
     }
 }
+
