@@ -21,13 +21,16 @@ class HabitRepository(
     suspend fun seedStandardHabits(userId: Int) {
         val standardHabits = HabitSeeder.getStandardHabits(userId)
         
-        // Special cleanup: Delete duplicates or Indonesian versions
+        // Special cleanup: Delete duplicates or Indonesian versions or corrupted ones
         val allHabits = habitDao.getHabitsForUserOnce(userId)
         allHabits.forEach { h ->
             if ((h.name == "Drink Water" || h.name == "Minum Air") && 
                 h.subtitle == "Minum 8 gelas air setiap hari untuk tetap terhidrasi") {
                 deleteHabit(h)
                 Log.d(TAG, "Deleted Indonesian Drink Water habit for user $userId")
+            } else if (h.name.isBlank()) {
+                deleteHabit(h)
+                Log.d(TAG, "Deleted corrupted habit with blank name for user $userId")
             }
         }
 
@@ -107,10 +110,21 @@ class HabitRepository(
         try {
             habitDao.updateHabitCompletion(habitId, isCompleted)
             try {
-                apiService.updateHabit(habitId, HabitRequest(
-                    userId = 0, name = "", startTime = 0, endTime = 0,
-                    isCompleted = isCompleted
-                ))
+                // Fetch full habit data to sync correctly with server
+                val habit = habitDao.getHabitById(habitId)
+                if (habit != null) {
+                    apiService.updateHabit(habitId, HabitRequest(
+                        userId = habit.userId,
+                        name = habit.name,
+                        category = habit.category,
+                        subtitle = habit.subtitle,
+                        isCompleted = isCompleted,
+                        streak = habit.streak,
+                        startTime = habit.startTime,
+                        endTime = habit.endTime,
+                        reminders = habit.reminders
+                    ))
+                }
             } catch (e: Exception) {
                 Log.w(TAG, "Gagal sync completion ke server: ${e.message}")
             }
@@ -181,6 +195,12 @@ class HabitRepository(
             if (response.isSuccessful && response.body() != null) {
                 val serverHabits = response.body()!!
                 serverHabits.forEach { apiHabit ->
+                    // Skip corrupted habits with empty names
+                    if (apiHabit.name.isBlank()) {
+                        Log.w(TAG, "Skipping corrupted habit from server with empty name (ID: ${apiHabit.id})")
+                        return@forEach
+                    }
+
                     // Ambil habit lokal yang ada untuk menjaga data reminderTime
                     val existingLocal = habitDao.getHabitById(apiHabit.id)
                     
