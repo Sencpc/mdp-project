@@ -87,9 +87,6 @@ class HabitsFragment : Fragment() {
                 val action = HomeFragmentDirections.actionNavHomeToNavHabitDetail(habit.id)
                 findNavController().navigate(action)
             },
-            onAddClick = {
-                findNavController().navigate(R.id.action_nav_home_to_nav_form_habits)
-            },
             onCompleteClick = { habit, isCompleted ->
                 viewModel.toggleHabitCompletion(habit, isCompleted)
             }
@@ -101,6 +98,10 @@ class HabitsFragment : Fragment() {
             // Prevent auto-scrolling to bottom on focus
             isFocusable = false
             isFocusableInTouchMode = false
+        }
+        
+        binding.fabAddHabit.setOnClickListener {
+            findNavController().navigate(R.id.action_nav_home_to_nav_form_habits)
         }
     }
 

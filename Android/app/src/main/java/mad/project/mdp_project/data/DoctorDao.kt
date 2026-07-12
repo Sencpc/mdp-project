@@ -11,34 +11,31 @@ interface DoctorDao {
 
     @Query("""
         SELECT * FROM doctors 
-        WHERE availableTime > :minTime 
         ORDER BY availableTime ASC
     """)
-    fun getAvailableDoctors(minTime: String): Flow<List<DoctorEntity>>
+    fun getAvailableDoctors(): Flow<List<DoctorEntity>>
 
     @Query("""
         SELECT * FROM doctors 
-        WHERE category = :category AND availableTime > :minTime 
+        WHERE category = :category 
         ORDER BY availableTime ASC
     """)
-    fun getAvailableDoctorsByCategory(category: String, minTime: String): Flow<List<DoctorEntity>>
+    fun getAvailableDoctorsByCategory(category: String): Flow<List<DoctorEntity>>
 
     @Query("""
         SELECT * FROM doctors 
         WHERE (doctorName LIKE '%' || :query || '%' OR category LIKE '%' || :query || '%') 
-        AND availableTime > :minTime 
         ORDER BY availableTime ASC
     """)
-    fun searchDoctors(query: String, minTime: String): Flow<List<DoctorEntity>>
+    fun searchDoctors(query: String): Flow<List<DoctorEntity>>
 
     @Query("""
         SELECT * FROM doctors 
         WHERE (doctorName LIKE '%' || :query || '%' OR category LIKE '%' || :query || '%') 
         AND category = :category 
-        AND availableTime > :minTime 
         ORDER BY availableTime ASC
     """)
-    fun searchDoctorsByCategory(query: String, category: String, minTime: String): Flow<List<DoctorEntity>>
+    fun searchDoctorsByCategory(query: String, category: String): Flow<List<DoctorEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(doctors: List<DoctorEntity>)

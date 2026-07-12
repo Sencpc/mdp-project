@@ -12,45 +12,21 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import mad.project.mdp_project.R
 import mad.project.mdp_project.data.Habit
-import mad.project.mdp_project.databinding.ItemAddHabitBinding
 import mad.project.mdp_project.databinding.ItemHabitBinding
 
 class HabitAdapter(
     private val onHabitClick: (Habit) -> Unit,
-    private val onAddClick: () -> Unit,
     private val onCompleteClick: (Habit, Boolean) -> Unit
-) : ListAdapter<Habit, RecyclerView.ViewHolder>(HabitDiffCallback()) {
+) : ListAdapter<Habit, HabitAdapter.HabitViewHolder>(HabitDiffCallback()) {
 
-    companion object {
-        private const val VIEW_TYPE_HABIT = 0
-        private const val VIEW_TYPE_ADD = 1
-    }
-
-    override fun getItemViewType(position: Int): Int {
-        return if (position < currentList.size) VIEW_TYPE_HABIT else VIEW_TYPE_ADD
-    }
-
-    override fun getItemCount(): Int {
-        return currentList.size + 1
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HabitViewHolder {
         val inflater = LayoutInflater.from(parent.context)
-        return if (viewType == VIEW_TYPE_HABIT) {
-            val binding = ItemHabitBinding.inflate(inflater, parent, false)
-            HabitViewHolder(binding)
-        } else {
-            val binding = ItemAddHabitBinding.inflate(inflater, parent, false)
-            AddViewHolder(binding)
-        }
+        val binding = ItemHabitBinding.inflate(inflater, parent, false)
+        return HabitViewHolder(binding)
     }
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        if (holder is HabitViewHolder) {
-            holder.bind(getItem(position))
-        } else if (holder is AddViewHolder) {
-            holder.bind()
-        }
+    override fun onBindViewHolder(holder: HabitViewHolder, position: Int) {
+        holder.bind(getItem(position))
     }
 
     inner class HabitViewHolder(private val binding: ItemHabitBinding) :
@@ -142,15 +118,6 @@ class HabitAdapter(
                 startDelay = 100
                 duration = 200
                 start()
-            }
-        }
-    }
-
-    inner class AddViewHolder(private val binding: ItemAddHabitBinding) :
-        RecyclerView.ViewHolder(binding.root) {
-        fun bind() {
-            binding.root.setOnClickListener {
-                onAddClick()
             }
         }
     }

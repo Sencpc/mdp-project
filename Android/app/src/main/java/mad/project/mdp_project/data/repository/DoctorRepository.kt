@@ -25,24 +25,22 @@ class DoctorRepository(
      * Time filter: availableTime > now + 1 hour (computed here, filtered in SQL).
      */
     fun getAvailableDoctors(category: String?, query: String?): Flow<List<DoctorEntity>> {
-        val minTime = LocalDateTime.now().plusHours(1).format(formatter)
-
         return when {
             // Has search query + category filter
             !query.isNullOrBlank() && !category.isNullOrBlank() && category != "All" -> {
-                doctorDao.searchDoctorsByCategory(query, category, minTime)
+                doctorDao.searchDoctorsByCategory(query, category)
             }
             // Has search query only
             !query.isNullOrBlank() -> {
-                doctorDao.searchDoctors(query, minTime)
+                doctorDao.searchDoctors(query)
             }
             // Has category filter only
             !category.isNullOrBlank() && category != "All" -> {
-                doctorDao.getAvailableDoctorsByCategory(category, minTime)
+                doctorDao.getAvailableDoctorsByCategory(category)
             }
             // No filters
             else -> {
-                doctorDao.getAvailableDoctors(minTime)
+                doctorDao.getAvailableDoctors()
             }
         }
     }
