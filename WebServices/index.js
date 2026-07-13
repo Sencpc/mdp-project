@@ -68,25 +68,13 @@ app.get("/api/facilities", async (req, res) => {
     const authData = await authResponse.json();
     const token = authData.access_token;
     
-    const facilityRes = await fetch('https://api-satusehat-stg.dto.kemkes.go.id/masterdata/v1/mastersaranaindex/mastersarana?limit=50&page=1&jenis_sarana=104&status_aktif=true&kode_provinsi=35&kode_kabkota=3578&kode_kecamatan=357804', {
+    const page = parseInt(req.query.page) || 1;
+    const facilityRes = await fetch(`https://api-satusehat-stg.dto.kemkes.go.id/masterdata/v1/mastersaranaindex/mastersarana?limit=50&page=${page}&jenis_sarana=104&status_aktif=true&kode_provinsi=35&kode_kabkota=3578&kode_kecamatan=357804`, {
       headers: { Authorization: `Bearer ${token}` }
     });
     const facilityData = await facilityRes.json();
 
-    const facilities = facilityData.data.map((place) => ({
-      kode_satusehat: place.kode_satusehat,
-      kode_sarana: place.kode_sarana,
-      nama: place.nama,
-      alamat: place.alamat || "",
-      telp: place.telp || null,
-      email: place.email || null,
-      latitude: place.latitude?.toString() || "",
-      longitude: place.longitude?.toString() || "",
-      operasional: place.operasional,
-      status_aktif: place.status_aktif,
-    }));
-
-    res.json({ success: true, data: facilities });
+    res.json({ success: true, data: facilityData });
   } catch (error) {
     console.error("Facilities API Error:", error.message);
     res.status(500).json({ success: false, message: error.message, data: [] });
@@ -696,7 +684,8 @@ app.post("/api/chat", async (req, res) => {
       }
     }
 
-    let doctorContext = "AVAILABLE MEDICAL PROFESSIONALS (You can recommend these specific doctors if the user needs help):";
+    let doctorContext =
+      "AVAILABLE MEDICAL PROFESSIONALS (You can recommend these specific doctors if the user needs help):";
     try {
       const doctors = await Doctor.findAll();
       if (doctors.length > 0) {
@@ -705,12 +694,13 @@ app.post("/api/chat", async (req, res) => {
           acc[doc.category].push(doc.displayName || doc.name);
           return acc;
         }, {});
-        
+
         Object.entries(categorized).forEach(([category, names]) => {
           doctorContext += `\n    - ${category}: ${names.join(", ")}`;
         });
       } else {
-        doctorContext += "\n    (No specific doctors available in the database at the moment.)";
+        doctorContext +=
+          "\n    (No specific doctors available in the database at the moment.)";
       }
     } catch (e) {
       console.error("Error fetching doctors for AI context:", e.message);
@@ -931,7 +921,7 @@ app.use("/admin", express.static(path.join(__dirname, "admin")));
 
 app.get("/admin/api/users", async (req, res) => {
   try {
-    const users = await User.findAll({ attributes: { exclude: ['password'] } });
+    const users = await User.findAll({ attributes: { exclude: ["password"] } });
     res.json(users);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -952,10 +942,11 @@ app.delete("/admin/api/users/:id", async (req, res) => {
 app.post("/admin/api/users", async (req, res) => {
   try {
     const { username, password, fullName } = req.body;
-    if (!username || !password) return res.status(400).json({ error: "Username and password required" });
-    
+    if (!username || !password)
+      return res.status(400).json({ error: "Username and password required" });
+
     const user = await User.create({ username, password, fullName });
-    
+
     const userJson = user.toJSON();
     delete userJson.password;
     res.json(userJson);
@@ -970,14 +961,14 @@ app.put("/admin/api/users/:id", async (req, res) => {
     if (!user) return res.status(404).json({ error: "User not found" });
 
     const { username, password, fullName } = req.body;
-    
+
     const updateData = { username, fullName };
     if (password && password.trim() !== "") {
       updateData.password = password; // Will be hashed by Sequelize hook
     }
 
     await user.update(updateData);
-    
+
     const userJson = user.toJSON();
     delete userJson.password;
     res.json(userJson);
@@ -989,12 +980,8 @@ app.put("/admin/api/users/:id", async (req, res) => {
 app.get("/admin/api/users/:id/details", async (req, res) => {
   try {
     const user = await User.findByPk(req.params.id, {
-      attributes: { exclude: ['password'] },
-      include: [
-        { model: Habit },
-        { model: SleepLog },
-        { model: NutritionLog }
-      ]
+      attributes: { exclude: ["password"] },
+      include: [{ model: Habit }, { model: SleepLog }, { model: NutritionLog }],
     });
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);

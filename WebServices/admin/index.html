@@ -234,6 +234,11 @@
                             </tbody>
                         </table>
                         <div x-show="!loadingHospitals && hospitals.length === 0" class="p-6 text-center text-gray-500">No hospitals found. Click refresh to load from API.</div>
+                        <div class="px-6 py-4 bg-gray-50 border-t flex items-center justify-between" x-show="!loadingHospitals">
+                            <button @click="if(hospitalPage > 1) { hospitalPage--; fetchHospitals(); }" :disabled="hospitalPage <= 1" class="px-4 py-2 border rounded text-sm bg-white hover:bg-gray-50 disabled:opacity-50 text-gray-700 font-medium">Previous Page</button>
+                            <span class="text-sm text-gray-600 font-medium">Page <span x-text="hospitalPage"></span></span>
+                            <button @click="hospitalPage++; fetchHospitals();" :disabled="hospitals.length < 50" class="px-4 py-2 border rounded text-sm bg-white hover:bg-gray-50 disabled:opacity-50 text-gray-700 font-medium">Next Page</button>
+                        </div>
                     </div>
                 </div>
 
@@ -249,6 +254,7 @@
                 doctors: [],
                 hospitals: [],
                 loadingHospitals: false,
+                hospitalPage: 1,
                 
                 // Users State
                 selectedUser: null,
@@ -350,7 +356,7 @@
                 async fetchHospitals() {
                     this.loadingHospitals = true;
                     try {
-                        const res = await fetch('/api/facilities');
+                        const res = await fetch('/api/facilities?page=' + this.hospitalPage);
                         if (res.ok) {
                             const result = await res.json();
                             this.hospitals = result.data || [];
