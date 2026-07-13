@@ -1,5 +1,6 @@
 const express = require("express");
 const path = require("path");
+const bcrypt = require("bcryptjs");
 const {
   sequelize,
   Op,
@@ -232,7 +233,8 @@ app.post("/api/users/login", async (req, res) => {
       return res.status(401).json({ error: "Username atau password salah" });
     }
 
-    if (user.password !== password) {
+    const isMatch = bcrypt.compareSync(password, user.password);
+    if (!isMatch) {
       return res.status(401).json({ error: "Username atau password salah" });
     }
 
@@ -941,6 +943,60 @@ async function updateChatSummary(userId, currentSummary, unsummarizedChats) {
     console.error("Background Summarizer Error:", error);
   }
 }
+
+// ==========================================
+// ADMIN SYSTEM ROUTES
+// ==========================================
+app.use("/admin", express.static(path.join(__dirname, "admin")));
+
+app.get("/admin/api/users", async (req, res) => {
+  try {
+    const users = await User.findAll({ attributes: { exclude: ['password'] } });
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete("/admin/api/users/:id", async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    await user.destroy();
+    res.json({ message: "User deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/admin/api/doctors", async (req, res) => {
+  try {
+    const doctors = await Doctor.findAll();
+    res.json(doctors);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/admin/api/doctors", async (req, res) => {
+  try {
+    const doctor = await Doctor.create(req.body);
+    res.json(doctor);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete("/admin/api/doctors/:id", async (req, res) => {
+  try {
+    const doctor = await Doctor.findByPk(req.params.id);
+    if (!doctor) return res.status(404).json({ error: "Doctor not found" });
+    await doctor.destroy();
+    res.json({ message: "Doctor deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // ==========================================
 // START SERVER

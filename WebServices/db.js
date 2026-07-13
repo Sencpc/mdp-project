@@ -1,5 +1,6 @@
 const { Sequelize, Model, DataTypes, Op } = require("sequelize");
 require("dotenv").config();
+const bcrypt = require("bcryptjs");
 
 const DB_NAME = process.env.DB_NAME;
 const DB_USER = process.env.DB_USER;
@@ -76,6 +77,20 @@ User.init(
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
+    hooks: {
+      beforeCreate: (user) => {
+        if (user.password) {
+          const salt = bcrypt.genSaltSync(10);
+          user.password = bcrypt.hashSync(user.password, salt);
+        }
+      },
+      beforeUpdate: (user) => {
+        if (user.changed("password")) {
+          const salt = bcrypt.genSaltSync(10);
+          user.password = bcrypt.hashSync(user.password, salt);
+        }
+      },
+    },
   },
 );
 
