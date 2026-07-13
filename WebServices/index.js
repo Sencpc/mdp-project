@@ -69,7 +69,14 @@ app.get("/api/facilities", async (req, res) => {
       },
     );
 
-    const authData = await authResponse.json();
+    const authText = await authResponse.text();
+    let authData;
+    try {
+      authData = JSON.parse(authText);
+    } catch (e) {
+      throw new Error(`Auth API returned non-JSON: ${authText.substring(0, 100)}...`);
+    }
+
     if (!authData.access_token) {
       throw new Error(
         `Failed to get SATUSEHAT token: ${JSON.stringify(authData)}`,
@@ -86,7 +93,13 @@ app.get("/api/facilities", async (req, res) => {
       },
     );
 
-    const facilityData = await facilityRes.json();
+    const facilityText = await facilityRes.text();
+    let facilityData;
+    try {
+      facilityData = JSON.parse(facilityText);
+    } catch (e) {
+      throw new Error(`Facility API returned non-JSON: ${facilityText.substring(0, 100)}...`);
+    }
 
     if (facilityData.status_code !== 200 || !facilityData.data) {
       throw new Error(`SATUSEHAT API error: ${JSON.stringify(facilityData)}`);
