@@ -1,7 +1,7 @@
 package mad.project.mdp_project.model
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -12,10 +12,9 @@ import mad.project.mdp_project.data.AppDatabase
 import mad.project.mdp_project.data.User
 import mad.project.mdp_project.data.remote.RetrofitClient
 import mad.project.mdp_project.data.repository.UserRepository
+import android.content.Context
 
-class RegisterViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val userRepository: UserRepository
+class RegisterViewModel(private val userRepository: UserRepository) : ViewModel() {
 
     // UI State
     private val _registerResult = MutableLiveData<Result<User>>()
@@ -30,9 +29,16 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
 
     private var delayedLoadingJob: Job? = null
 
-    init {
-        val db = AppDatabase.getDatabase(application)
-        userRepository = UserRepository(db.userDao(), RetrofitClient.apiService)
+    class Factory(private val context: Context) : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(RegisterViewModel::class.java)) {
+                val db = AppDatabase.getDatabase(context)
+                val userRepository = UserRepository(db.userDao(), RetrofitClient.apiService)
+                @Suppress("UNCHECKED_CAST")
+                return RegisterViewModel(userRepository) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class")
+        }
     }
 
     fun register(fullName: String, username: String, password: String) {
