@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 const {
   sequelize,
   Op,
@@ -18,6 +19,11 @@ app.use(express.json());
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
+});
+
+// Serve Privacy Policy
+app.get("/privacy-policy", (req, res) => {
+  res.sendFile(path.join(__dirname, "privacy_policy.html"));
 });
 
 const PORT = process.env.PORT || 3000;
