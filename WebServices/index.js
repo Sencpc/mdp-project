@@ -50,22 +50,27 @@ const upload = multer({ storage: multer.memoryStorage() });
 // ==========================================
 // SATUSEHAT API (FACILITIES)
 // ==========================================
-const SATUSEHAT_CLIENT_ID = process.env.SATUSEHAT_CLIENT_ID;
-const SATUSEHAT_CLIENT_SECRET = process.env.SATUSEHAT_CLIENT_SECRET;
 
 app.get("/api/facilities", async (req, res) => {
   try {
-    if (!SATUSEHAT_CLIENT_ID || !SATUSEHAT_CLIENT_SECRET) {
+    const clientId = process.env.SATUSEHAT_CLIENT_ID;
+    const clientSecret = process.env.SATUSEHAT_CLIENT_SECRET;
+
+    if (!clientId || !clientSecret) {
       throw new Error("SATUSEHAT credentials missing in .env");
     }
 
     // 1. Request OAuth Token
+    const params = new URLSearchParams();
+    params.append('client_id', clientId);
+    params.append('client_secret', clientSecret);
+
     const authResponse = await fetch(
       "https://api-satusehat-stg.dto.kemkes.go.id/oauth2/v1/accesstoken?grant_type=client_credentials",
       {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: `client_id=${SATUSEHAT_CLIENT_ID}&client_secret=${SATUSEHAT_CLIENT_SECRET}`,
+        body: params,
       },
     );
 
