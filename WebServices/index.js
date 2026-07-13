@@ -50,31 +50,80 @@ const upload = multer({ storage: multer.memoryStorage() });
 // ==========================================
 // SATUSEHAT API (FACILITIES)
 // ==========================================
+const SATUSEHAT_CLIENT_ID = process.env.SATUSEHAT_CLIENT_ID;
+const SATUSEHAT_CLIENT_SECRET = process.env.SATUSEHAT_CLIENT_SECRET;
 
 app.get("/api/facilities", async (req, res) => {
   try {
-    const SATUSEHAT_CLIENT_ID = process.env.SATUSEHAT_CLIENT_ID;
-    const SATUSEHAT_CLIENT_SECRET = process.env.SATUSEHAT_CLIENT_SECRET;
-    
     if (!SATUSEHAT_CLIENT_ID || !SATUSEHAT_CLIENT_SECRET) {
-      return res.status(500).json({ success: false, message: 'No credentials in env', data: [] });
+      throw new Error("SATUSEHAT credentials missing in .env");
     }
-    
-    const authResponse = await fetch('https://api-satusehat-stg.dto.kemkes.go.id/oauth2/v1/accesstoken?grant_type=client_credentials', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `client_id=${SATUSEHAT_CLIENT_ID}&client_secret=${SATUSEHAT_CLIENT_SECRET}`
-    });
-    const authData = await authResponse.json();
-    const token = authData.access_token;
-    
-    const page = parseInt(req.query.page) || 1;
-    const facilityRes = await fetch(`https://api-satusehat-stg.dto.kemkes.go.id/masterdata/v1/mastersaranaindex/mastersarana?limit=50&page=${page}&jenis_sarana=104&status_aktif=true&kode_provinsi=35&kode_kabkota=3578&kode_kecamatan=357804`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const facilityData = await facilityRes.json();
 
-    res.json({ success: true, data: facilityData });
+    // 1. Request OAuth Token
+    const authResponse = await fetch(
+      "https://api-satusehat-stg.dto.kemkes.go.id/oauth2/v1/accesstoken?grant_type=client_credentials",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `client_id=${SATUSEHAT_CLIENT_ID}&client_secret=${SATUSEHAT_CLIENT_SECRET}`,
+      },
+    );
+
+    const authText = await authResponse.text();
+    let authData;
+    try {
+      authData = JSON.parse(authText);
+    } catch (e) {
+      throw new Error(
+        `Auth API returned non-JSON: ${authText.substring(0, 100)}...`,
+      );
+    }
+
+    if (!authData.access_token) {
+      throw new Error(
+        `Failed to get SATUSEHAT token: ${JSON.stringify(authData)}`,
+      );
+    }
+
+    const token = authData.access_token;
+
+    // 2. Fetch Facilities (Hardcoded to Surabaya: kode_provinsi=35, kode_kabkota=3578)
+    const facilityRes = await fetch(
+      "https://api-satusehat-stg.dto.kemkes.go.id/masterdata/v1/mastersaranaindex/mastersarana?limit=50&page=1&jenis_sarana=104&status_aktif=true&kode_provinsi=35&kode_kabkota=3578&kode_kecamatan=357804",
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+
+    const facilityText = await facilityRes.text();
+    let facilityData;
+    try {
+      facilityData = JSON.parse(facilityText);
+    } catch (e) {
+      throw new Error(
+        `Facility API returned non-JSON: ${facilityText.substring(0, 100)}...`,
+      );
+    }
+
+    if (facilityData.status_code !== 200 || !facilityData.data) {
+      throw new Error(`SATUSEHAT API error: ${JSON.stringify(facilityData)}`);
+    }
+
+    // Map to expected frontend format
+    const facilities = facilityData.data.map((place) => ({
+      kode_satusehat: place.kode_satusehat,
+      kode_sarana: place.kode_sarana,
+      nama: place.nama,
+      alamat: place.alamat || "",
+      telp: place.telp || null,
+      email: place.email || null,
+      latitude: place.latitude?.toString() || "",
+      longitude: place.longitude?.toString() || "",
+      operasional: place.operasional,
+      status_aktif: place.status_aktif,
+    }));
+
+    res.json({ success: true, data: facilities });
   } catch (error) {
     console.error("Facilities API Error:", error.message);
     res.status(500).json({ success: false, message: error.message, data: [] });

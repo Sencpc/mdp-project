@@ -20,7 +20,6 @@
             <nav class="flex-1 px-4 space-y-2">
                 <button @click="tab = 'users'; selectedUser = null;" :class="tab === 'users' ? 'bg-gray-800' : 'hover:bg-gray-800'" class="w-full text-left px-4 py-3 rounded-lg font-medium transition-colors">Users</button>
                 <button @click="tab = 'doctors'; selectedUser = null;" :class="tab === 'doctors' ? 'bg-gray-800' : 'hover:bg-gray-800'" class="w-full text-left px-4 py-3 rounded-lg font-medium transition-colors">Doctors</button>
-                <button @click="tab = 'hospitals'; selectedUser = null;" :class="tab === 'hospitals' ? 'bg-gray-800' : 'hover:bg-gray-800'" class="w-full text-left px-4 py-3 rounded-lg font-medium transition-colors">Hospitals (API)</button>
             </nav>
         </div>
 
@@ -203,45 +202,6 @@
                     </div>
                 </div>
 
-                <!-- HOSPITALS TAB -->
-                <div x-show="tab === 'hospitals'" style="display: none;">
-                    <div class="bg-white rounded-lg shadow overflow-hidden">
-                        <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
-                            <h3 class="text-lg font-medium text-gray-900">Satusehat Facilities</h3>
-                            <button @click="fetchHospitals()" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors">Refresh Data</button>
-                        </div>
-                        <div x-show="loadingHospitals" class="p-6 text-center text-gray-500">Fetching from Kemkes API...</div>
-                        <table class="min-w-full divide-y divide-gray-200" x-show="!loadingHospitals">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kode Satusehat</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                <template x-for="h in hospitals" :key="h.kode_satusehat">
-                                    <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" x-text="h.kode_satusehat"></td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium" x-text="h.nama"></td>
-                                        <td class="px-6 py-4 text-sm text-gray-500" x-text="h.alamat"></td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                            <span :class="h.status_aktif ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" x-text="h.status_aktif ? 'Active' : 'Inactive'"></span>
-                                        </td>
-                                    </tr>
-                                </template>
-                            </tbody>
-                        </table>
-                        <div x-show="!loadingHospitals && hospitals.length === 0" class="p-6 text-center text-gray-500">No hospitals found. Click refresh to load from API.</div>
-                        <div class="px-6 py-4 bg-gray-50 border-t flex items-center justify-between" x-show="!loadingHospitals">
-                            <button @click="if(hospitalPage > 1) { hospitalPage--; fetchHospitals(); }" :disabled="hospitalPage <= 1" class="px-4 py-2 border rounded text-sm bg-white hover:bg-gray-50 disabled:opacity-50 text-gray-700 font-medium">Previous Page</button>
-                            <span class="text-sm text-gray-600 font-medium">Page <span x-text="hospitalPage"></span></span>
-                            <button @click="hospitalPage++; fetchHospitals();" :disabled="hospitals.length < 50" class="px-4 py-2 border rounded text-sm bg-white hover:bg-gray-50 disabled:opacity-50 text-gray-700 font-medium">Next Page</button>
-                        </div>
-                    </div>
-                </div>
-
             </main>
         </div>
     </div>
@@ -252,9 +212,6 @@
                 tab: 'users',
                 users: [],
                 doctors: [],
-                hospitals: [],
-                loadingHospitals: false,
-                hospitalPage: 1,
                 
                 // Users State
                 selectedUser: null,
@@ -266,7 +223,7 @@
 
                 get headerTitle() {
                     if (this.selectedUser) return `User Details: ${this.selectedUser.username}`;
-                    if (this.tab === 'hospitals') return 'Satusehat Hospitals Directory';
+                    if (this.tab === 'doctors') return 'Manage Doctors';
                     return this.tab === 'users' ? 'User Management' : 'Doctor Management';
                 },
 
@@ -276,7 +233,6 @@
                     this.$watch('tab', value => {
                         if(value === 'users') this.fetchUsers();
                         if(value === 'doctors') this.fetchDoctors();
-                        if(value === 'hospitals') this.fetchHospitals();
                     });
                 },
 
@@ -349,24 +305,6 @@
                     if(confirm('Are you sure you want to delete this doctor?')) {
                         await fetch('/admin/api/doctors/' + id, { method: 'DELETE' });
                         this.fetchDoctors();
-                    }
-                },
-
-                // HOSPITAL METHODS
-                async fetchHospitals() {
-                    this.loadingHospitals = true;
-                    try {
-                        const res = await fetch('/api/facilities?page=' + this.hospitalPage);
-                        if (res.ok) {
-                            const result = await res.json();
-                            this.hospitals = result.data || [];
-                        } else {
-                            console.error('Failed to fetch hospitals from API');
-                        }
-                    } catch (e) {
-                        console.error('Error fetching hospitals:', e);
-                    } finally {
-                        this.loadingHospitals = false;
                     }
                 }
             }))
