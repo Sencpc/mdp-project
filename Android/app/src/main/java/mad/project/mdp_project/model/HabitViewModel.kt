@@ -27,11 +27,8 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
         val userId = sessionManager.getUserId()
         habits = habitRepository.getHabitsForUser(userId)
 
-        // Seed standard habits & Sync dari server
+        // Sync dari server
         viewModelScope.launch {
-            if (userId != -1) {
-                habitRepository.seedStandardHabits(userId)
-            }
             habitRepository.syncFromServer(userId)
         }
 
