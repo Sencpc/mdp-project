@@ -26,6 +26,16 @@ app.get("/privacy-policy", (req, res) => {
   res.sendFile(path.join(__dirname, "privacy_policy.html"));
 });
 
+// Serve Account Deletion Request Page
+app.get("/delete-account", (req, res) => {
+  res.sendFile(path.join(__dirname, "delete_account.html"));
+});
+
+// Serve Data Deletion Request Page
+app.get("/delete-data", (req, res) => {
+  res.sendFile(path.join(__dirname, "delete_data.html"));
+});
+
 const PORT = process.env.PORT || 3000;
 
 require("dotenv").config();
