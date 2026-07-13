@@ -1,12 +1,16 @@
 package mad.project.mdp_project.ui
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
@@ -22,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -110,18 +116,19 @@ fun ProfileScreen(
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     // Image Pickers Logic
-    var tempImageFile by remember { mutableStateOf<java.io.File?>(null) }
+    // Use rememberSaveable so the file path survives process death while camera is open
+    var tempImageFilePath by rememberSaveable { mutableStateOf<String?>(null) }
 
     val pickMedia = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         uri?.let { selectedUri ->
             try {
                 val inputStream = context.contentResolver.openInputStream(selectedUri)
-                val file = java.io.File(context.filesDir, "profile_${System.currentTimeMillis()}.jpg")
+                val file = File(context.filesDir, "profile_${System.currentTimeMillis()}.jpg")
                 val outputStream = java.io.FileOutputStream(file)
                 inputStream?.copyTo(outputStream)
                 inputStream?.close()
                 outputStream.close()
-                viewModel.updateDraft { it.copy(profilePicturePath = android.net.Uri.fromFile(file).toString()) }
+                viewModel.updateDraft { it.copy(profilePicturePath = Uri.fromFile(file).toString()) }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -130,9 +137,42 @@ fun ProfileScreen(
 
     val takePicture = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success) {
-            tempImageFile?.let { file -> 
-                viewModel.updateDraft { it.copy(profilePicturePath = android.net.Uri.fromFile(file).toString()) } 
+            tempImageFilePath?.let { path ->
+                val file = File(path)
+                if (file.exists()) {
+                    viewModel.updateDraft { it.copy(profilePicturePath = Uri.fromFile(file).toString()) }
+                }
             }
+        }
+    }
+
+    // Helper to create the temp file, get a content URI, and launch the camera
+    fun launchCameraSafely(takePictureLauncher: ActivityResultLauncher<Uri>) {
+        try {
+            val file = File(context.filesDir, "profile_${System.currentTimeMillis()}.jpg")
+            tempImageFilePath = file.absolutePath
+            val uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                file
+            )
+            takePictureLauncher.launch(uri)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(context, "Unable to open camera. Please try again.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Runtime CAMERA permission launcher
+    // Required because the manifest declares CAMERA (for ScannerFragment's CameraX),
+    // which forces ACTION_IMAGE_CAPTURE to also require it at runtime.
+    val requestCameraPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            launchCameraSafely(takePicture)
+        } else {
+            Toast.makeText(context, "Camera permission is required to take a photo.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -334,10 +374,13 @@ fun ProfileScreen(
                         leadingContent = { Icon(Icons.Default.Camera, null) },
                         modifier = Modifier.clickable {
                             showPhotoOptions = false
-                            val file = java.io.File(context.filesDir, "profile_${System.currentTimeMillis()}.jpg")
-                            tempImageFile = file
-                            val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-                            takePicture.launch(uri)
+                            if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
+                                == PackageManager.PERMISSION_GRANTED
+                            ) {
+                                launchCameraSafely(takePicture)
+                            } else {
+                                requestCameraPermission.launch(Manifest.permission.CAMERA)
+                            }
                         }
                     )
                     ListItem(

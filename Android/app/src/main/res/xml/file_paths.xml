@@ -7,6 +7,6 @@
         name="my_cache_images"
         path="/" />
     <files-path
-        name="internal_files"
+        name="internal_images"
         path="." />
 </paths>
